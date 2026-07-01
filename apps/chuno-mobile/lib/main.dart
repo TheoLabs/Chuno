@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme/app_theme.dart';
 import 'screens/login_screen.dart';
 
-void main() => runApp(const ChunoApp());
+// 앱 전체 상태관리 기준 = Riverpod. 루트를 ProviderScope 로 감싼다.
+void main() => runApp(const ProviderScope(child: ChunoApp()));
 
 class ChunoApp extends StatelessWidget {
   const ChunoApp({super.key});

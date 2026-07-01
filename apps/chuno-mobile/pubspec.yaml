@@ -35,9 +35,16 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  # S1-7 앱 네트워킹 / 상태관리 기반
+  flutter_riverpod: ^2.6.1        # 앱 전체 상태관리 기준
+  dio: ^5.7.0                     # HTTP 클라이언트 + 인터셉터
+  flutter_secure_storage: ^9.2.2  # 토큰 보안 저장
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  http_mock_adapter: ^0.6.1       # dio 인터셉터 단위 테스트용
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

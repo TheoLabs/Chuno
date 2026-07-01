@@ -29,11 +29,21 @@
   .lg{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);}
   .lg i{width:14px; height:14px; border-radius:4px; display:inline-block;}
 
-  nav.tabbar{position:sticky; top:0; z-index:50; background:#060608ee; backdrop-filter:blur(8px); border-bottom:1px solid #16181d;}
+  nav.tabbar{position:sticky; top:46px; z-index:50; background:#060608ee; backdrop-filter:blur(8px); border-bottom:1px solid #16181d;}
   nav.tabbar .inner{max-width:1360px; margin:0 auto; display:flex; gap:6px; padding:10px 40px; overflow-x:auto;}
   nav.tabbar a{font-size:13px; color:#aeb4bc; padding:8px 14px; border-radius:10px; white-space:nowrap;}
   nav.tabbar a:hover{background:#111318;}
   nav.tabbar a.on{background:color-mix(in srgb,var(--ar) 16%,transparent); color:var(--ar);}
+
+  /* site-wide section nav (docs/ 전체 공통 상단 바) */
+  nav.sitenav{position:sticky; top:0; z-index:60; background:#08090cf5; backdrop-filter:blur(8px); border-bottom:1px solid #16181d; height:46px;}
+  nav.sitenav .inner{max-width:1360px; margin:0 auto; height:100%; display:flex; align-items:center; gap:2px; padding:0 40px; overflow-x:auto;}
+  nav.sitenav .sn-brand{font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:.3px; margin-right:14px; white-space:nowrap;}
+  nav.sitenav .sn-brand b{color:var(--ar); font-weight:700;}
+  nav.sitenav a, nav.sitenav span.on{font-size:12.5px; padding:6px 12px; border-radius:8px; white-space:nowrap;}
+  nav.sitenav a{color:#aeb4bc; transition:.12s;}
+  nav.sitenav a:hover{background:#111318; color:var(--text);}
+  nav.sitenav span.on{background:color-mix(in srgb,var(--ar) 16%,transparent); color:var(--ar); font-weight:700; cursor:default;}
 
   main{max-width:1360px; margin:0 auto; padding:26px 40px 90px;}
   section{margin-bottom:46px; scroll-margin-top:64px;}
@@ -112,6 +122,15 @@
 </style>
 </head>
 <body>
+
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../README.md">개요</a>
+  <a href="../mvp/index.html">MVP 로드맵</a>
+  <a href="../issue/index.html">이슈 보드</a>
+  <span class="on">도메인(DDD)</span>
+  <a href="../wireframes/index.html">와이어프레임</a>
+</div></nav>
 
 <header>
   <h1>추노 <b>Chuno</b> — 도메인 설계</h1>
@@ -220,18 +239,18 @@
           <div class="f"><span class="fn">profileImageFileId</span><span class="ft">FileId?</span><span class="fnote">프로필 사진 참조</span></div>
           <div class="f"><span class="fn">joinOn</span><span class="ft">Date</span><span class="fnote">가입·온보딩 시각</span></div>
         </div>
-        <div class="rel"><b>관계:</b> 1 ── N <b>AuthIdentity</b> · 1 ── 1 <b>RunnerStats</b>/<b>PointAccount</b>(참조) · 1 ── 1 <b>File</b>(profileImageFileId 참조)</div>
+        <div class="rel"><b>관계:</b> 1 ── 1 <b>AuthIdentity</b> · 1 ── 1 <b>RunnerStats</b>/<b>PointAccount</b>(참조) · 1 ── 1 <b>File</b>(profileImageFileId 참조)</div>
       </div>
       <div class="card ent">
         <div class="hd"><span class="nm">AuthIdentity</span><span class="badge ent">Entity</span></div>
-        <div class="desc">소셜 로그인 수단(카카오·구글·애플)과 User를 잇는 연결. provider별로 고유.</div>
+        <div class="desc">소셜 로그인 수단(카카오·구글·애플)과 User를 잇는 연결. 유저당 소셜 신원 1개(1:1) — 통합 소셜로그인(다중 provider 연동) 미지원.</div>
         <div class="fields">
           <div class="f"><span class="fn">id</span><span class="ft">AuthIdentityId</span></div>
-          <div class="f"><span class="fn">userId</span><span class="ft">UserId</span></div>
+          <div class="f"><span class="fn">userId</span><span class="ft">UserId</span><span class="fnote">UNIQUE·1:1 강제</span></div>
           <div class="f"><span class="fn">provider</span><span class="ft">AuthProvider</span><span class="fnote">KAKAO·GOOGLE·APPLE</span></div>
           <div class="f"><span class="fn">providerUserId</span><span class="ft">string</span></div>
         </div>
-        <div class="inv">UNIQUE(provider, providerUserId) — 소셜 계정당 1 User</div>
+        <div class="inv">UNIQUE(userId) — User당 AuthIdentity 1개(1:1) · UNIQUE(provider, providerUserId) — 소셜 계정당 1 User</div>
       </div>
       <div class="card ent">
         <div class="hd"><span class="nm">UserConsent</span><span class="badge ent">Entity</span></div>
@@ -543,7 +562,7 @@
       <g><rect class="nbox" x="915" y="55" width="150" height="46" rx="9"/><rect x="915" y="55" width="4" height="46" rx="2" fill="#B98BFF"/><text class="nname" x="931" y="76">Notification</text><text class="ntype" x="931" y="92">READ MODEL</text></g>
 
       <!-- edge labels (top) -->
-      <text class="elabel" x="248" y="60">1 · N</text>
+      <text class="elabel" x="248" y="60">1 · 1</text>
       <text class="elabel" x="248" y="130">1 · N</text>
       <text class="elabel" x="285" y="158">1 · N</text>
       <text class="elabel" x="120" y="176">1 · N host</text>

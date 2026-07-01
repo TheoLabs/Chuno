@@ -89,3 +89,24 @@ h2 .em{font-family:var(--mono); font-size:11px; color:var(--muted); font-weight:
 
 .pill{font-family:var(--mono); font-size:11px; padding:3px 10px; border-radius:20px; border:1px solid var(--line); color:var(--muted);}
 .mono{font-family:var(--mono);}
+
+/* 항목 상태 태그 (완료/남음/이월) — mvp·issue 공용, task/.isub 체크박스와 함께 사용 */
+.stag{font-family:var(--mono); font-size:10px; font-weight:700; padding:1px 7px; border-radius:5px; margin-right:6px; letter-spacing:.2px; white-space:nowrap; display:inline-block;}
+.stag.done{background:color-mix(in srgb,var(--done) 16%,transparent); color:var(--done);}
+.stag.todo{background:color-mix(in srgb,var(--alert) 14%,transparent); color:var(--alert);}
+.stag.defer{background:color-mix(in srgb,var(--amber) 16%,transparent); color:var(--amber);}
+.stag.scope{background:color-mix(in srgb,var(--muted) 16%,transparent); color:var(--muted);}
+.task .box.done, .isub li .box.done{background:var(--done); border-color:var(--done); position:relative;}
+.task .box.defer, .isub li .box.defer{border-style:dashed; border-color:var(--amber);}
+.task .box.scope, .isub li .box.scope{border-style:dashed; border-color:var(--muted); opacity:.6;}
+.task .box.done::after, .isub li .box.done::after{content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:10px; line-height:1; color:#06110b; font-weight:800;}
+
+/* site-wide section nav (모든 docs/*.html 공통 상단 바) */
+.sitenav{display:flex; align-items:center; flex-wrap:wrap; gap:2px; border-bottom:1px solid var(--line); background:#0a0b0e;}
+.sitenav .inner{max-width:1080px; margin:0 auto; width:100%; display:flex; align-items:center; flex-wrap:wrap; gap:2px; padding:11px 32px;}
+.sitenav .sn-brand{font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:.3px; margin-right:12px; white-space:nowrap;}
+.sitenav .sn-brand b{color:var(--coral);}
+.sitenav a, .sitenav span.on{font-size:12.5px; padding:6px 12px; border-radius:8px; white-space:nowrap;}
+.sitenav a{color:#aeb4bc; transition:.12s;}
+.sitenav a:hover{background:var(--panel2); color:var(--text);}
+.sitenav span.on{background:color-mix(in srgb,var(--coral) 16%,transparent); color:var(--coral); font-weight:700; cursor:default;}

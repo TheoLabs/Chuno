@@ -16,7 +16,12 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+
+    "paths": {
+      "@configs": ["src/configs"],
+      "@libs/*": ["src/libs/*"]
+    }
   },
   "exclude": ["node_modules", "dist"]
 }

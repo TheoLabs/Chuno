@@ -8,6 +8,14 @@
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../README.md">개요</a>
+  <a href="../mvp/index.html">MVP 로드맵</a>
+  <span class="on">이슈 보드</span>
+  <a href="../domain/index.html">도메인(DDD)</a>
+  <a href="../wireframes/index.html">와이어프레임</a>
+</div></nav>
 <div class="wrap">
   <div class="crumb"><a href="../README.md">docs</a><span class="sep">/</span>issue</div>
   <h1>추노 <b>이슈</b> 보드</h1>
@@ -24,7 +32,7 @@
     <div class="sh"><span class="snum">STEP 1</span><span class="stitle">기반 &amp; 인증</span><span class="sgo"><a href="step1.html">상세 →</a> · <a href="../mvp/step1.html">MVP</a></span></div>
     <div class="rows">
       <a class="row" href="step1.html#S1-1"><span class="iid">S1-1</span><span class="rt">core-api 인프라 세팅 (TypeORM·MySQL·Config)</span><span class="badge be">BE</span><span class="pill">M</span></a>
-      <a class="row" href="step1.html#S1-2"><span class="iid">S1-2</span><span class="rt">DDD 모듈 스캐폴딩 (레이어·도메인 기본형)</span><span class="badge be">BE</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#S1-2"><span class="iid">S1-2</span><span class="rt">DDD 공용 기본형 (libs/ddd) <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">S</span></a>
       <a class="row" href="step1.html#S1-3"><span class="iid">S1-3</span><span class="rt">User / AuthIdentity 엔티티 + 마이그레이션</span><span class="badge be">BE</span><span class="pill">S</span></a>
       <a class="row" href="step1.html#S1-4"><span class="iid">S1-4</span><span class="rt">소셜 토큰 검증 (google·apple·kakao) + DEV_MODE</span><span class="badge be">BE</span><span class="pill">M</span></a>
       <a class="row" href="step1.html#S1-5"><span class="iid">S1-5</span><span class="rt">JWT 액세스 + 리프레시 회전 + auth 엔드포인트</span><span class="badge be">BE</span><span class="pill">M</span></a>
