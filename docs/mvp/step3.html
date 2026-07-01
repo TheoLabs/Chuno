@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Step 3 · 경주 코어 — 추노 MVP</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">MVP 로드맵</a><span class="sep">/</span>Step 3</div>
+  <h1><b>Step 3</b> · 경주 코어 — 실 GPS + 실시간 순위 <span class="pill" style="color:var(--alert); border-color:var(--alert)">난이도 최상</span></h1>
+  <p class="lead">이 앱의 심장. 예약 시각 동시출발 → 각자 GPS로 뛴 거리 측정 → 좌표 없이 거리만 실시간 공유 → 순위 경쟁 → 완주/종료.</p>
+
+  <div class="callout"><b>목표</b> — 서로 다른 장소의 참가자들이 동시에 출발해, 각자 실제로 뛴 거리가 실시간 리더보드에 반영되고 완주/시간초과로 경주가 끝난다.</div>
+
+  <p style="margin:-6px 0 18px;"><a href="../issue/step3.html" style="color:var(--coral); font-weight:600; font-size:13px;">🎫 이 스텝의 상세 이슈 (11) →</a></p>
+
+  <div class="dep"><b>선행:</b> Step 2(방·로비·스케줄러·socket.io) — 경주는 LIVE 전환된 방에서 시작</div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge app">APP</span> 실 GPS 추적 (가장 어려운 부분)</div>
+    <div class="task"><div class="box"></div><div class="k"><b>geolocator 백그라운드 추적</b> — iOS UIBackgroundModes[location]·allowBackgroundLocationUpdates, Android 포그라운드 서비스</div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>거리 계산 + 노이즈 필터</b> — 저정확도 좌표 버림, 미세 드리프트/순간이동 무시, 누적 km 스트림(RunTracker)</div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>좌표는 서버 미전송</b>, 누적거리(km)만 주기 보고 — 프라이버시 원칙 유지</div></div>
+    <div class="task"><div class="box"></div><div class="k">화면잠금·백그라운드에서도 측정 지속, 배터리 고려</div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge be">BACKEND</span> Race 도메인 &amp; 게이트웨이</div>
+    <div class="task"><div class="box"></div><div class="k"><b>RaceScheduler</b> — LIVE 전환 시 Race 생성, 서버시계 기준 동시출발(startedAt)</div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>RaceGateway(socket.io /race)</b> — JWT 핸드셰이크, joinRoom / progress(거리) / leaderboard 브로드캐스트 / raceFinished</div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>RaceService</b> — 진행 클램프·안티치트(MIN_FEASIBLE_PACE, 순간이동/비현실 페이스 리젝)</div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>종료 판정</b> — 전원 완주 or 제한시간 경과 → FINISHED, finalize <b>멱등</b></div></div>
+    <div class="task"><div class="box"></div><div class="k">RaceParticipant 상태(RUNNING/FINISHED/DNF/DISCONNECTED), 이벤트 RunnerFinished·RaceFinished</div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge app">APP</span> 경주 화면 실연동</div>
+    <div class="task"><div class="box"></div><div class="k">socket.io 클라이언트 — 진행률 보고 + leaderboard 수신, <b>세로 리더보드 실시간 재정렬</b>(이미 위젯 있음)</div></div>
+    <div class="task"><div class="box"></div><div class="k">타겟 격차(Δ)·내 페이스·남은시간 실데이터, 완주/DNF 결과 진입</div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>오프라인 내성</b> — 끊겨도 로컬 GPS로 내 화면 지속, 복귀 시 재동기화</div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge design">DESIGN</span> 경주 엣지 UX</div>
+    <div class="task"><div class="box"></div><div class="k">연결끊김 배너·재동기화, GPS 약함/미확보, 중도 포기(DNF) 확인, 마지막 1명 처리</div></div>
+    <div class="task"><div class="box"></div><div class="k">카운트다운/완주 <b>햅틱·사운드</b> — 경쟁 손맛</div></div>
+  </div>
+
+  <div class="risk"><b>주의</b> — 실외 실기기 필드 테스트가 필수(시뮬레이터 GPS 주입으론 한계). 2대 이상으로 서로 다른 경로를 실제로 뛰며 동시출발·순위·안티치트를 반복 검증. 시계 동기화(서버 권위) 어긋나면 공정성 붕괴 → 최우선 확인.</div>
+
+  <div class="done-when"><b>완료 기준</b> — 서로 다른 장소의 실기기 2대가 예약 시각에 동시 출발 → 각자 뛴 거리가 상대 화면 리더보드에 실시간 반영 → 목표거리 완주 또는 제한시간 종료로 경주가 정상 마감. 좌표는 서버에 전송되지 않음을 확인.</div>
+
+  <div class="nav">
+    <a href="step2.html"><span class="lbl">이전</span>← Step 2 · 방 &amp; 로비</a>
+    <a class="next" href="step4.html"><span class="lbl">다음</span>Step 4 · 점수·랭킹 →</a>
+  </div>
+</div>
+</body>
+</html>

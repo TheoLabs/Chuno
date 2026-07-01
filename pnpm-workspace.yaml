@@ -1,0 +1,3 @@
+packages:
+  - "apps/core-api"
+# apps/chuno-mobile 은 Flutter(Dart) 프로젝트라 JS 워크스페이스에 포함하지 않습니다.

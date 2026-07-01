@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Step 5 · 알림 & 출시 준비 — 추노 MVP</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">MVP 로드맵</a><span class="sep">/</span>Step 5</div>
+  <h1><b>Step 5</b> · 알림 &amp; 출시 준비</h1>
+  <p class="lead">예약 경주 모델은 푸시가 없으면 사람들이 경주를 놓친다. 여기에 스토어 심사에 필요한 것들을 채워 제출까지.</p>
+
+  <div class="callout"><b>목표</b> — 경주 임박/결과 푸시가 오고, 앱 아이콘·스토어 에셋·개인정보 정책·프로덕션 서버가 갖춰져 <b>베타(TestFlight) 및 스토어 제출</b>이 가능하다.</div>
+
+  <p style="margin:-6px 0 18px;"><a href="../issue/step5.html" style="color:var(--coral); font-weight:600; font-size:13px;">🎫 이 스텝의 상세 이슈 (9) →</a></p>
+
+  <div class="dep"><b>선행:</b> Step 1~4 (핵심 루프 완성)</div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge be">BACKEND</span><span class="badge app">APP</span> 푸시 알림</div>
+    <div class="task"><div class="box"></div><div class="k"><b>FCM/APNs</b> 연동 — DeviceToken 등록, 이벤트 구독(Notification 컨텍스트) → 발송</div></div>
+    <div class="task"><div class="box"></div><div class="k">시나리오 — 경주 임박(T-10분/T-1분), 새 참가자, 결과 도착</div></div>
+    <div class="task"><div class="box"></div><div class="k">앱 — 알림 권한 요청, 포그라운드/백그라운드 수신·딥링크(해당 방/결과로)</div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge design">DESIGN</span> 브랜드 &amp; 스토어 에셋</div>
+    <div class="task"><div class="box"></div><div class="k"><b>앱 아이콘</b>(iOS/Android 전 사이즈) + <b>스플래시</b></div></div>
+    <div class="task"><div class="box"></div><div class="k">스토어 스크린샷·프리뷰, 앱 이름/설명/키워드</div></div>
+    <div class="task"><div class="box"></div><div class="k">기기 사이즈·글자크기·대비 QA, 다국어(MVP는 ko)</div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge ops">OPS</span> 배포 &amp; 운영</div>
+    <div class="task"><div class="box"></div><div class="k"><b>프로덕션 인프라</b> — MySQL·Redis 매니지드, core-api 배포(컨테이너/PaaS), 시크릿·환경설정</div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>크래시/분석</b> — Sentry or Firebase Crashlytics + 기본 이벤트 로깅</div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>개인정보 정책 호스팅</b>, 위치데이터 처리방침, 앱 심사용 데이터·권한 고지</div></div>
+    <div class="task"><div class="box"></div><div class="k">서명/프로비저닝, <b>TestFlight·내부 테스트</b>로 베타 → 피드백 → 스토어 제출</div></div>
+  </div>
+
+  <div class="done-when"><b>완료 기준</b> — 실제 사용자가 예약 경주 알림을 받고 앱에 들어와 완주까지 하고, 크래시 없이 결과가 반영된다. 스토어 심사에 필요한 에셋·정책·빌드가 준비되어 베타 배포됨.</div>
+
+  <div class="risk"><b>이후(post-MVP)</b> — 포인트 상점(광고제거)·프로필 사진·Kafka EDA·비공개 방·자동매칭·리매치·티어 정교화·지도 공유. MVP 반응을 본 뒤 우선순위 재정렬.</div>
+
+  <div class="nav">
+    <a href="step4.html"><span class="lbl">이전</span>← Step 4 · 점수·랭킹</a>
+    <a class="next" href="index.html"><span class="lbl">돌아가기</span>로드맵 개요 →</a>
+  </div>
+</div>
+</body>
+</html>

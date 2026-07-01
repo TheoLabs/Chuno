@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Step 2 · 방 & 실시간 로비 — 추노 MVP</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">MVP 로드맵</a><span class="sep">/</span>Step 2</div>
+  <h1><b>Step 2</b> · 방 &amp; 실시간 로비</h1>
+  <p class="lead">방을 만들고 여러 명이 모여 예약 시각을 기다리는 흐름. 실시간(socket.io) 입퇴장이 처음 등장.</p>
+
+  <div class="callout"><b>목표</b> — 실데이터로 방을 만들고 다른 사람이 참가해 로비에서 실시간으로 인원이 갱신되며, 예약 시각 대기 상태까지 간다.</div>
+
+  <p style="margin:-6px 0 18px;"><a href="../issue/step2.html" style="color:var(--coral); font-weight:600; font-size:13px;">🎫 이 스텝의 상세 이슈 (10) →</a></p>
+
+  <div class="dep"><b>선행:</b> Step 1(인증·User) — 방장/참가자 식별에 필요</div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge be">BACKEND</span> Room 도메인</div>
+    <div class="task"><div class="box"></div><div class="k"><b>Room 애그리거트</b>(RaceGoal·RoomStatus·participants) + Participant 엔티티, 마이그레이션</div></div>
+    <div class="task"><div class="box"></div><div class="k">엔드포인트 <span class="mono">POST /rooms</span>, <span class="mono">GET /rooms</span>(필터), <span class="mono">POST /rooms/:id/join·leave</span>, <span class="mono">DELETE /rooms/:id</span>(방장)</div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>불변식</b> — 정원 초과 join 불가, 시작 후 join 불가, 최소 2명</div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>예약 스케줄러</b>(BullMQ 지연잡 or @Interval) — scheduledStartAt 도달 시 RECRUITING→STARTING→LIVE 전환, <b>2명 미만이면 CANCELLED</b></div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>socket.io 게이트웨이(로비)</b> — 방 룸 조인, 입퇴장·상태전환 브로드캐스트</div></div>
+    <div class="task"><div class="box"></div><div class="k">도메인 이벤트(인프로세스) — RoomCreated·ParticipantJoined·RoomStarting·RoomCancelled</div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge app">APP</span> 방 화면 실연동</div>
+    <div class="task"><div class="box"></div><div class="k"><b>홈 방 목록</b> 실데이터 + 필터(거리/제한시간/빈자리) + 시작 카운트다운</div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>방 생성</b> 폼 → POST /rooms, 성공 시 로비 이동</div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>로비</b> — socket.io 연결, 참가자 실시간 입퇴장, 나가기/방삭제</div></div>
+    <div class="task"><div class="box"></div><div class="k">서버시계 동기 카운트다운(elapsed = now − scheduledStartAt), STARTING 진입 시 카운트다운 화면 전환</div></div>
+    <div class="task"><div class="box"></div><div class="k">엣지 상태 UI — 방 취소(인원미달) 안내, 목록 빈 상태</div></div>
+  </div>
+
+  <div class="done-when"><b>완료 기준</b> — 기기 2대(또는 시뮬 2개)에서 한쪽이 방 생성 → 다른쪽이 목록에서 참가 → 양쪽 로비에 서로 실시간 표시 → 예약 시각에 카운트다운 진입. 인원 미달 시 자동 취소 확인.</div>
+
+  <div class="nav">
+    <a href="step1.html"><span class="lbl">이전</span>← Step 1 · 기반 &amp; 인증</a>
+    <a class="next" href="step3.html"><span class="lbl">다음</span>Step 3 · 경주 코어 →</a>
+  </div>
+</div>
+</body>
+</html>

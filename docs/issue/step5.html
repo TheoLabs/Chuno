@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Step 5 이슈 · 알림 & 출시 준비 — 추노</title>
+<link rel="stylesheet" href="../mvp/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">이슈 보드</a><span class="sep">/</span>Step 5<span class="sep">·</span><a href="../mvp/step5.html">MVP Step 5</a></div>
+  <h1><b>Step 5</b> · 알림 &amp; 출시 준비</h1>
+  <p class="lead">예약 경주 푸시 + 스토어 심사에 필요한 에셋·정책·배포까지. (총 9 이슈)</p>
+  <div class="boardnote">
+    <a class="linkbtn" href="../mvp/step5.html">📋 <b>MVP Step 5</b></a>
+    <a class="linkbtn" href="index.html">← 이슈 보드</a>
+  </div>
+
+  <div class="issue" id="S5-1">
+    <div class="ihead"><span class="iid">S5-1</span><span class="ititle">FCM/APNs + DeviceToken + Notification 발송</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">예약 경주 모델의 필수 요소. 이벤트를 구독해 푸시 발송.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>DeviceToken 등록 API, FCM/APNs 발송기</span></li>
+      <li><span class="box"></span><span>이벤트 구독(Notification 컨텍스트) → 경주 임박(T-10/1분)·새 참가자·결과 도착</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 경주 임박·결과 시 실제 기기에 푸시가 도착한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S4-2</span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+  </div>
+
+  <div class="issue app" id="S5-2">
+    <div class="ihead"><span class="iid">S5-2</span><span class="ititle">푸시 수신 / 권한 / 딥링크</span><span class="badge app">APP</span><span class="pill">M</span></div>
+    <div class="idesc">앱에서 알림 권한을 받고 수신·탭 시 올바른 화면으로 이동.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>알림 권한 요청, 토큰 등록, 포그라운드/백그라운드 수신</span></li>
+      <li><span class="box"></span><span>딥링크 — 해당 방/결과 화면으로 이동</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 푸시를 탭하면 관련 방/결과 화면으로 정확히 진입한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S5-1</span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+  </div>
+
+  <div class="issue design" id="S5-3">
+    <div class="ihead"><span class="iid">S5-3</span><span class="ititle">앱 아이콘 + 스플래시</span><span class="badge design">DESIGN</span><span class="pill">M</span></div>
+    <div class="idesc">브랜드 첫인상. 추격전 정체성을 담은 아이콘·스플래시.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>iOS/Android 전 사이즈 앱 아이콘</span></li>
+      <li><span class="box"></span><span>스플래시(다크+코랄), 로고 마크</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 홈 화면 아이콘·부팅 스플래시가 브랜드에 맞게 표시된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a></span></div>
+  </div>
+
+  <div class="issue design" id="S5-4">
+    <div class="ihead"><span class="iid">S5-4</span><span class="ititle">스토어 에셋</span><span class="badge design">DESIGN</span><span class="pill">M</span></div>
+    <div class="idesc">스토어 등록·전환율을 위한 시각·문안 자산.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>스크린샷·프리뷰, 앱 이름/설명/키워드</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 스토어 등록에 필요한 스크린샷·문안이 준비된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+  </div>
+
+  <div class="issue design" id="S5-5">
+    <div class="ihead"><span class="iid">S5-5</span><span class="ititle">기기 / 접근성 QA</span><span class="badge design">DESIGN</span><span class="pill">M</span></div>
+    <div class="idesc">다양한 화면·설정에서 레이아웃·가독성 점검.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>기기 사이즈별 레이아웃, 글자 크기 확대, 대비</span></li>
+      <li><span class="box"></span><span>다국어(MVP는 ko), 오버플로우 회귀 확인</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 소형~대형 기기·큰 글자에서 레이아웃이 깨지지 않는다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+  </div>
+
+  <div class="issue ops" id="S5-6">
+    <div class="ihead"><span class="iid">S5-6</span><span class="ititle">프로덕션 인프라 배포</span><span class="badge ops">OPS</span><span class="pill">L</span></div>
+    <div class="idesc">로컬 도커를 벗어나 실제 서비스가 도는 환경 구성.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>MySQL·Redis 매니지드, core-api 컨테이너/PaaS 배포</span></li>
+      <li><span class="box"></span><span>시크릿·환경설정, 도메인·HTTPS, 헬스체크/롤링 배포</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 프로덕션 URL로 앱이 붙어 전 기능이 동작한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a></span></div>
+  </div>
+
+  <div class="issue ops" id="S5-7">
+    <div class="ihead"><span class="iid">S5-7</span><span class="ititle">크래시 / 분석</span><span class="badge ops">OPS</span><span class="pill">S</span></div>
+    <div class="idesc">출시 후 문제를 잡고 사용을 이해할 최소 관측성.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>Sentry or Firebase Crashlytics 연동</span></li>
+      <li><span class="box"></span><span>핵심 이벤트 로깅(로그인·방생성·경주완료)</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 크래시가 대시보드에 수집되고 핵심 퍼널이 계측된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a></span></div>
+  </div>
+
+  <div class="issue ops" id="S5-8">
+    <div class="ihead"><span class="iid">S5-8</span><span class="ititle">개인정보 정책 + 심사 고지</span><span class="badge ops">OPS</span><span class="pill">M</span></div>
+    <div class="idesc">스토어 심사·법적 요건. 특히 위치 데이터 처리 고지.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>개인정보 정책 호스팅(공개 URL), 위치데이터 처리방침</span></li>
+      <li><span class="box"></span><span>앱 심사 데이터·권한 사용 목적 고지(App Privacy/데이터 안전)</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 정책 URL이 공개되고 심사용 개인정보·권한 고지가 채워진다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-11</span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a></span></div>
+  </div>
+
+  <div class="issue ops" id="S5-9">
+    <div class="ihead"><span class="iid">S5-9</span><span class="ititle">서명 / 프로비저닝 + TestFlight 베타</span><span class="badge ops">OPS</span><span class="pill">M</span></div>
+    <div class="idesc">실제 배포 채널로 빌드를 올려 베타 → 스토어 제출.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>서명·프로비저닝(iOS)·키스토어(Android)</span></li>
+      <li><span class="box"></span><span>TestFlight·내부 테스트 배포, 피드백 → 스토어 제출</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 베타 빌드가 테스터에게 배포되고 스토어 심사 제출이 가능하다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S5-3, S5-6</span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a></span></div>
+  </div>
+
+  <div class="nav">
+    <a href="step4.html"><span class="lbl">이전</span>← Step 4 · 점수·랭킹</a>
+    <a class="next" href="index.html"><span class="lbl">돌아가기</span>이슈 보드 →</a>
+  </div>
+</div>
+</body>
+</html>

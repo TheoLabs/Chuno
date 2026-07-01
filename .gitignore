@@ -1,0 +1,23 @@
+# Node
+node_modules/
+dist/
+build/
+coverage/
+*.log
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/
+
+# core-api
+apps/core-api/dist/
+
+# Flutter (앱 폴더의 .gitignore가 세부 처리)
+apps/chuno-mobile/.dart_tool/
+apps/chuno-mobile/build/

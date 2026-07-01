@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Step 1 이슈 · 기반 & 인증 — 추노</title>
+<link rel="stylesheet" href="../mvp/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">이슈 보드</a><span class="sep">/</span>Step 1<span class="sep">·</span><a href="../mvp/step1.html">MVP Step 1</a></div>
+  <h1><b>Step 1</b> · 기반 &amp; 인증</h1>
+  <p class="lead">백엔드 골격 + 소셜 로그인 → 온보딩 → 홈 진입까지 실계정으로 도는 첫 뼈대. (총 12 이슈)</p>
+  <div class="boardnote">
+    <a class="linkbtn" href="../mvp/step1.html">📋 <b>MVP Step 1</b></a>
+    <a class="linkbtn" href="index.html">← 이슈 보드</a>
+  </div>
+
+  <div class="issue" id="S1-1">
+    <div class="ihead"><span class="iid">S1-1</span><span class="ititle">core-api 인프라 세팅</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">NestJS에 TypeORM+MySQL 연결과 설정 로딩을 붙여 이후 도메인이 얹힐 토대를 만든다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">TypeOrmModule.forRootAsync</span> (MySQL, charset utf8mb4, 로컬 도커 DB)</span></li>
+      <li><span class="box"></span><span><span class="mono">@nestjs/config</span> ConfigModule + <span class="mono">.env.example</span> (DB·JWT·소셜 키)</span></li>
+      <li><span class="box"></span><span>헬스체크 확장, 마이그레이션 스크립트(<span class="mono">migration:run</span>)</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 앱 부팅 시 DB 연결 성공, 마이그레이션이 실행되고 <span class="mono">GET /api/health</span> 200.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a></span></div>
+  </div>
+
+  <div class="issue" id="S1-2">
+    <div class="ihead"><span class="iid">S1-2</span><span class="ititle">DDD 모듈 스캐폴딩</span><span class="badge be">BACKEND</span><span class="pill">S</span></div>
+    <div class="idesc">바운디드 컨텍스트가 일관된 구조로 자라도록 공용 도메인 기본형과 레이어 규약을 세운다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>shared: <span class="mono">AggregateRoot·Entity·ValueObject·DomainEvent</span> 기본형</span></li>
+      <li><span class="box"></span><span>모듈 레이어 규약 <span class="mono">domain / application / infrastructure / interface</span></span></li>
+      <li><span class="box"></span><span>인프로세스 EventBus 포트(구현은 이후 BullMQ/인메모리)</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 샘플 모듈이 4레이어 구조로 컴파일되고, 다른 이슈가 이 규약을 그대로 따를 수 있다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-1</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+  </div>
+
+  <div class="issue" id="S1-3">
+    <div class="ihead"><span class="iid">S1-3</span><span class="ititle">User / AuthIdentity 엔티티 + 마이그레이션</span><span class="badge be">BACKEND</span><span class="pill">S</span></div>
+    <div class="idesc">사용자와 소셜 신원을 저장할 스키마. 인증·프로필의 기반 애그리거트.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>User(nickname·level·tier·profileImageUrl?·onboardedAt?) — Nickname/RunnerLevel VO</span></li>
+      <li><span class="box"></span><span>AuthIdentity(provider·providerUserId) — <span class="mono">UNIQUE(provider, providerUserId)</span></span></li>
+      <li><span class="box"></span><span>UserConsent(userId·type·documentVersion·agreedAt·revokedAt?) — 약관/개인정보/위치 동의 이력, User와 1:N</span></li>
+      <li><span class="box"></span><span>UserRepository(포트) + TypeORM 구현·매퍼, 마이그레이션</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 마이그레이션으로 테이블 생성, 동일 소셜 신원 중복 삽입이 유니크 제약으로 거부되고, 동의 기록이 type·documentVersion·agreedAt으로 저장된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-1, S1-2</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html#model">도메인</a></span></div>
+  </div>
+
+  <div class="issue" id="S1-4">
+    <div class="ihead"><span class="iid">S1-4</span><span class="ititle">소셜 토큰 검증 + AUTH_DEV_MODE</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">provider별로 클라이언트가 넘긴 토큰을 검증해 신뢰 가능한 소셜 신원을 얻는다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>google: <span class="mono">google-auth-library</span> / apple: <span class="mono">jose</span>로 JWK 검증 / kakao: 사용자 API</span></li>
+      <li><span class="box"></span><span>신원 → User 조회·없으면 생성(AuthIdentity 연결)</span></li>
+      <li><span class="box"></span><span><span class="mono">AUTH_DEV_MODE</span>: "dev:&lt;id&gt;:&lt;email&gt;" 토큰으로 키 없이 로컬 테스트</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — dev 토큰과 실제 idToken 모두 검증되어 올바른 User로 매핑된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-3</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+  </div>
+
+  <div class="issue" id="S1-5">
+    <div class="ihead"><span class="iid">S1-5</span><span class="ititle">JWT + 리프레시 회전 + auth 엔드포인트</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">세션 토큰 발급/갱신/폐기. 리프레시 재사용 탐지로 탈취 방어.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>액세스 JWT 15m + opaque 리프레시(회전, sha256 해시 저장)</span></li>
+      <li><span class="box"></span><span>리프레시 재사용 시 <span class="mono">401</span> + 계열 무효화</span></li>
+      <li><span class="box"></span><span><span class="mono">POST /auth/social-login · /auth/refresh · /auth/logout</span></span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 로그인→토큰 발급, refresh로 회전, 이전 리프레시 재사용 시 401.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-3, S1-4</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+  </div>
+
+  <div class="issue" id="S1-6">
+    <div class="ihead"><span class="iid">S1-6</span><span class="ititle">users/me API</span><span class="badge be">BACKEND</span><span class="pill">S</span></div>
+    <div class="idesc">온보딩·프로필에서 쓰는 내 정보 조회/수정과 닉네임 중복확인.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">GET /users/me</span>, <span class="mono">PATCH /users/me</span>(닉네임·레벨·onboardedAt)</span></li>
+      <li><span class="box"></span><span><span class="mono">GET /users/check-nickname</span> (2~12자·고유 검증)</span></li>
+      <li><span class="box"></span><span>JWT 가드로 보호</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 토큰으로 내 정보 조회·수정되고, 중복 닉네임이 거부된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-3, S1-5</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+  </div>
+
+  <div class="issue app" id="S1-7">
+    <div class="ihead"><span class="iid">S1-7</span><span class="ititle">앱 네트워킹 / 상태관리 기반</span><span class="badge app">APP</span><span class="pill">M</span></div>
+    <div class="idesc">실 API 연동을 위한 공통 인프라 — 토큰 저장, 자동 갱신, 상태관리.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>상태관리 도입(provider or riverpod), <span class="mono">dio</span> + <span class="mono">flutter_secure_storage</span></span></li>
+      <li><span class="box"></span><span>api_client 인터셉터 — 401 시 <span class="mono">refresh</span> 회전 후 재시도</span></li>
+      <li><span class="box"></span><span>Env·에러 핸들링·공통 응답 모델</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 토큰이 보안 저장되고, 만료 시 자동 갱신 후 요청이 재개된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a></span></div>
+  </div>
+
+  <div class="issue app" id="S1-8">
+    <div class="ihead"><span class="iid">S1-8</span><span class="ititle">세션 / AuthGate 분기</span><span class="badge app">APP</span><span class="pill">S</span></div>
+    <div class="idesc">앱 시작 시 로그인·온보딩 상태에 따라 진입 화면을 결정한다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>부팅 시 토큰 확인 → 로그인 / 온보딩미완 / 홈 분기</span></li>
+      <li><span class="box"></span><span>로그아웃 시 스택 초기화(이미 UI 존재) + 토큰 삭제</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 재실행 시 세션 유지로 홈 직행, 미온보딩 계정은 온보딩으로.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-7, S1-5</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+  </div>
+
+  <div class="issue app" id="S1-9">
+    <div class="ihead"><span class="iid">S1-9</span><span class="ititle">소셜 로그인 SDK 3종</span><span class="badge app">APP</span><span class="pill">L</span></div>
+    <div class="idesc">카카오·구글·애플 네이티브 로그인으로 idToken을 받아 백엔드에 전달.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">google_sign_in</span> · <span class="mono">sign_in_with_apple</span> · kakao SDK</span></li>
+      <li><span class="box"></span><span>iOS 네이티브엔 iOS 타입 클라이언트 필수(웹 클라 custom scheme 불가)</span></li>
+      <li><span class="box"></span><span>취득 토큰 → <span class="mono">POST /auth/social-login</span></span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 3종 각각 실제 로그인 동의창까지 뜨고 백엔드 세션이 발급된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-7, S1-12</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+  </div>
+
+  <div class="issue app" id="S1-10">
+    <div class="ihead"><span class="iid">S1-10</span><span class="ititle">온보딩 저장</span><span class="badge app">APP</span><span class="pill">S</span></div>
+    <div class="idesc">닉네임·러닝레벨을 실제 저장하고 위치 동의를 받아 홈으로 진입.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>닉네임 중복확인(<span class="mono">check-nickname</span>) → 레벨 → <span class="mono">PATCH /users/me</span></span></li>
+      <li><span class="box"></span><span>완료 시 onboardedAt 설정, MainShell 진입</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 온보딩 입력이 서버에 저장되고 재실행 시 반복되지 않는다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-8, S1-6</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+  </div>
+
+  <div class="issue design" id="S1-11">
+    <div class="ihead"><span class="iid">S1-11</span><span class="ititle">약관·개인정보·위치 동의</span><span class="badge design">DESIGN</span><span class="pill">M</span></div>
+    <div class="idesc">스토어 심사·법적 요건(위치정보법)을 위한 동의 플로우와 문서.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>이용약관·개인정보처리방침 문안 + 앱 내 화면/링크</span></li>
+      <li><span class="box"></span><span>위치정보 이용동의(필수) — 온보딩 동의 단계 설계</span></li>
+      <li><span class="box"></span><span>동의 시 <span class="mono">UserConsent</span>(type·documentVersion·agreedAt) 기록 저장 — 재동의·철회 이력 대비</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 온보딩에 동의 단계가 있고, 약관/방침 화면이 앱에서 열리며, 동의가 문서 버전과 함께 서버에 기록된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a><a href="../domain/index.html#model">도메인</a></span></div>
+  </div>
+
+  <div class="issue ops" id="S1-12">
+    <div class="ihead"><span class="iid">S1-12</span><span class="ititle">소셜 개발자 콘솔 등록·키 발급</span><span class="badge ops">OPS</span><span class="pill">M</span></div>
+    <div class="idesc">리드타임이 있으므로 스텝1 초반에 착수해야 하는 외부 설정.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>카카오 앱 등록, 구글 GCP OAuth(iOS·웹 클라), Apple Sign in 설정</span></li>
+      <li><span class="box"></span><span>클라이언트 ID·시크릿·번들ID·리다이렉트 정리 → .env</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 3사 키가 발급되어 S1-4/S1-9가 실제 검증·로그인에 사용 가능.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a></span></div>
+  </div>
+
+  <div class="nav">
+    <a href="index.html"><span class="lbl">이전</span>← 이슈 보드</a>
+    <a class="next" href="step2.html"><span class="lbl">다음</span>Step 2 · 방 &amp; 로비 →</a>
+  </div>
+</div>
+</body>
+</html>

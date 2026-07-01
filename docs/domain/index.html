@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>추노(Chuno) — 도메인 설계</title>
+<style>
+  :root{
+    --bg:#0B0C10; --bg2:#0E1015; --panel:#14161D; --panel2:#1A1D25; --line:#262B34;
+    --text:#E7EAF0; --muted:#8A929D;
+    --ar:#FF6B4A;   /* Aggregate Root */
+    --ent:#5B9BFF;  /* Entity */
+    --vo:#2FDDB0;   /* Value Object */
+    --rm:#B98BFF;   /* Read Model / Projection */
+    --evt:#FFB020;  /* Domain Event */
+    --mono:"SF Mono","JetBrains Mono","Roboto Mono",ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:#060608; color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    line-height:1.5; letter-spacing:-.1px;}
+  a{color:inherit; text-decoration:none;}
+
+  header{padding:34px 40px 18px; max-width:1360px; margin:0 auto;}
+  header h1{margin:0 0 6px; font-size:27px; letter-spacing:-.5px;}
+  header h1 b{color:var(--ar);}
+  header p{margin:2px 0; color:var(--muted); font-size:13px;}
+  .legend{display:flex; flex-wrap:wrap; gap:16px; margin-top:16px;}
+  .lg{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);}
+  .lg i{width:14px; height:14px; border-radius:4px; display:inline-block;}
+
+  nav.tabbar{position:sticky; top:0; z-index:50; background:#060608ee; backdrop-filter:blur(8px); border-bottom:1px solid #16181d;}
+  nav.tabbar .inner{max-width:1360px; margin:0 auto; display:flex; gap:6px; padding:10px 40px; overflow-x:auto;}
+  nav.tabbar a{font-size:13px; color:#aeb4bc; padding:8px 14px; border-radius:10px; white-space:nowrap;}
+  nav.tabbar a:hover{background:#111318;}
+  nav.tabbar a.on{background:color-mix(in srgb,var(--ar) 16%,transparent); color:var(--ar);}
+
+  main{max-width:1360px; margin:0 auto; padding:26px 40px 90px;}
+  section{margin-bottom:46px; scroll-margin-top:64px;}
+  section > h2{font-size:19px; margin:0 0 4px; letter-spacing:-.3px;}
+  section > .desc{color:var(--muted); font-size:13px; margin-bottom:18px;}
+
+  /* context overview */
+  .ctx-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:14px;}
+  .ctx{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:15px; border-top:3px solid var(--ar);}
+  .ctx h3{margin:0 0 3px; font-size:15px;}
+  .ctx .en{font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:.5px; text-transform:uppercase;}
+  .ctx ul{margin:11px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:5px;}
+  .ctx li{font-size:12px; color:#c3c9d2; display:flex; align-items:center; gap:7px;}
+  .ctx li b{width:6px; height:6px; border-radius:50%; flex:none;}
+
+  /* entity cards */
+  .ctx-block{margin-bottom:26px;}
+  .ctx-block > h3{font-size:15px; margin:0 0 12px; display:flex; align-items:center; gap:9px;}
+  .ctx-block > h3 .en{font-family:var(--mono); font-size:10px; color:var(--muted); font-weight:400; letter-spacing:.5px;}
+  .cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); gap:14px; align-items:start;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; border-left:3px solid var(--line);}
+  .card.ar{border-left-color:var(--ar);} .card.ent{border-left-color:var(--ent);}
+  .card.vo{border-left-color:var(--vo);} .card.rm{border-left-color:var(--rm);}
+  .card .hd{padding:11px 13px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line);}
+  .card .hd .nm{font-weight:700; font-size:14px; font-family:var(--mono);}
+  .badge{font-size:9px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; padding:3px 7px; border-radius:6px;}
+  .badge.ar{background:color-mix(in srgb,var(--ar) 18%,transparent); color:var(--ar);}
+  .badge.ent{background:color-mix(in srgb,var(--ent) 18%,transparent); color:var(--ent);}
+  .badge.vo{background:color-mix(in srgb,var(--vo) 18%,transparent); color:var(--vo);}
+  .badge.rm{background:color-mix(in srgb,var(--rm) 18%,transparent); color:var(--rm);}
+  .fields{padding:6px 13px 10px;}
+  .f{display:flex; gap:8px; padding:5px 0; font-size:12px; border-bottom:1px dashed #1e222a;}
+  .f:last-child{border-bottom:0;}
+  .f .fn{font-family:var(--mono); color:#d7dce3; flex:none;}
+  .f .ft{color:var(--vo); font-family:var(--mono); font-size:11px;}
+  .f .fnote{color:var(--muted); font-size:11px; margin-left:auto; text-align:right;}
+  .rel{padding:9px 13px; background:var(--bg2); border-top:1px solid var(--line); font-size:11px; color:var(--muted); line-height:1.7;}
+  .rel b{color:#c3c9d2; font-weight:600;}
+  .inv{padding:9px 13px; border-top:1px solid var(--line); font-size:11px; color:#e0b48a; line-height:1.7; background:color-mix(in srgb,var(--evt) 6%,transparent);}
+  .card .desc{padding:9px 13px 3px; font-size:12px; color:#aab0b9; line-height:1.55;}
+
+  /* ERD */
+  .erd-wrap{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; overflow-x:auto;}
+  .erd{min-width:1150px; width:100%; height:auto; display:block;}
+  .erd .nname{fill:#E7EAF0; font-size:13.5px; font-weight:700; font-family:var(--mono);}
+  .erd .ntype{fill:#8A929D; font-size:9px; font-family:var(--mono); letter-spacing:.5px;}
+  .erd .nbox{fill:var(--panel2); stroke:var(--line); stroke-width:1;}
+  .erd .elabel{font-family:var(--mono); font-size:11px; fill:#c3c9d2; stroke:#0b0c10; stroke-width:3px; paint-order:stroke;}
+  .erd .edge{stroke:#3a414c; stroke-width:1.5; fill:none;}
+  .erd .edge.ref{stroke:#46505c; stroke-dasharray:5 4;}
+  .erd .edge.evt{stroke:#7a6836; stroke-dasharray:5 4;}
+
+  /* events table */
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{color:var(--muted); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.5px;}
+  td .ev{font-family:var(--mono); color:var(--evt); font-weight:600;}
+  td .mono{font-family:var(--mono); font-size:11px; color:#c3c9d2;}
+  tr:hover td{background:#0f1116;}
+
+  /* state machines */
+  .sm{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px; margin-bottom:14px;}
+  .sm h4{margin:0 0 14px; font-size:14px;}
+  .flow{display:flex; align-items:center; flex-wrap:wrap; gap:9px;}
+  .st{font-family:var(--mono); font-size:12px; padding:7px 12px; border-radius:8px; background:var(--panel2); border:1px solid var(--line);}
+  .st.start{border-color:var(--vo); color:var(--vo);}
+  .st.end{border-color:var(--ar); color:var(--ar);}
+  .st.warn{border-color:var(--evt); color:var(--evt);}
+  .arw{color:var(--muted); font-size:13px; display:flex; flex-direction:column; align-items:center;}
+  .arw small{font-size:9px; color:var(--muted); font-family:var(--mono);}
+
+  /* map table */
+  .maprow td:first-child{font-weight:600;}
+  .pill{display:inline-block; font-family:var(--mono); font-size:11px; padding:2px 8px; border-radius:6px; background:var(--panel2); border:1px solid var(--line); margin:2px 4px 2px 0;}
+  .note-box{background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--rm); border-radius:10px; padding:14px 16px; font-size:12.5px; color:#c3c9d2; line-height:1.7;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>추노 <b>Chuno</b> — 도메인 설계</h1>
+  <p>MVP UI(와이어프레임)에서 역으로 도출한 DDD 도메인 모델. NestJS + TypeORM · DDD · EDA(Kafka) · BullMQ 대상.</p>
+  <p style="color:#6f7680;">2026-07-01 · 설계 초안 · <span style="font-family:var(--mono)">docs/domain/index.html</span></p>
+  <div class="legend">
+    <span class="lg"><i style="background:var(--ar)"></i>Aggregate Root (일관성 경계)</span>
+    <span class="lg"><i style="background:var(--ent)"></i>Entity</span>
+    <span class="lg"><i style="background:var(--vo)"></i>Value Object</span>
+    <span class="lg"><i style="background:var(--rm)"></i>Read Model / Projection</span>
+    <span class="lg"><i style="background:var(--evt)"></i>Domain Event</span>
+  </div>
+</header>
+
+<nav class="tabbar"><div class="inner">
+  <a href="#overview" class="on">컨텍스트 개요</a>
+  <a href="#model">애그리거트 & 엔티티</a>
+  <a href="#erd">관계도</a>
+  <a href="#events">도메인 이벤트</a>
+  <a href="#states">상태 머신</a>
+  <a href="#map">화면 ↔ 도메인</a>
+</div></nav>
+
+<main>
+
+<!-- ========== 컨텍스트 개요 ========== -->
+<section id="overview">
+  <h2>바운디드 컨텍스트 (7)</h2>
+  <div class="desc">각 컨텍스트 = core-api의 모듈 경계 후보. 컨텍스트 간에는 도메인 이벤트로 느슨하게 연결(EDA).</div>
+  <div class="ctx-grid">
+    <div class="ctx" style="border-top-color:var(--ar)">
+      <div class="en">Identity &amp; Access</div><h3>인증 · 사용자</h3>
+      <ul>
+        <li><b style="background:var(--ar)"></b>User</li>
+        <li><b style="background:var(--ent)"></b>AuthIdentity</li>
+        <li><b style="background:var(--ent)"></b>UserConsent</li>
+        <li><b style="background:var(--vo)"></b>Nickname · RunnerLevel</li>
+      </ul>
+    </div>
+    <div class="ctx" style="border-top-color:var(--ent)">
+      <div class="en">Room</div><h3>런닝방 · 매칭</h3>
+      <ul>
+        <li><b style="background:var(--ar)"></b>Room</li>
+        <li><b style="background:var(--ent)"></b>Participant</li>
+        <li><b style="background:var(--vo)"></b>RaceGoal · RoomStatus</li>
+      </ul>
+    </div>
+    <div class="ctx" style="border-top-color:var(--vo)">
+      <div class="en">Race</div><h3>경주 (실시간)</h3>
+      <ul>
+        <li><b style="background:var(--ar)"></b>Race</li>
+        <li><b style="background:var(--ent)"></b>RaceParticipant</li>
+        <li><b style="background:var(--vo)"></b>Progress · RunnerStatus</li>
+      </ul>
+    </div>
+    <div class="ctx" style="border-top-color:var(--rm)">
+      <div class="en">Scoring &amp; Ranking</div><h3>점수 · 랭킹</h3>
+      <ul>
+        <li><b style="background:var(--ar)"></b>RaceResult · RunnerStats</li>
+        <li><b style="background:var(--vo)"></b>Score · Tier</li>
+        <li><b style="background:var(--rm)"></b>Leaderboard</li>
+      </ul>
+    </div>
+    <div class="ctx" style="border-top-color:var(--evt)">
+      <div class="en">Points &amp; Rewards</div><h3>포인트 · 보상</h3>
+      <ul>
+        <li><b style="background:var(--ar)"></b>PointAccount</li>
+        <li><b style="background:var(--ent)"></b>PointTransaction · Entitlement</li>
+        <li><b style="background:var(--vo)"></b>StoreItem</li>
+      </ul>
+    </div>
+    <div class="ctx" style="border-top-color:var(--ent)">
+      <div class="en">Notification</div><h3>알림</h3>
+      <ul>
+        <li><b style="background:var(--ent)"></b>Notification · DeviceToken</li>
+        <li><b style="background:var(--rm)"></b>이벤트 구독 → 푸시</li>
+      </ul>
+    </div>
+    <div class="ctx" style="border-top-color:var(--ar)">
+      <div class="en">File / Media</div><h3>파일 · 미디어</h3>
+      <ul>
+        <li><b style="background:var(--ar)"></b>File</li>
+        <li><b style="background:var(--vo)"></b>FileKind</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 애그리거트 & 엔티티 ========== -->
+<section id="model">
+  <h2>애그리거트 &amp; 엔티티</h2>
+  <div class="desc">애그리거트 루트 = 트랜잭션/일관성 경계. 리포지토리는 애그리거트 단위로만 저장·조회.</div>
+
+  <!-- Identity -->
+  <div class="ctx-block">
+    <h3>🔐 인증 · 사용자 <span class="en">Identity &amp; Access</span></h3>
+    <div class="cards">
+      <div class="card ar">
+        <div class="hd"><span class="nm">User</span><span class="badge ar">Aggregate</span></div>
+        <div class="desc">앱 사용자 계정. 닉네임·레벨·티어를 지닌 프로필의 주체이자 모든 활동의 기준점.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">id</span><span class="ft">UserId</span></div>
+          <div class="f"><span class="fn">nickname</span><span class="ft">Nickname</span><span class="fnote">2~12자·고유</span></div>
+          <div class="f"><span class="fn">level</span><span class="ft">RunnerLevel</span></div>
+          <div class="f"><span class="fn">tier</span><span class="ft">Tier</span><span class="fnote">파생(누적점수)</span></div>
+          <div class="f"><span class="fn">profileImageFileId</span><span class="ft">FileId?</span><span class="fnote">프로필 사진 참조</span></div>
+          <div class="f"><span class="fn">joinOn</span><span class="ft">Date</span><span class="fnote">가입·온보딩 시각</span></div>
+        </div>
+        <div class="rel"><b>관계:</b> 1 ── N <b>AuthIdentity</b> · 1 ── 1 <b>RunnerStats</b>/<b>PointAccount</b>(참조) · 1 ── 1 <b>File</b>(profileImageFileId 참조)</div>
+      </div>
+      <div class="card ent">
+        <div class="hd"><span class="nm">AuthIdentity</span><span class="badge ent">Entity</span></div>
+        <div class="desc">소셜 로그인 수단(카카오·구글·애플)과 User를 잇는 연결. provider별로 고유.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">id</span><span class="ft">AuthIdentityId</span></div>
+          <div class="f"><span class="fn">userId</span><span class="ft">UserId</span></div>
+          <div class="f"><span class="fn">provider</span><span class="ft">AuthProvider</span><span class="fnote">KAKAO·GOOGLE·APPLE</span></div>
+          <div class="f"><span class="fn">providerUserId</span><span class="ft">string</span></div>
+        </div>
+        <div class="inv">UNIQUE(provider, providerUserId) — 소셜 계정당 1 User</div>
+      </div>
+      <div class="card ent">
+        <div class="hd"><span class="nm">UserConsent</span><span class="badge ent">Entity</span></div>
+        <div class="desc">약관·개인정보·위치 동의를 "받았다"는 사실의 append 기록. User 필드로 흡수하지 않고 별도 이력으로 분리.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">id</span><span class="ft">UserConsentId</span></div>
+          <div class="f"><span class="fn">userId</span><span class="ft">UserId</span></div>
+          <div class="f"><span class="fn">type</span><span class="ft">ConsentType</span><span class="fnote">TERMS·PRIVACY·LOCATION·MARKETING?</span></div>
+          <div class="f"><span class="fn">documentVersion</span><span class="ft">string</span><span class="fnote">동의한 문서 버전, 예 "v1.0"</span></div>
+          <div class="f"><span class="fn">agreedAt</span><span class="ft">Date</span></div>
+          <div class="f"><span class="fn">revokedAt</span><span class="ft">Date?</span><span class="fnote">철회 시각 · 위치동의는 철회 가능</span></div>
+        </div>
+        <div class="rel"><b>관계:</b> N ── 1 <b>User</b>(동의 이력)</div>
+        <div class="inv">약관 개정 시 재동의는 새 레코드로 append — type·documentVersion·agreedAt으로 "언제 어떤 버전에 동의했는지" 법적 입증(위치정보법·개인정보보호법·스토어 심사). 필수(TERMS·PRIVACY·LOCATION)/선택(MARKETING) 구분은 스키마 변경 없이 type으로 처리</div>
+      </div>
+      <div class="card vo">
+        <div class="hd"><span class="nm">값 객체</span><span class="badge vo">Value Object</span></div>
+        <div class="desc">식별자가 아닌 '값'으로 다루는 불변 타입. 유효성 규칙을 스스로 보장한다.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">Nickname</span><span class="fnote">2~12자, 유효성·고유</span></div>
+          <div class="f"><span class="fn">RunnerLevel</span><span class="fnote">BEGINNER·INTERMEDIATE·ADVANCED</span></div>
+          <div class="f"><span class="fn">Tier</span><span class="fnote">BRONZE~DIAMOND</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Room -->
+  <div class="ctx-block">
+    <h3>🏁 런닝방 · 매칭 <span class="en">Room</span></h3>
+    <div class="cards">
+      <div class="card ar">
+        <div class="hd"><span class="nm">Room</span><span class="badge ar">Aggregate</span></div>
+        <div class="desc">한 번의 경주를 위한 모집 단위. 목표·시작시각·정원을 정하고 참가자를 모은다.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">id</span><span class="ft">RoomId</span></div>
+          <div class="f"><span class="fn">hostUserId</span><span class="ft">UserId</span></div>
+          <div class="f"><span class="fn">name</span><span class="ft">string</span></div>
+          <div class="f"><span class="fn">goal</span><span class="ft">RaceGoal</span><span class="fnote">거리+제한시간</span></div>
+          <div class="f"><span class="fn">maxParticipants</span><span class="ft">int</span></div>
+          <div class="f"><span class="fn">scheduledStartAt</span><span class="ft">Date</span></div>
+          <div class="f"><span class="fn">status</span><span class="ft">RoomStatus</span></div>
+          <div class="f"><span class="fn">participants</span><span class="ft">Participant[]</span></div>
+        </div>
+        <div class="rel"><b>관계:</b> 1 ── N <b>Participant</b> · 1 ──▶ <b>Race</b>(LIVE 전환 시 생성)</div>
+        <div class="inv">불변식: 2 ≤ max · 정원 초과 join 불가 · 시작 후 join 불가 · 시작 시각 2명 미만 → CANCELLED</div>
+      </div>
+      <div class="card ent">
+        <div class="hd"><span class="nm">Participant</span><span class="badge ent">Entity</span></div>
+        <div class="desc">특정 방에 참가한 한 명. Room 애그리거트 내부에서만 존재하는 자식 엔티티.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">userId</span><span class="ft">UserId</span></div>
+          <div class="f"><span class="fn">joinedAt</span><span class="ft">Date</span></div>
+          <div class="f"><span class="fn">isHost</span><span class="ft">bool</span></div>
+        </div>
+        <div class="rel">Room 애그리거트 내부 자식(별도 조회 X)</div>
+      </div>
+      <div class="card vo">
+        <div class="hd"><span class="nm">값 객체</span><span class="badge vo">Value Object</span></div>
+        <div class="desc">방의 목표(RaceGoal)와 상태(RoomStatus)를 표현하는 불변 값.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">RaceGoal</span><span class="fnote">targetKm, limitMinutes</span></div>
+          <div class="f"><span class="fn">RoomStatus</span><span class="fnote">RECRUITING·STARTING·LIVE·FINISHED·CANCELLED</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Race -->
+  <div class="ctx-block">
+    <h3>🏃 경주 (실시간) <span class="en">Race</span></h3>
+    <div class="cards">
+      <div class="card ar">
+        <div class="hd"><span class="nm">Race</span><span class="badge ar">Aggregate</span></div>
+        <div class="desc">방이 출발하면 생성되는 실시간 경주 세션. 진행을 모아 순위를 매기고 종료를 판정.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">id</span><span class="ft">RaceId</span></div>
+          <div class="f"><span class="fn">roomId</span><span class="ft">RoomId</span></div>
+          <div class="f"><span class="fn">goal</span><span class="ft">RaceGoal</span></div>
+          <div class="f"><span class="fn">startedAt</span><span class="ft">Date</span><span class="fnote">서버시계 동시출발</span></div>
+          <div class="f"><span class="fn">endedAt</span><span class="ft">Date?</span></div>
+          <div class="f"><span class="fn">status</span><span class="ft">RaceStatus</span><span class="fnote">LIVE·FINISHED</span></div>
+          <div class="f"><span class="fn">runners</span><span class="ft">RaceParticipant[]</span></div>
+        </div>
+        <div class="rel"><b>관계:</b> 1 ── N <b>RaceParticipant</b> · 종료 시 N개 <b>RaceResult</b> 생성</div>
+        <div class="inv">종료 조건: 전원 완주 OR 제한시간 경과 · finalize 멱등</div>
+      </div>
+      <div class="card ent">
+        <div class="hd"><span class="nm">RaceParticipant</span><span class="badge ent">Entity</span></div>
+        <div class="desc">경주 중 한 러너의 실시간 진행 상태(거리·상태). 좌표 없이 거리만 보고받는다.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">userId</span><span class="ft">UserId</span></div>
+          <div class="f"><span class="fn">distanceKm</span><span class="ft">Progress</span><span class="fnote">좌표 없음</span></div>
+          <div class="f"><span class="fn">status</span><span class="ft">RunnerStatus</span></div>
+          <div class="f"><span class="fn">finishedAt</span><span class="ft">Date?</span></div>
+          <div class="f"><span class="fn">lastReportAt</span><span class="ft">Date</span></div>
+        </div>
+        <div class="inv">진행 보고는 거리(km)만 · anti-cheat: MIN_FEASIBLE_PACE 위반(순간이동/비현실 페이스) 리젝</div>
+      </div>
+      <div class="card vo">
+        <div class="hd"><span class="nm">값 객체</span><span class="badge vo">Value Object</span></div>
+        <div class="desc">진행률(Progress)과 러너 상태(RunnerStatus)를 담는 불변 값.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">Progress</span><span class="fnote">distanceKm (좌표 미포함)</span></div>
+          <div class="f"><span class="fn">RunnerStatus</span><span class="fnote">RUNNING·FINISHED·DNF·DISCONNECTED</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scoring & Ranking -->
+  <div class="ctx-block">
+    <h3>🏆 점수 · 랭킹 <span class="en">Scoring &amp; Ranking</span></h3>
+    <div class="cards">
+      <div class="card ar">
+        <div class="hd"><span class="nm">RaceResult</span><span class="badge ar">Aggregate</span></div>
+        <div class="desc">경주 종료 시 유저 1명에 대해 확정되는 성적 기록. 기록·랭킹·포인트의 원천.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">id</span><span class="ft">RaceResultId</span></div>
+          <div class="f"><span class="fn">raceId · userId</span><span class="ft">Id</span></div>
+          <div class="f"><span class="fn">finished</span><span class="ft">bool</span></div>
+          <div class="f"><span class="fn">distanceKm</span><span class="ft">number</span></div>
+          <div class="f"><span class="fn">finishTime</span><span class="ft">number?</span></div>
+          <div class="f"><span class="fn">rank</span><span class="ft">int</span></div>
+          <div class="f"><span class="fn">score</span><span class="ft">Score</span></div>
+          <div class="f"><span class="fn">pointsAwarded</span><span class="ft">int</span></div>
+        </div>
+        <div class="rel">기록/랭킹/포인트의 원천. 날짜 윈도우로 주간·월간 집계.</div>
+      </div>
+      <div class="card ar">
+        <div class="hd"><span class="nm">RunnerStats</span><span class="badge ar">Aggregate</span></div>
+        <div class="desc">유저별 누적 전적(총점·거리·경기수·승수)과 티어를 관리하는 집계.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">userId</span><span class="ft">UserId</span></div>
+          <div class="f"><span class="fn">totalScore</span><span class="ft">int</span></div>
+          <div class="f"><span class="fn">totalDistanceKm</span><span class="ft">number</span></div>
+          <div class="f"><span class="fn">raceCount · winCount</span><span class="ft">int</span></div>
+          <div class="f"><span class="fn">tier</span><span class="ft">Tier</span></div>
+        </div>
+        <div class="rel">RaceFinished 구독 → 누적 갱신</div>
+      </div>
+      <div class="card vo">
+        <div class="hd"><span class="nm">Score</span><span class="badge vo">Value Object</span></div>
+        <div class="desc">경주 1건의 점수를 4개 축으로 분해해 담는 계산 결과 값. 서버가 권위적으로 산출.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">total</span><span class="fnote">≤ 1000</span></div>
+          <div class="f"><span class="fn">rankScore</span><span class="fnote">≤ 300</span></div>
+          <div class="f"><span class="fn">distanceScore</span><span class="fnote">≤ 200</span></div>
+          <div class="f"><span class="fn">finishBonus</span><span class="fnote">220</span></div>
+          <div class="f"><span class="fn">marginScore</span><span class="fnote">≤ 100 (완주 여유)</span></div>
+        </div>
+        <div class="inv">서버 권위 계산 · 배점 밸런싱은 MVP 이후</div>
+      </div>
+      <div class="card rm">
+        <div class="hd"><span class="nm">Leaderboard</span><span class="badge rm">Read Model</span></div>
+        <div class="desc">누적/주간/월간 순위를 빠르게 조회하기 위한 읽기 전용 투영(Redis ZSET).</div>
+        <div class="fields">
+          <div class="f"><span class="fn">scope</span><span class="ft">전체·주간·월간</span></div>
+          <div class="f"><span class="fn">store</span><span class="ft">Redis ZSET</span></div>
+        </div>
+        <div class="rel">RaceResult/Stats 투영 · 명시적 Season 테이블 없음</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Points -->
+  <div class="ctx-block">
+    <h3>🎟️ 포인트 · 보상 <span class="en">Points &amp; Rewards</span></h3>
+    <div class="cards">
+      <div class="card ar">
+        <div class="hd"><span class="nm">PointAccount</span><span class="badge ar">Aggregate</span></div>
+        <div class="desc">유저의 포인트 잔액과 거래 내역을 관리하는 지갑. 잔액 일관성의 경계.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">userId</span><span class="ft">UserId</span></div>
+          <div class="f"><span class="fn">balance</span><span class="ft">int</span></div>
+          <div class="f"><span class="fn">transactions</span><span class="ft">PointTransaction[]</span></div>
+        </div>
+        <div class="inv">잔액 ≥ 0 · 적립/차감은 트랜잭션으로만</div>
+      </div>
+      <div class="card ent">
+        <div class="hd"><span class="nm">PointTransaction</span><span class="badge ent">Entity</span></div>
+        <div class="desc">포인트 적립·차감 한 건의 불변 기록(사유·참조 포함).</div>
+        <div class="fields">
+          <div class="f"><span class="fn">amount</span><span class="ft">int</span><span class="fnote">+/-</span></div>
+          <div class="f"><span class="fn">reason</span><span class="ft">PointReason</span><span class="fnote">RACE_REWARD·PURCHASE</span></div>
+          <div class="f"><span class="fn">refId</span><span class="ft">string</span></div>
+        </div>
+      </div>
+      <div class="card ent">
+        <div class="hd"><span class="nm">Entitlement</span><span class="badge ent">Entity</span></div>
+        <div class="desc">구매로 부여된 권리(예: 광고 제거)와 만료 시점.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">type</span><span class="ft">AD_FREE</span></div>
+          <div class="f"><span class="fn">expiresAt</span><span class="ft">Date</span></div>
+        </div>
+        <div class="rel">StoreItem(AD_REMOVAL_1M, 500P) 구매 결과</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification -->
+  <div class="ctx-block">
+    <h3>🔔 알림 <span class="en">Notification</span></h3>
+    <div class="cards">
+      <div class="card ent">
+        <div class="hd"><span class="nm">DeviceToken</span><span class="badge ent">Entity</span></div>
+        <div class="desc">푸시 발송 대상 기기 토큰. 유저당 여러 기기 가능.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">userId</span><span class="ft">UserId</span></div>
+          <div class="f"><span class="fn">token · platform</span><span class="ft">string</span></div>
+        </div>
+      </div>
+      <div class="card rm">
+        <div class="hd"><span class="nm">Notification</span><span class="badge rm">Projection</span></div>
+        <div class="desc">타 컨텍스트 이벤트를 구독해 생성되는 알림 발송 기록(순수 소비자).</div>
+        <div class="fields">
+          <div class="f"><span class="fn">type</span><span class="ft">NotiType</span><span class="fnote">RACE_STARTING·PARTICIPANT_JOINED·RESULT_READY</span></div>
+          <div class="f"><span class="fn">payload · sentAt</span><span class="ft">—</span></div>
+        </div>
+        <div class="rel">타 컨텍스트 이벤트 구독 → 푸시 발송(순수 소비자)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- File / Media -->
+  <div class="ctx-block">
+    <h3>🗂️ 파일 · 미디어 <span class="en">File / Media</span></h3>
+    <div class="cards">
+      <div class="card ar">
+        <div class="hd"><span class="nm">File</span><span class="badge ar">Aggregate</span></div>
+        <div class="desc">사진·영상 등 정적 파일 1건. S3에 저장하고 공개 URL로 서빙 — 프로필 사진 등이 이 파일을 참조한다.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">id</span><span class="ft">FileId</span></div>
+          <div class="f"><span class="fn">ownerUserId</span><span class="ft">UserId</span><span class="fnote">업로더</span></div>
+          <div class="f"><span class="fn">kind</span><span class="ft">FileKind</span><span class="fnote">IMAGE·VIDEO</span></div>
+          <div class="f"><span class="fn">mimeType</span><span class="ft">string</span><span class="fnote">image/jpeg·video/mp4</span></div>
+          <div class="f"><span class="fn">storageKey</span><span class="ft">string</span><span class="fnote">S3 키</span></div>
+          <div class="f"><span class="fn">url</span><span class="ft">string</span><span class="fnote">공개 URL</span></div>
+          <div class="f"><span class="fn">sizeBytes</span><span class="ft">int</span></div>
+          <div class="f"><span class="fn">createdOn</span><span class="ft">Date</span></div>
+        </div>
+        <div class="rel"><b>관계:</b> N ── 1 <b>User</b>(owner) · <b>User.profileImageFileId</b> ──▶ <b>File</b>(1·1 참조)</div>
+        <div class="inv">업로드 시 타입·용량 검증(이미지/영상), S3(로컬=LocalStack 버킷 chuno-uploads) 저장 후 공개 URL 발급</div>
+      </div>
+      <div class="card vo">
+        <div class="hd"><span class="nm">FileKind</span><span class="badge vo">Value Object</span></div>
+        <div class="desc">파일 종류 값객체</div>
+        <div class="fields">
+          <div class="f"><span class="fn">IMAGE</span><span class="fnote">사진</span></div>
+          <div class="f"><span class="fn">VIDEO</span><span class="fnote">영상</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 관계도 ========== -->
+<section id="erd">
+  <h2>관계도 (ERD)</h2>
+  <div class="desc">애그리거트/엔티티 간 관계와 카디널리티. <span style="color:var(--ar)">코랄=AR</span> · <span style="color:var(--ent)">파랑=Entity</span> · <span style="color:var(--rm)">보라=ReadModel</span> · <span style="color:#7a6836">점선=참조/이벤트</span>.</div>
+  <div class="erd-wrap">
+    <svg class="erd" viewBox="0 -78 1180 888" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arw" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#4a525d"/></marker>
+        <marker id="arwE" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#7a6836"/></marker>
+      </defs>
+
+      <!-- edges first (under opaque nodes) -->
+      <!-- spine: User → Room → Race → RaceResult → RunnerStats (계단) -->
+      <line class="edge" x1="135" y1="106" x2="250" y2="220" marker-end="url(#arw)"/>
+      <line class="edge" x1="250" y1="266" x2="365" y2="375" marker-end="url(#arw)"/>
+      <line class="edge" x1="365" y1="421" x2="480" y2="530" marker-end="url(#arw)"/>
+      <line class="edge" x1="480" y1="576" x2="595" y2="685" marker-end="url(#arw)"/>
+      <!-- satellites (부모 오른쪽 짧은 커넥터) -->
+      <line class="edge" x1="210" y1="83"  x2="320" y2="63"  marker-end="url(#arw)"/>
+      <line class="edge" x1="210" y1="83"  x2="320" y2="133" marker-end="url(#arw)"/>
+      <line class="edge" x1="210" y1="83"  x2="335" y2="193" marker-end="url(#arw)"/>
+      <line class="edge" x1="325" y1="243" x2="420" y2="243" marker-end="url(#arw)"/>
+      <line class="edge" x1="440" y1="398" x2="535" y2="398" marker-end="url(#arw)"/>
+      <!-- point 계열 branch -->
+      <line class="edge" x1="555" y1="553" x2="670" y2="598" marker-end="url(#arw)"/>
+      <line class="edge" x1="745" y1="621" x2="845" y2="705" marker-end="url(#arw)"/>
+      <line class="edge" x1="770" y1="621" x2="1030" y2="705" marker-end="url(#arw)"/>
+      <!-- File ↔ User (좌상단) -->
+      <path class="edge ref" d="M110,60 L110,-12" marker-end="url(#arw)"/>
+      <line class="edge" x1="165" y1="-12" x2="165" y2="60" marker-end="url(#arw)"/>
+      <!-- references (점선) -->
+      <path class="edge ref" d="M75,106 Q55,772 518,712" marker-end="url(#arw)"/>
+      <path class="edge ref" d="M100,106 Q332,796 743,626" marker-end="url(#arw)"/>
+      <!-- events (점선, Race·RaceResult ⇢ Notification) -->
+      <path class="edge evt" d="M440,388 Q780,240 975,103" marker-end="url(#arwE)"/>
+      <path class="edge evt" d="M555,545 Q905,345 1003,103" marker-end="url(#arwE)"/>
+
+      <!-- nodes -->
+      <g><rect class="nbox" x="60" y="-58" width="150" height="46" rx="9"/><rect x="60" y="-58" width="4" height="46" rx="2" fill="#FF6B4A"/><text class="nname" x="76" y="-37">File</text><text class="ntype" x="76" y="-21">AGGREGATE</text></g>
+      <g><rect class="nbox" x="60" y="60" width="150" height="46" rx="9"/><rect x="60" y="60" width="4" height="46" rx="2" fill="#FF6B4A"/><text class="nname" x="76" y="81">User</text><text class="ntype" x="76" y="97">AGGREGATE</text></g>
+      <g><rect class="nbox" x="320" y="40" width="150" height="46" rx="9"/><rect x="320" y="40" width="4" height="46" rx="2" fill="#5B9BFF"/><text class="nname" x="336" y="61">AuthIdentity</text><text class="ntype" x="336" y="77">ENTITY</text></g>
+      <g><rect class="nbox" x="320" y="110" width="150" height="46" rx="9"/><rect x="320" y="110" width="4" height="46" rx="2" fill="#5B9BFF"/><text class="nname" x="336" y="131">DeviceToken</text><text class="ntype" x="336" y="147">ENTITY</text></g>
+      <g><rect class="nbox" x="335" y="170" width="150" height="46" rx="9"/><rect x="335" y="170" width="4" height="46" rx="2" fill="#5B9BFF"/><text class="nname" x="351" y="191">UserConsent</text><text class="ntype" x="351" y="207">ENTITY</text></g>
+      <g><rect class="nbox" x="175" y="220" width="150" height="46" rx="9"/><rect x="175" y="220" width="4" height="46" rx="2" fill="#FF6B4A"/><text class="nname" x="191" y="241">Room</text><text class="ntype" x="191" y="257">AGGREGATE</text></g>
+      <g><rect class="nbox" x="420" y="220" width="150" height="46" rx="9"/><rect x="420" y="220" width="4" height="46" rx="2" fill="#5B9BFF"/><text class="nname" x="436" y="241">Participant</text><text class="ntype" x="436" y="257">ENTITY</text></g>
+      <g><rect class="nbox" x="290" y="375" width="150" height="46" rx="9"/><rect x="290" y="375" width="4" height="46" rx="2" fill="#FF6B4A"/><text class="nname" x="306" y="396">Race</text><text class="ntype" x="306" y="412">AGGREGATE</text></g>
+      <g><rect class="nbox" x="535" y="375" width="150" height="46" rx="9"/><rect x="535" y="375" width="4" height="46" rx="2" fill="#5B9BFF"/><text class="nname" x="551" y="396">RaceParticipant</text><text class="ntype" x="551" y="412">ENTITY</text></g>
+      <g><rect class="nbox" x="405" y="530" width="150" height="46" rx="9"/><rect x="405" y="530" width="4" height="46" rx="2" fill="#FF6B4A"/><text class="nname" x="421" y="551">RaceResult</text><text class="ntype" x="421" y="567">AGGREGATE</text></g>
+      <g><rect class="nbox" x="670" y="575" width="150" height="46" rx="9"/><rect x="670" y="575" width="4" height="46" rx="2" fill="#FF6B4A"/><text class="nname" x="686" y="596">PointAccount</text><text class="ntype" x="686" y="612">AGGREGATE</text></g>
+      <g><rect class="nbox" x="520" y="685" width="150" height="46" rx="9"/><rect x="520" y="685" width="4" height="46" rx="2" fill="#FF6B4A"/><text class="nname" x="536" y="706">RunnerStats</text><text class="ntype" x="536" y="722">AGGREGATE</text></g>
+      <g><rect class="nbox" x="770" y="705" width="150" height="46" rx="9"/><rect x="770" y="705" width="4" height="46" rx="2" fill="#5B9BFF"/><text class="nname" x="786" y="726">PointTransaction</text><text class="ntype" x="786" y="742">ENTITY</text></g>
+      <g><rect class="nbox" x="955" y="705" width="150" height="46" rx="9"/><rect x="955" y="705" width="4" height="46" rx="2" fill="#5B9BFF"/><text class="nname" x="971" y="726">Entitlement</text><text class="ntype" x="971" y="742">ENTITY</text></g>
+      <g><rect class="nbox" x="915" y="55" width="150" height="46" rx="9"/><rect x="915" y="55" width="4" height="46" rx="2" fill="#B98BFF"/><text class="nname" x="931" y="76">Notification</text><text class="ntype" x="931" y="92">READ MODEL</text></g>
+
+      <!-- edge labels (top) -->
+      <text class="elabel" x="248" y="60">1 · N</text>
+      <text class="elabel" x="248" y="130">1 · N</text>
+      <text class="elabel" x="285" y="158">1 · N</text>
+      <text class="elabel" x="120" y="176">1 · N host</text>
+      <text class="elabel" x="232" y="326">1 ▶ LIVE</text>
+      <text class="elabel" x="352" y="485">1 · N 종료</text>
+      <text class="elabel" x="470" y="642">▶ 갱신</text>
+      <text class="elabel" x="352" y="236">1 · N</text>
+      <text class="elabel" x="463" y="391">1 · N</text>
+      <text class="elabel" x="566" y="548">▶ 적립</text>
+      <text class="elabel" x="760" y="672">1 · N</text>
+      <text class="elabel" x="902" y="656">1 · N</text>
+      <text class="elabel" x="58" y="470">1 · 1 ref</text>
+      <text class="elabel" x="330" y="726">1 · 1 ref</text>
+      <text class="elabel" x="26" y="28">1·1 ref</text>
+      <text class="elabel" x="172" y="34">N·1 owner</text>
+      <text class="elabel" x="792" y="150">이벤트 구독 → 푸시</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ========== 도메인 이벤트 ========== -->
+<section id="events">
+  <h2>도메인 이벤트 (EDA)</h2>
+  <div class="desc">컨텍스트 간 통신은 이벤트로. 스케줄러(BullMQ/@Interval)가 예약 시각에 방을 전환, 종료 시 점수·포인트·알림이 이벤트로 연쇄.</div>
+  <table>
+    <thead><tr><th style="width:22%">이벤트</th><th style="width:16%">발행</th><th style="width:30%">구독 → 처리</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr><td><span class="ev">UserOnboarded</span></td><td class="mono">Identity</td><td class="mono">Stats·Points(계정 초기화)</td><td>온보딩 완료</td></tr>
+      <tr><td><span class="ev">RoomCreated</span></td><td class="mono">Room</td><td class="mono">—</td><td>홈 목록 노출</td></tr>
+      <tr><td><span class="ev">ParticipantJoined</span></td><td class="mono">Room</td><td class="mono">Notification(방장에게)</td><td>실시간 로비 갱신(WS)</td></tr>
+      <tr><td><span class="ev">RoomStarting</span></td><td class="mono">Scheduler→Room</td><td class="mono">Notification("곧 시작")</td><td>T-Δ 카운트다운</td></tr>
+      <tr><td><span class="ev">RoomCancelled</span></td><td class="mono">Room</td><td class="mono">Notification·Points(환불 시)</td><td>시작 시 2명 미만</td></tr>
+      <tr><td><span class="ev">RaceStarted</span></td><td class="mono">Race</td><td class="mono">Realtime(WS join)</td><td>동시 출발</td></tr>
+      <tr><td><span class="ev">RunnerFinished</span></td><td class="mono">Race</td><td class="mono">Race(종료 판정)</td><td>목표거리 도달</td></tr>
+      <tr><td><span class="ev">RaceFinished</span></td><td class="mono">Race</td><td class="mono">Scoring → Points → Stats → Notification</td><td>핵심 연쇄</td></tr>
+      <tr><td><span class="ev">ScoreCalculated</span></td><td class="mono">Scoring</td><td class="mono">Points(적립)·Leaderboard(갱신)</td><td>RaceResult 저장</td></tr>
+      <tr><td><span class="ev">PointsAwarded</span></td><td class="mono">Points</td><td class="mono">Notification(선택)</td><td>Score 연동</td></tr>
+      <tr><td><span class="ev">ItemPurchased</span></td><td class="mono">Points</td><td class="mono">Entitlement(광고제거 부여)</td><td>스토어</td></tr>
+    </tbody>
+  </table>
+  <div style="margin-top:14px;" class="note-box">
+    ⚡ <b>고빈도 진행 보고</b>(RunnerProgressed)는 도메인 이벤트/Kafka가 아니라 <b>socket.io 브로드캐스트</b>로 처리(초당 다수). 이벤트버스는 "완주/종료" 같은 상태 전이 사실에만 사용해 부하를 낮춘다.
+  </div>
+</section>
+
+<!-- ========== 상태 머신 ========== -->
+<section id="states">
+  <h2>상태 머신</h2>
+  <div class="desc">두 핵심 라이프사이클: 방(Room)과 경주 참가자(RaceParticipant).</div>
+
+  <div class="sm">
+    <h4>Room 상태</h4>
+    <div class="flow">
+      <span class="st start">RECRUITING</span>
+      <span class="arw">▶<small>예약 T-Δ</small></span>
+      <span class="st">STARTING</span>
+      <span class="arw">▶<small>카운트다운</small></span>
+      <span class="st">LIVE</span>
+      <span class="arw">▶<small>전원완주/시간초과</small></span>
+      <span class="st end">FINISHED</span>
+      <span style="width:24px;"></span>
+      <span class="st warn">CANCELLED</span>
+      <span class="arw" style="transform:rotate(180deg)">▶</span>
+      <span class="st" style="opacity:.6">RECRUITING/STARTING</span>
+      <small style="color:var(--muted); font-family:var(--mono);">2명 미만</small>
+    </div>
+  </div>
+
+  <div class="sm">
+    <h4>RaceParticipant 상태 (LIVE 중)</h4>
+    <div class="flow">
+      <span class="st start">RUNNING</span>
+      <span class="arw">▶<small>목표거리</small></span>
+      <span class="st end">FINISHED</span>
+      <span style="width:20px;"></span>
+      <span class="st start" style="opacity:.6">RUNNING</span>
+      <span class="arw">▶<small>시간초과/포기</small></span>
+      <span class="st warn">DNF</span>
+      <span style="width:20px;"></span>
+      <span class="st start" style="opacity:.6">RUNNING</span>
+      <span class="arw">⇄<small>끊김/복귀</small></span>
+      <span class="st">DISCONNECTED</span>
+    </div>
+    <div style="margin-top:12px; font-size:11.5px; color:var(--muted); line-height:1.7;">
+      DISCONNECTED 중에도 <b style="color:#c3c9d2">로컬 GPS는 계속 거리 측정</b> → 복귀 시 재동기화. DNF도 달린 거리는 점수에 반영(완주 보너스만 0).
+    </div>
+  </div>
+</section>
+
+<!-- ========== 화면 ↔ 도메인 ========== -->
+<section id="map">
+  <h2>화면 ↔ 도메인 매핑</h2>
+  <div class="desc">프로토타입 화면이 어떤 애그리거트/유스케이스에 대응하는지.</div>
+  <table>
+    <thead><tr><th style="width:22%">화면</th><th style="width:34%">애그리거트 / 값객체</th><th>유스케이스 · 비고</th></tr></thead>
+    <tbody>
+      <tr class="maprow"><td>로그인 · 온보딩</td><td><span class="pill">User</span><span class="pill">AuthIdentity</span><span class="pill">UserConsent</span><span class="pill">Nickname</span><span class="pill">RunnerLevel</span></td><td>소셜로그인, 닉네임/레벨/위치권한, 약관·위치동의 기록</td></tr>
+      <tr class="maprow"><td>홈 (방 목록)</td><td><span class="pill">Room</span><span class="pill">RoomStatus</span></td><td>모집중/곧시작/LIVE 조회 · 필터</td></tr>
+      <tr class="maprow"><td>방 생성</td><td><span class="pill">Room</span><span class="pill">RaceGoal</span></td><td>거리·제한시간·인원·시작시각</td></tr>
+      <tr class="maprow"><td>방 로비</td><td><span class="pill">Room</span><span class="pill">Participant</span></td><td>실시간 입퇴장(WS) · 자동 출발 대기</td></tr>
+      <tr class="maprow"><td>카운트다운</td><td><span class="pill">RoomStarting</span><span class="pill">Race</span></td><td>서버시계 동기 · GPS fix</td></tr>
+      <tr class="maprow"><td>경주 (라이브)</td><td><span class="pill">Race</span><span class="pill">RaceParticipant</span><span class="pill">Progress</span></td><td>거리 보고(좌표X) · 순위 브로드캐스트 · anti-cheat</td></tr>
+      <tr class="maprow"><td>결과 (완주/DNF)</td><td><span class="pill">RaceResult</span><span class="pill">Score</span><span class="pill">PointTransaction</span></td><td>순위·점수 4축 분해·포인트 적립</td></tr>
+      <tr class="maprow"><td>랭킹</td><td><span class="pill">RunnerStats</span><span class="pill">Leaderboard</span><span class="pill">Tier</span></td><td>전체·주간·월간</td></tr>
+      <tr class="maprow"><td>기록</td><td><span class="pill">RaceResult</span></td><td>지난 경주 히스토리</td></tr>
+      <tr class="maprow"><td>프로필</td><td><span class="pill">User</span><span class="pill">File</span><span class="pill">RunnerStats</span><span class="pill">PointAccount</span></td><td>프로필 사진·티어·누적·포인트</td></tr>
+      <tr class="maprow"><td>스토어</td><td><span class="pill">PointAccount</span><span class="pill">StoreItem</span><span class="pill">Entitlement</span></td><td>광고제거 한달권(500P)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</main>
+
+<script>
+  const links = [...document.querySelectorAll('nav.tabbar a')];
+  const secs = links.map(a => document.querySelector(a.getAttribute('href')));
+  const spy = () => {
+    const y = window.scrollY + 90;
+    let idx = 0;
+    secs.forEach((s,i)=>{ if(s && s.offsetTop <= y) idx = i; });
+    links.forEach((a,i)=>a.classList.toggle('on', i===idx));
+  };
+  window.addEventListener('scroll', spy, {passive:true});
+  links.forEach(a=>a.addEventListener('click', e=>{
+    e.preventDefault();
+    document.querySelector(a.getAttribute('href')).scrollIntoView({behavior:'smooth'});
+  }));
+  spy();
+</script>
+</body>
+</html>

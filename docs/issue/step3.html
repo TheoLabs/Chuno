@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Step 3 이슈 · 경주 코어 — 추노</title>
+<link rel="stylesheet" href="../mvp/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">이슈 보드</a><span class="sep">/</span>Step 3<span class="sep">·</span><a href="../mvp/step3.html">MVP Step 3</a></div>
+  <h1><b>Step 3</b> · 경주 코어 — 실 GPS + 실시간 순위</h1>
+  <p class="lead">이 앱의 심장. 동시출발 → 각자 GPS 거리측정 → 좌표 없이 실시간 순위 → 완주/종료. (총 11 이슈, 난이도 최상)</p>
+  <div class="boardnote">
+    <a class="linkbtn" href="../mvp/step3.html">📋 <b>MVP Step 3</b></a>
+    <a class="linkbtn" href="index.html">← 이슈 보드</a>
+  </div>
+
+  <div class="issue app" id="S3-1">
+    <div class="ihead"><span class="iid">S3-1</span><span class="ititle">RunTracker: 백그라운드 GPS + 노이즈필터</span><span class="badge app">APP</span><span class="pill">L</span></div>
+    <div class="idesc">실제로 뛴 거리를 정확히 측정하는 핵심 모듈. 좌표가 아니라 누적 거리만 산출.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">geolocator</span> 위치 스트림, 화면잠금·백그라운드에서도 지속</span></li>
+      <li><span class="box"></span><span>노이즈필터 — 저정확도(accuracy 큰) 버림, 미세 드리프트/순간이동 점프 무시</span></li>
+      <li><span class="box"></span><span>누적 거리(km) 스트림 노출, 배터리 고려</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 실제 이동 시 누적 거리가 합리적으로 증가하고 정지 시 드리프트가 누적되지 않는다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S3-2</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+  </div>
+
+  <div class="issue app" id="S3-2">
+    <div class="ihead"><span class="iid">S3-2</span><span class="ititle">위치 권한 (항상 허용/백그라운드)</span><span class="badge app">APP</span><span class="pill">M</span></div>
+    <div class="idesc">경주 중 화면을 꺼도 측정하려면 백그라운드 위치 권한이 필요.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>iOS: <span class="mono">UIBackgroundModes[location]</span>·allowBackgroundLocationUpdates·Info.plist 문구</span></li>
+      <li><span class="box"></span><span>Android: 위치·FOREGROUND_SERVICE_LOCATION·포그라운드 서비스 알림</span></li>
+      <li><span class="box"></span><span>권한 거부 플로우(설정 유도) 연결</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 항상 허용 권한 취득 후 백그라운드에서도 위치 업데이트가 들어온다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-11</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+  </div>
+
+  <div class="issue" id="S3-3">
+    <div class="ihead"><span class="iid">S3-3</span><span class="ititle">RaceScheduler: Race 생성 · 동시출발</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">방이 LIVE로 전환되면 Race를 만들고 서버시계 기준 동시출발 시각을 확정.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>LIVE 전환 시 Race 생성(goal·runners), <span class="mono">startedAt</span> 서버시계 확정</span></li>
+      <li><span class="box"></span><span>RaceStarted 이벤트 발행</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 방 LIVE 시 Race가 생성되고 모든 참가자에게 동일 출발 시각이 전달된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S2-3</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+  </div>
+
+  <div class="issue" id="S3-4">
+    <div class="ihead"><span class="iid">S3-4</span><span class="ititle">RaceGateway (/race socket.io)</span><span class="badge be">BACKEND</span><span class="pill">L</span></div>
+    <div class="idesc">경주의 실시간 중계. 거리만 받아 순위를 브로드캐스트(좌표 미전송).</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>JWT 핸드셰이크, <span class="mono">joinRoom</span> / <span class="mono">progress</span>(거리) / <span class="mono">leaderboard</span> 브로드캐스트 / <span class="mono">raceFinished</span></span></li>
+      <li><span class="box"></span><span>주기 순위 산출·전파(2~5초), RaceParticipant 상태 반영</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 한 참가자의 거리 보고가 같은 방 전원의 리더보드에 실시간 반영된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S2-4, S3-3</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+  </div>
+
+  <div class="issue" id="S3-5">
+    <div class="ihead"><span class="iid">S3-5</span><span class="ititle">RaceService 안티치트 · 진행 클램프</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">공정성의 핵심. 비현실적 진행은 서버가 최종 판정해 거부.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">MIN_FEASIBLE_PACE</span> 위반(순간이동/비현실 페이스) 리젝</span></li>
+      <li><span class="box"></span><span>진행 클램프(역행 방지·상한), 보고 간격 검증</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 조작된 급증 보고가 거부되고 정상 진행만 순위에 반영된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S3-4</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+  </div>
+
+  <div class="issue" id="S3-6">
+    <div class="ihead"><span class="iid">S3-6</span><span class="ititle">종료 판정 + finalize 멱등</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">경주를 안전하게 마감. 중복 종료 호출에도 결과가 한 번만 확정.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>전원 완주 or 제한시간 경과 → FINISHED, <span class="mono">raceFinished</span> 브로드캐스트</span></li>
+      <li><span class="box"></span><span>finalize 멱등(중복 방지), RunnerFinished·RaceFinished 이벤트</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 완주/시간초과로 경주가 마감되고 재호출해도 결과가 바뀌지 않는다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S3-4, S3-5</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+  </div>
+
+  <div class="issue app" id="S3-7">
+    <div class="ihead"><span class="iid">S3-7</span><span class="ititle">경주 화면 socket 실연동</span><span class="badge app">APP</span><span class="pill">M</span></div>
+    <div class="idesc">RunTracker 거리를 보고하고 서버 리더보드를 받아 실시간 순위 표시.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>socket.io 클라 — 거리 <span class="mono">progress</span> 전송 + <span class="mono">leaderboard</span> 수신</span></li>
+      <li><span class="box"></span><span>세로 리더보드 재정렬(위젯 존재)·타겟 격차(Δ)·페이스·남은시간 실데이터</span></li>
+      <li><span class="box"></span><span>완주/DNF 결과 화면 진입</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 내가 뛴 거리가 상대 화면에, 상대 거리가 내 화면에 실시간으로 반영된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S3-1, S3-4</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+  </div>
+
+  <div class="issue app" id="S3-8">
+    <div class="ihead"><span class="iid">S3-8</span><span class="ititle">오프라인 내성</span><span class="badge app">APP</span><span class="pill">M</span></div>
+    <div class="idesc">경주 중 네트워크가 끊겨도 내 측정은 지속되고 복귀 시 재동기화.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>끊김 시 로컬 GPS로 내 화면 계속, 거리 버퍼링</span></li>
+      <li><span class="box"></span><span>복귀 시 재전송·재동기화, 연결끊김 표시</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 일시적 끊김 후 복귀하면 그 사이 거리가 반영되어 순위가 맞춰진다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S3-7</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+  </div>
+
+  <div class="issue design" id="S3-9">
+    <div class="ihead"><span class="iid">S3-9</span><span class="ititle">경주 엣지 UX</span><span class="badge design">DESIGN</span><span class="pill">M</span></div>
+    <div class="idesc">경주 중 발생하는 예외 상황들의 화면·안내.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>연결끊김 배너·재동기화, GPS 약함/미확보</span></li>
+      <li><span class="box"></span><span>중도 포기(DNF) 확인, 마지막 1명 남음 처리</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 각 예외 상황에서 사용자가 상태를 이해하고 대응할 수 있다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S3-7</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+  </div>
+
+  <div class="issue design" id="S3-10">
+    <div class="ihead"><span class="iid">S3-10</span><span class="ititle">햅틱 · 사운드</span><span class="badge design">DESIGN</span><span class="pill">S</span></div>
+    <div class="idesc">경쟁 손맛을 살리는 감각 피드백.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>카운트다운 진동·사운드, 완주 축하 연출</span></li>
+      <li><span class="box"></span><span>순위 역전 등 주요 순간 햅틱(선택)</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 카운트다운·완주에 햅틱/사운드가 동작한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+  </div>
+
+  <div class="issue ops" id="S3-11">
+    <div class="ihead"><span class="iid">S3-11</span><span class="ititle">실외 실기기 필드 테스트</span><span class="badge ops">OPS</span><span class="pill">L</span></div>
+    <div class="idesc">시뮬레이터로는 못 잡는 실 GPS·동시성·공정성을 실제로 검증.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>기기 2대 이상, 서로 다른 경로를 실제로 달리며 동시출발·순위·완주 검증</span></li>
+      <li><span class="box"></span><span>안티치트·시계 동기화·배터리·백그라운드 지속 확인</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 실외 반복 테스트에서 순위·거리·종료가 공정하고 안정적으로 동작한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S3-6, S3-7</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a></span></div>
+  </div>
+
+  <div class="nav">
+    <a href="step2.html"><span class="lbl">이전</span>← Step 2 · 방 &amp; 로비</a>
+    <a class="next" href="step4.html"><span class="lbl">다음</span>Step 4 · 점수·랭킹 →</a>
+  </div>
+</div>
+</body>
+</html>

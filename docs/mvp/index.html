@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>추노 MVP 로드맵</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb"><a href="../README.md">docs</a><span class="sep">/</span>mvp</div>
+  <h1>추노 <b>MVP</b> 로드맵</h1>
+  <p class="lead">"장소 무관 실시간 경쟁 러닝"의 최소 기능. 설계·UI 껍데기(mock)는 완료됨 → 이제 핵심 엔진(백엔드·실시간·GPS)을 스텝으로 쌓는다.</p>
+  <p style="margin:-8px 0 20px;"><a href="../issue/index.html" style="color:var(--coral); font-weight:600; font-size:13px;">🎫 상세 이슈 보드 (스텝별 티켓) →</a></p>
+
+  <div class="callout">
+    <b>MVP 핵심 루프</b> — 이 한 바퀴가 돌면 MVP다. 나머지는 전부 이후로.
+    <div class="flow">
+      <span class="n">로그인</span><span class="a">→</span>
+      <span class="n">방 생성·참가</span><span class="a">→</span>
+      <span class="n hot">예약 동시출발</span><span class="a">→</span>
+      <span class="n hot">실 GPS 거리 실시간 공유</span><span class="a">→</span>
+      <span class="n">순위·점수</span><span class="a">→</span>
+      <span class="n">랭킹·기록</span>
+    </div>
+  </div>
+
+  <h2>포함 / 제외 <span class="em">scope</span></h2>
+  <div class="cols">
+    <div class="col inc card">
+      <h3>MVP 포함</h3>
+      <ul>
+        <li>소셜 로그인(카카오·구글·애플) + 온보딩</li>
+        <li>공개 방: 생성·목록·참가·나가기, 인원미달 자동취소</li>
+        <li>예약 시각 동시출발(서버시계)</li>
+        <li>실 GPS 거리측정 + socket.io 실시간 순위(좌표 미전송)</li>
+        <li>기본 안티치트(비현실 페이스 리젝)</li>
+        <li>점수(4축)·완주판정·랭킹(전체/주간/월간)·기록</li>
+        <li>경주 임박·결과 푸시 알림</li>
+      </ul>
+    </div>
+    <div class="col exc card">
+      <h3>MVP 제외 (이후)</h3>
+      <ul>
+        <li>포인트 상점 / 광고 제거(적립·밸런싱 미정)</li>
+        <li>Kafka EDA → MVP는 인프로세스 이벤트 + BullMQ로</li>
+        <li>프로필 사진 업로드(S3)</li>
+        <li>비공개 방(초대코드)·자동 매칭</li>
+        <li>리매치, 티어 정교화, 지도/경로 공유</li>
+        <li>백오피스(back-office)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>빌드 스텝 <span class="em">de-risk 순서: 어려운 코어를 앞으로</span></h2>
+  <div class="steps">
+    <a class="stepcard" href="step1.html">
+      <div class="num">01</div>
+      <div class="body">
+        <div class="t">기반 &amp; 인증</div>
+        <div class="s">NestJS+TypeORM+MySQL 골격, User/Auth 도메인, 소셜로그인+JWT, 온보딩 저장, 약관·위치 동의</div>
+        <div class="areas"><span class="badge be">BACKEND</span><span class="badge app">APP</span><span class="badge design">DESIGN</span></div>
+      </div>
+    </a>
+    <a class="stepcard" href="step2.html">
+      <div class="num">02</div>
+      <div class="body">
+        <div class="t">방 &amp; 실시간 로비</div>
+        <div class="s">Room 도메인(생성/참가/나가기), 예약 스케줄러, 로비 실시간 입퇴장(socket.io), 홈 방목록 실데이터</div>
+        <div class="areas"><span class="badge be">BACKEND</span><span class="badge app">APP</span></div>
+      </div>
+    </a>
+    <a class="stepcard" href="step3.html">
+      <div class="num">03</div>
+      <div class="body">
+        <div class="t">경주 코어 — 실 GPS + 실시간 순위 <span class="pill" style="color:var(--alert); border-color:var(--alert)">난이도 최상</span></div>
+        <div class="s">geolocator 백그라운드 거리측정, RaceGateway 진행률 중계·브로드캐스트, 동시출발·안티치트·종료판정</div>
+        <div class="areas"><span class="badge app">APP</span><span class="badge be">BACKEND</span><span class="badge design">DESIGN</span></div>
+      </div>
+    </a>
+    <a class="stepcard" href="step4.html">
+      <div class="num">04</div>
+      <div class="body">
+        <div class="t">점수 · 랭킹 · 기록</div>
+        <div class="s">Scoring(4축)·RaceResult 저장·RunnerStats 누적·랭킹 윈도우, 결과/랭킹/기록 화면 실연동</div>
+        <div class="areas"><span class="badge be">BACKEND</span><span class="badge app">APP</span></div>
+      </div>
+    </a>
+    <a class="stepcard" href="step5.html">
+      <div class="num">05</div>
+      <div class="body">
+        <div class="t">알림 &amp; 출시 준비</div>
+        <div class="s">푸시(FCM/APNs), 앱아이콘·스플래시·스토어 에셋, 프로덕션 배포, 크래시/분석, 개인정보 정책, 베타</div>
+        <div class="areas"><span class="badge app">APP</span><span class="badge ops">OPS</span><span class="badge design">DESIGN</span></div>
+      </div>
+    </a>
+  </div>
+
+  <h2>주요 리스크</h2>
+  <div class="risk">
+    <b>핵심 리스크는 Step 3에 몰려 있다.</b> 실 GPS 정확도·백그라운드 추적, 실시간 동기화(서버시계 동시출발), 공정성(안티치트)이 이 앱의 성패. → Step 1~2로 로그인/방을 빨리 세우고, <b>Step 3을 최우선·최다시간</b> 배정. 소셜로그인 3종·푸시는 각각 개발자계정/키 설정 리드타임이 있으니 미리 발급 착수.
+  </div>
+
+  <h2>아직 열린 결정</h2>
+  <div class="card" style="font-size:13.5px; color:var(--muted)">
+    티어 컷 기준 · 리매치 포함 여부 · 비공개 방 · 포인트 적립·가격(이미 이후로) — 전부 MVP 진행하며 확정 가능, 지금 막지 않아도 됨.
+  </div>
+
+  <div class="nav">
+    <span class="nav-spacer" style="flex:1"></span>
+    <a class="next" href="step1.html"><span class="lbl">다음</span>Step 1 · 기반 &amp; 인증 →</a>
+  </div>
+</div>
+</body>
+</html>

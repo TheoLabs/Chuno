@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>추노 — 이슈 보드</title>
+<link rel="stylesheet" href="../mvp/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb"><a href="../README.md">docs</a><span class="sep">/</span>issue</div>
+  <h1>추노 <b>이슈</b> 보드</h1>
+  <p class="lead">MVP 로드맵의 각 스텝을 실행 가능한 상세 티켓으로 분해. 각 이슈는 관련 MVP 스텝·도메인·화면과 연결돼 있다.</p>
+
+  <div class="boardnote">
+    <a class="linkbtn" href="../mvp/index.html">📋 <b>MVP 로드맵</b> 보기</a>
+    <a class="linkbtn" href="../domain/index.html">🧩 도메인 설계</a>
+    <a class="linkbtn" href="../wireframes/index.html">📱 와이어프레임</a>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="stepsec">
+    <div class="sh"><span class="snum">STEP 1</span><span class="stitle">기반 &amp; 인증</span><span class="sgo"><a href="step1.html">상세 →</a> · <a href="../mvp/step1.html">MVP</a></span></div>
+    <div class="rows">
+      <a class="row" href="step1.html#S1-1"><span class="iid">S1-1</span><span class="rt">core-api 인프라 세팅 (TypeORM·MySQL·Config)</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step1.html#S1-2"><span class="iid">S1-2</span><span class="rt">DDD 모듈 스캐폴딩 (레이어·도메인 기본형)</span><span class="badge be">BE</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#S1-3"><span class="iid">S1-3</span><span class="rt">User / AuthIdentity 엔티티 + 마이그레이션</span><span class="badge be">BE</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#S1-4"><span class="iid">S1-4</span><span class="rt">소셜 토큰 검증 (google·apple·kakao) + DEV_MODE</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step1.html#S1-5"><span class="iid">S1-5</span><span class="rt">JWT 액세스 + 리프레시 회전 + auth 엔드포인트</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step1.html#S1-6"><span class="iid">S1-6</span><span class="rt">users/me API (조회·수정·닉네임 중복확인)</span><span class="badge be">BE</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#S1-7"><span class="iid">S1-7</span><span class="rt">앱 네트워킹/상태관리 기반 (dio·secure·provider)</span><span class="badge app">APP</span><span class="pill">M</span></a>
+      <a class="row" href="step1.html#S1-8"><span class="iid">S1-8</span><span class="rt">세션 / AuthGate 분기</span><span class="badge app">APP</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#S1-9"><span class="iid">S1-9</span><span class="rt">소셜 로그인 SDK 3종 연동</span><span class="badge app">APP</span><span class="pill">L</span></a>
+      <a class="row" href="step1.html#S1-10"><span class="iid">S1-10</span><span class="rt">온보딩 저장 (닉네임·레벨 → API)</span><span class="badge app">APP</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#S1-11"><span class="iid">S1-11</span><span class="rt">약관·개인정보·위치 동의 화면 + 문서</span><span class="badge design">DES</span><span class="pill">M</span></a>
+      <a class="row" href="step1.html#S1-12"><span class="iid">S1-12</span><span class="rt">소셜 개발자 콘솔 앱 등록 · 키 발급</span><span class="badge ops">OPS</span><span class="pill">M</span></a>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="stepsec">
+    <div class="sh"><span class="snum">STEP 2</span><span class="stitle">방 &amp; 실시간 로비</span><span class="sgo"><a href="step2.html">상세 →</a> · <a href="../mvp/step2.html">MVP</a></span></div>
+    <div class="rows">
+      <a class="row" href="step2.html#S2-1"><span class="iid">S2-1</span><span class="rt">Room 애그리거트 + Participant + 마이그레이션</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step2.html#S2-2"><span class="iid">S2-2</span><span class="rt">Room API (생성/목록/참가/나가기/삭제)</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step2.html#S2-3"><span class="iid">S2-3</span><span class="rt">예약 스케줄러 (상태전환·인원미달 취소)</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step2.html#S2-4"><span class="iid">S2-4</span><span class="rt">로비 socket.io 게이트웨이 (입퇴장 브로드캐스트)</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step2.html#S2-5"><span class="iid">S2-5</span><span class="rt">Room 도메인 이벤트 (인프로세스)</span><span class="badge be">BE</span><span class="pill">S</span></a>
+      <a class="row" href="step2.html#S2-6"><span class="iid">S2-6</span><span class="rt">홈 방목록 실연동 + 필터</span><span class="badge app">APP</span><span class="pill">M</span></a>
+      <a class="row" href="step2.html#S2-7"><span class="iid">S2-7</span><span class="rt">방 생성 실연동</span><span class="badge app">APP</span><span class="pill">S</span></a>
+      <a class="row" href="step2.html#S2-8"><span class="iid">S2-8</span><span class="rt">로비 실시간 (socket.io·입퇴장·나가기/삭제)</span><span class="badge app">APP</span><span class="pill">M</span></a>
+      <a class="row" href="step2.html#S2-9"><span class="iid">S2-9</span><span class="rt">서버시계 동기 카운트다운</span><span class="badge app">APP</span><span class="pill">S</span></a>
+      <a class="row" href="step2.html#S2-10"><span class="iid">S2-10</span><span class="rt">방 엣지 상태 (취소/빈 목록)</span><span class="badge design">DES</span><span class="pill">S</span></a>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="stepsec">
+    <div class="sh"><span class="snum">STEP 3</span><span class="stitle">경주 코어 — 실 GPS + 실시간 순위</span><span class="sgo"><a href="step3.html">상세 →</a> · <a href="../mvp/step3.html">MVP</a></span></div>
+    <div class="rows">
+      <a class="row" href="step3.html#S3-1"><span class="iid">S3-1</span><span class="rt">RunTracker: geolocator 백그라운드 + 노이즈필터</span><span class="badge app">APP</span><span class="pill">L</span></a>
+      <a class="row" href="step3.html#S3-2"><span class="iid">S3-2</span><span class="rt">위치 권한 (항상 허용/백그라운드) 처리</span><span class="badge app">APP</span><span class="pill">M</span></a>
+      <a class="row" href="step3.html#S3-3"><span class="iid">S3-3</span><span class="rt">RaceScheduler: Race 생성 · 동시출발</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step3.html#S3-4"><span class="iid">S3-4</span><span class="rt">RaceGateway (/race socket.io: progress/leaderboard)</span><span class="badge be">BE</span><span class="pill">L</span></a>
+      <a class="row" href="step3.html#S3-5"><span class="iid">S3-5</span><span class="rt">RaceService 안티치트 · 진행 클램프</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step3.html#S3-6"><span class="iid">S3-6</span><span class="rt">종료 판정 + finalize 멱등</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step3.html#S3-7"><span class="iid">S3-7</span><span class="rt">경주 화면 socket 실연동</span><span class="badge app">APP</span><span class="pill">M</span></a>
+      <a class="row" href="step3.html#S3-8"><span class="iid">S3-8</span><span class="rt">오프라인 내성 (로컬 지속 · 재동기화)</span><span class="badge app">APP</span><span class="pill">M</span></a>
+      <a class="row" href="step3.html#S3-9"><span class="iid">S3-9</span><span class="rt">경주 엣지 UX (끊김/GPS약함/DNF/1명)</span><span class="badge design">DES</span><span class="pill">M</span></a>
+      <a class="row" href="step3.html#S3-10"><span class="iid">S3-10</span><span class="rt">햅틱 / 사운드 (카운트다운·완주)</span><span class="badge design">DES</span><span class="pill">S</span></a>
+      <a class="row" href="step3.html#S3-11"><span class="iid">S3-11</span><span class="rt">실외 실기기 필드 테스트</span><span class="badge ops">OPS</span><span class="pill">L</span></a>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="stepsec">
+    <div class="sh"><span class="snum">STEP 4</span><span class="stitle">점수 · 랭킹 · 기록</span><span class="sgo"><a href="step4.html">상세 →</a> · <a href="../mvp/step4.html">MVP</a></span></div>
+    <div class="rows">
+      <a class="row" href="step4.html#S4-1"><span class="iid">S4-1</span><span class="rt">ScoringModule (4축 · 서버 권위)</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step4.html#S4-2"><span class="iid">S4-2</span><span class="rt">RaceResult 저장 (RaceFinished 구독 · 멱등)</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step4.html#S4-3"><span class="iid">S4-3</span><span class="rt">RunnerStats 누적 + 티어</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step4.html#S4-4"><span class="iid">S4-4</span><span class="rt">랭킹 (전체 / 주간 / 월간)</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step4.html#S4-5"><span class="iid">S4-5</span><span class="rt">랭킹 / 기록 / 결과 API</span><span class="badge be">BE</span><span class="pill">S</span></a>
+      <a class="row" href="step4.html#S4-6"><span class="iid">S4-6</span><span class="rt">결과 화면 실연동</span><span class="badge app">APP</span><span class="pill">S</span></a>
+      <a class="row" href="step4.html#S4-7"><span class="iid">S4-7</span><span class="rt">랭킹 실연동</span><span class="badge app">APP</span><span class="pill">S</span></a>
+      <a class="row" href="step4.html#S4-8"><span class="iid">S4-8</span><span class="rt">기록 / 프로필 통계 실연동</span><span class="badge app">APP</span><span class="pill">S</span></a>
+      <a class="row" href="step4.html#S4-9"><span class="iid">S4-9</span><span class="rt">mock 데이터 제거</span><span class="badge app">APP</span><span class="pill">S</span></a>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="stepsec">
+    <div class="sh"><span class="snum">STEP 5</span><span class="stitle">알림 &amp; 출시 준비</span><span class="sgo"><a href="step5.html">상세 →</a> · <a href="../mvp/step5.html">MVP</a></span></div>
+    <div class="rows">
+      <a class="row" href="step5.html#S5-1"><span class="iid">S5-1</span><span class="rt">FCM/APNs + DeviceToken + Notification 발송</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step5.html#S5-2"><span class="iid">S5-2</span><span class="rt">푸시 수신 / 권한 / 딥링크</span><span class="badge app">APP</span><span class="pill">M</span></a>
+      <a class="row" href="step5.html#S5-3"><span class="iid">S5-3</span><span class="rt">앱 아이콘 + 스플래시</span><span class="badge design">DES</span><span class="pill">M</span></a>
+      <a class="row" href="step5.html#S5-4"><span class="iid">S5-4</span><span class="rt">스토어 에셋 (스크린샷 · 설명)</span><span class="badge design">DES</span><span class="pill">M</span></a>
+      <a class="row" href="step5.html#S5-5"><span class="iid">S5-5</span><span class="rt">기기 / 접근성 QA</span><span class="badge design">DES</span><span class="pill">M</span></a>
+      <a class="row" href="step5.html#S5-6"><span class="iid">S5-6</span><span class="rt">프로덕션 인프라 배포</span><span class="badge ops">OPS</span><span class="pill">L</span></a>
+      <a class="row" href="step5.html#S5-7"><span class="iid">S5-7</span><span class="rt">크래시 / 분석 (Sentry·Crashlytics)</span><span class="badge ops">OPS</span><span class="pill">S</span></a>
+      <a class="row" href="step5.html#S5-8"><span class="iid">S5-8</span><span class="rt">개인정보 정책 호스팅 + 심사 고지</span><span class="badge ops">OPS</span><span class="pill">M</span></a>
+      <a class="row" href="step5.html#S5-9"><span class="iid">S5-9</span><span class="rt">서명 / 프로비저닝 + TestFlight 베타</span><span class="badge ops">OPS</span><span class="pill">M</span></a>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
