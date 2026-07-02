@@ -19,7 +19,7 @@
 <div class="wrap">
   <div class="crumb"><a href="index.html">이슈 보드</a><span class="sep">/</span>Step 1<span class="sep">·</span><a href="../mvp/step1.html">MVP Step 1</a></div>
   <h1><b>Step 1</b> · 기반 &amp; 인증</h1>
-  <p class="lead">백엔드 골격 + 소셜 로그인 → 온보딩 → 홈 진입까지 실계정으로 도는 첫 뼈대. (총 12 이슈)</p>
+  <p class="lead">백엔드 골격 + 소셜 로그인 → 온보딩 → 홈 진입까지 실계정으로 도는 첫 뼈대. (총 13 이슈)</p>
   <div class="boardnote">
     <a class="linkbtn" href="../mvp/step1.html">📋 <b>MVP Step 1</b></a>
     <a class="linkbtn" href="index.html">← 이슈 보드</a>
@@ -33,9 +33,9 @@
       <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">TypeOrmModule.forRootAsync</span> — <span class="mono">ConfigsService.mysql</span> 주입, MySQL(mysql2) 연결(charset <span class="mono">utf8mb4</span>) + 라이프사이클 로깅(TypeORM 1.0.0)</span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span>헬스체크 — <span class="mono">setGlobalPrefix('api')</span> 복원, <span class="mono">GET /api/health</span> → 200 실측 확인. DB 연결(ping)은 스코프 제외로 확정, 정적 <span class="mono">{status:'ok'}</span>로 충분</span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span>graceful shutdown — <span class="mono">main.ts</span>에서 <span class="mono">enableShutdownHooks()</span> 호출 + <span class="mono">onModuleDestroy</span>에서 <span class="mono">await datasource.destroy()</span></span></li>
-      <li><span class="box"></span><span><span class="stag defer">S1-3 이월</span>마이그레이션 스크립트(<span class="mono">migration:run</span>) — 엔티티가 아직 없어 현재는 <span class="mono">synchronize:true</span>, 첫 엔티티 도입 시점(S1-3)에 CLI DataSource + <span class="mono">synchronize:false</span>(<span class="mono">isLocal()</span> 가드)로 전환</span></li>
+      <li><span class="box done"></span><span><span class="stag scope">결정</span>마이그레이션 스크립트(<span class="mono">migration:run</span>) <b>미도입 결정</b> — 로컬/현재는 <span class="mono">synchronize:true</span>로 스키마 관리, CLI DataSource + <span class="mono">synchronize:false</span> 전환 작업 자체를 도입하지 않기로 함</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 앱 부팅 시 DB 연결 성공, <span class="mono">GET /api/health</span> 200, ConfigModule·TypeORM·charset·graceful shutdown 등 핵심 인프라 완료. 마이그레이션(<span class="mono">synchronize:false</span> 전환 포함)은 S1-3에서 실행.</div>
+    <div class="iaccept"><b>완료</b> — 앱 부팅 시 DB 연결 성공, <span class="mono">GET /api/health</span> 200, ConfigModule·TypeORM·charset·graceful shutdown 등 핵심 인프라 완료. 마이그레이션 스크립트는 미도입 결정 — <span class="mono">synchronize</span>로 스키마 관리.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a></span></div>
   </div>
 
@@ -55,12 +55,16 @@
     <div class="ihead"><span class="iid">S1-3</span><span class="ititle">User / AuthIdentity 엔티티 + 마이그레이션</span><span class="badge be">BACKEND</span><span class="pill">S</span></div>
     <div class="idesc">사용자와 소셜 신원을 저장할 스키마. 인증·프로필의 기반 애그리거트.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>User(nickname·level·tier·profileImageUrl?·onboardedAt?) — Nickname/RunnerLevel VO</span></li>
-      <li><span class="box"></span><span>AuthIdentity(userId·provider·providerUserId) — User와 1:1(<span class="mono">userId UNIQUE</span>), 통합 소셜로그인(다중 연동) 미지원 · <span class="mono">UNIQUE(provider, providerUserId)</span></span></li>
-      <li><span class="box"></span><span>UserConsent(userId·type·documentVersion·agreedAt·revokedAt?) — 약관/개인정보/위치 동의 이력, User와 1:N</span></li>
-      <li><span class="box"></span><span>UserRepository(포트) + TypeORM 구현·매퍼, 마이그레이션</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>User(<span class="mono">nickname?</span> unique·<span class="mono">level?</span>(RunnerLevel)·<span class="mono">tier</span>(RunnerTier, 기본 BRONZE)·<span class="mono">profileImageFileId?</span>·<span class="mono">bio?</span>·<span class="mono">joinOn</span>(CalendarDate)) + <span class="mono">User.of()</span> 팩토리(authIdentity·consents 조립)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>AuthIdentity — User와 <b>1:1</b>(<span class="mono">@OneToOne</span> + <span class="mono">@JoinColumn userId</span>) + provider enum(kakao/google/apple)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>UserConsent(userId·type·documentVersion·agreedOn·revokeOn?) + <span class="mono">@ManyToOne User</span>(1:N) + <span class="mono">revoke()</span></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>UserRepository(포트, <span class="mono">DddRepository</span> 상속) + find/count — 앱 부팅 시 DI 정상, 스키마 자동 생성, <span class="mono">GET /api/health</span> 200 실측</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">sub</span> 컬럼 반영 — provider의 외부 소셜 고유ID(Google/Apple <span class="mono">sub</span>, Kakao <span class="mono">id</span>), 토큰 검증 후 조회 키로 사용. 기존 <span class="mono">(userId, provider)</span> 복합 유니크는 <span class="mono">UNIQUE(provider, sub)</span>로 대체(같은 소셜 계정이 두 User에 붙는 것 방지) — User와는 계속 1:1(userId) <small><a href="step1.html#S1-4">S1-4</a>에서 반영·실측</small></span></li>
+      <li><span class="box done"></span><span><span class="stag scope">결정</span>마이그레이션 스크립트(generate/run) 도입 작업 자체를 하지 않기로 결정 — 로컬/현재는 <span class="mono">synchronize:true</span>로 스키마 관리</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>UserConsentType에 <span class="mono">MARKETING</span>(선택 동의) 추가 <small><a href="step1.html#S1-6">S1-6</a> 재검증에서 확인</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>첫 소셜 로그인 = 온보딩 전 User 생성 — <span class="mono">(provider, sub)</span> 없으면 User+AuthIdentity 생성 시점엔 아직 닉네임/레벨 없음 → <span class="mono">nickname</span>·<span class="mono">level</span> nullable, <span class="mono">onboardedOn</span>(CalendarDate?, 온보딩 완료 시각) 추가. 온보딩(S1-10)에서 채움, AuthGate(S1-8)는 <span class="mono">onboardedOn</span> null 여부로 분기 <small><a href="step1.html#S1-4">S1-4</a>에서 반영·실측</small></span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 마이그레이션으로 테이블 생성, 동일 소셜 신원 중복 삽입이 유니크 제약으로 거부되고, 동의 기록이 type·documentVersion·agreedAt으로 저장된다.</div>
+    <div class="iaccept"><b>완료</b> — User·AuthIdentity(1:1)·UserConsent 엔티티 + UserRepository(포트), <span class="mono">synchronize</span>로 스키마 생성, 앱 부팅·스키마 생성 실측 확인. 마이그레이션 스크립트는 미도입 결정. <span class="mono">sub</span>/nullable nickname·level/<span class="mono">onboardedOn</span> 컬럼 적용은 <a href="step1.html#S1-4">S1-4</a>에서 완료.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-1, S1-2</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html#model">도메인</a></span></div>
   </div>
 
@@ -68,11 +72,12 @@
     <div class="ihead"><span class="iid">S1-4</span><span class="ititle">소셜 토큰 검증 + AUTH_DEV_MODE</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">provider별로 클라이언트가 넘긴 토큰을 검증해 신뢰 가능한 소셜 신원을 얻는다.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>google: <span class="mono">google-auth-library</span> / apple: <span class="mono">jose</span>로 JWK 검증 / kakao: 사용자 API</span></li>
-      <li><span class="box"></span><span>신원 → User 조회·없으면 생성(AuthIdentity 연결)</span></li>
-      <li><span class="box"></span><span><span class="mono">AUTH_DEV_MODE</span>: "dev:&lt;id&gt;:&lt;email&gt;" 토큰으로 키 없이 로컬 테스트</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>provider별 verifier — google(<span class="mono">google-auth-library</span> <span class="mono">verifyIdToken</span>, audience 검증) / apple(<span class="mono">jose</span> JWKS + iss/aud 검증) / kakao(사용자 API) — 검증 결과에서 provider 외부 고유ID(<span class="mono">sub</span>)를 얻는다</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">sub</span>로 <span class="mono">(provider, sub)</span> AuthIdentity 조회 · 없으면 <b>온보딩 전 User + AuthIdentity 생성</b>(<span class="mono">nickname</span>/<span class="mono">level</span> null, <span class="mono">onboardedOn</span> null) — 있으면 연결된 User로 매핑</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">AUTH_DEV_MODE</span>: <span class="mono">"dev:&lt;sub&gt;:&lt;email&gt;"</span> 토큰으로 키 없이 로컬 테스트 — 플래그 on일 때만 동작(기본 off로 프로덕션 우회 차단)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">UNIQUE(provider, sub)</span> 반영, 날짜 규칙 준수, DDD 레이어 분리(컨트롤러는 아직 없음 — S1-5에서 노출) <small>code-reviewer 실측: build/lint OK, 테스트 12/12, 부팅+스키마 OK</small></span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — dev 토큰과 실제 idToken 모두 검증되어 올바른 User로 매핑된다.</div>
+    <div class="iaccept"><b>완료</b> — dev 토큰과 실제 idToken 모두 검증되어 <span class="mono">(provider, sub)</span>로 올바른 User에 매핑되고, 첫 로그인은 온보딩 전 User가 생성된다. <small>실 소셜 키 E2E는 S1-12 키 발급 후로 명시. 후속 개선(완료를 막지 않음): 프로덕션 <span class="mono">isProduction()</span> fail-fast 다중 방어(AUTH_DEV_MODE) · <span class="mono">resolveOrCreateUser</span> 동시 첫 로그인 unique 충돌 시 upsert-on-conflict · Kakao <span class="mono">id</span> 누락 시 명시적 예외.</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-3</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
   </div>
 
@@ -80,23 +85,26 @@
     <div class="ihead"><span class="iid">S1-5</span><span class="ititle">JWT + 리프레시 회전 + auth 엔드포인트</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">세션 토큰 발급/갱신/폐기. 리프레시 재사용 탐지로 탈취 방어.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>액세스 JWT 15m + opaque 리프레시(회전, sha256 해시 저장)</span></li>
-      <li><span class="box"></span><span>리프레시 재사용 시 <span class="mono">401</span> + 계열 무효화</span></li>
-      <li><span class="box"></span><span><span class="mono">POST /auth/social-login · /auth/refresh · /auth/logout</span></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>액세스 JWT <span class="mono">15m</span> + opaque 리프레시(<b>회전형</b>, <span class="mono">sha256</span> 해시 저장, 원문 미저장)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>리프레시 <b>재사용 감지</b> → <span class="mono">401</span> + 계열(family) 전체 무효화 — 회전된 후속 토큰까지 폐기 실증</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">POST /api/auth/social-login</span> · <span class="mono">/api/auth/refresh</span> · <span class="mono">/api/auth/logout</span> + 전역 <span class="mono">ValidationPipe</span>(DTO 400 검증), logout이 family 폐기</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>만료는 <span class="mono">expiresOn</span>(CalendarDate/KST) 규칙 준수, DDD 레이어 분리 <small>code-reviewer 실측: build/lint OK, 테스트 22/22, 부팅 E2E 전 흐름 실증</small></span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 로그인→토큰 발급, refresh로 회전, 이전 리프레시 재사용 시 401.</div>
+    <div class="iaccept"><b>완료</b> — 로그인→토큰 발급, refresh로 회전, 이전 리프레시 재사용 시 401 — 부팅 E2E로 충족. <small>실 소셜 키 idToken E2E는 <a href="step1.html#S1-12">S1-12</a> 키 발급 후로 명시. 후속 개선(완료를 막지 않음): 프로덕션 <span class="mono">isProduction()</span> 시 <span class="mono">JWT_ACCESS_SECRET</span> 강제 + <span class="mono">AUTH_DEV_MODE=false</span> fail-fast(<a href="step1.html#S1-4">S1-4</a>의 프로덕션 방어와 함께 처리 권장) · 리프레시 동시 회전 레이스 → 낙관적 락/조건부 UPDATE · GoogleVerifier 잘못된 토큰 500→401 변환(S1-4).</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-3, S1-4</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
   </div>
 
   <div class="issue" id="S1-6">
     <div class="ihead"><span class="iid">S1-6</span><span class="ititle">users/me API</span><span class="badge be">BACKEND</span><span class="pill">S</span></div>
-    <div class="idesc">온보딩·프로필에서 쓰는 내 정보 조회/수정과 닉네임 중복확인.</div>
+    <div class="idesc">내 정보 조회, 온보딩 저장(<span class="mono">PUT /users/onboard</span>), 닉네임 중복확인. 프로필 수정(<span class="mono">PUT /users/me</span>)은 별도 태스크로 분리.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="mono">GET /users/me</span>, <span class="mono">PATCH /users/me</span>(닉네임·레벨·onboardedAt)</span></li>
-      <li><span class="box"></span><span><span class="mono">GET /users/check-nickname</span> (2~12자·고유 검증)</span></li>
-      <li><span class="box"></span><span>JWT 가드로 보호</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">GET /users/me</span> — 200으로 내 정보 반환, 무토큰·손상토큰·존재하지 않는 유저 401 분기 실측, <span class="mono">onboardedOn</span>(CalendarDate) 문자열 직렬화·민감정보 미노출. 직전 500 버그(<span class="mono">Context.USER</span> 미스매치)는 해소됨 <small>code-reviewer 실측: build/lint OK, 부팅 후 엔드투엔드</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">PUT /users/onboard</span>(닉네임+레벨+<span class="mono">consents:[{type,documentVersion}]</span>) — 필수 동의 3종(TERMS·PRIVACY·LOCATION) <b>전부 포함</b> 검증 반영(도메인 <span class="mono">User.onboard</span>), 부분 동의(예: privacy 단독)는 <span class="mono">400</span> 실측으로 확인. happy path(필수3+marketing → 200, <span class="mono">onboardedOn</span>·UserConsent <span class="mono">agreedOn</span> 서버 KST 원자 저장)·재온보딩 <span class="mono">409</span>·<span class="mono">consents</span> 누락/빈배열 <span class="mono">400</span>·응답 <span class="mono">{data}</span>·<span class="mono">MARKETING</span> 저장 가능·닉네임 2~12·중복 400·<span class="mono">@Put</span>·날짜규칙(<span class="mono">onboardedOn</span>/<span class="mono">agreedOn</span> KST) 모두 정상 <small>code-reviewer 재검증: build/lint OK, 일회용 DB E2E · <a href="step1.html#S1-11">S1-11</a>의 동의 서버 기록 요구사항을 이 엔드포인트에서 완료(이월 아님). 후속 노트(완료를 막지 않음, 낮음): 재온보딩 시 같은 닉네임이면 도메인 409보다 닉네임중복 400이 먼저 나옴 — 서비스에서 도메인 검증을 앞에 두면 해소 · 미사용 <span class="mono">ConflictException</span> import 정리</small></span></li>
+      <li><span class="box"></span><span><span class="stag scope">스코프외</span>프로필 수정 <span class="mono">PUT /users/me</span> — 별도 태스크로 분리(추후)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">GET /users/check-nickname</span> — <span class="mono">@Query()</span>로 전환(쿼리 <span class="mono">?nickname=</span> 200 동작), <span class="mono">@Length(2,12)</span>(1자·13자·빈값 400 / 2·12자 통과), <span class="mono">count</span> 기반 고유성(존재→사용중, 미존재→가용) 실측. 직전 차단 버그(<span class="mono">@Body()</span>/GET, 길이검증 누락)는 해소됨 <small>code-reviewer 재검증: build/lint OK, 부팅 후 실호출. 후속 노트(완료를 막지 않음): 응답 <span class="mono">{usedCount}</span> 의미 모호(→<span class="mono">{available: boolean}</span> 권장) · 닉네임 트림/정규화 없음(앞뒤 공백 통과, DTO 트림 권장) · soft-delete 유저 닉네임이 "가용"으로 보고될 수 있음(count는 <span class="mono">deletedAt</span> 제외, DB UNIQUE는 포함)</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>JWT 가드(<span class="mono">UserGuard</span>)로 보호 — Bearer 액세스 JWT 검증(무토큰·잘못된 토큰 → 401 실측), 성공 시 User 객체(consents 포함)를 <span class="mono">Context.USER</span>에 심음; <span class="mono">JwtModule</span> 전역 등록(auth.module <span class="mono">global:true</span>)으로 UserModule 주입 정상 <small>code-reviewer 실측: build/lint OK, 부팅+엔드투엔드</small></span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 토큰으로 내 정보 조회·수정되고, 중복 닉네임이 거부된다.</div>
+    <div class="iaccept"><b>완료</b> — <span class="mono">GET /users/me</span>·<span class="mono">check-nickname</span>·JWT 가드·<span class="mono">PUT /users/onboard</span>(필수 동의 3종·서버 <span class="mono">onboardedOn</span>/<span class="mono">agreedOn</span>·원자 트랜잭션) 완료. <span class="mono">PUT /users/me</span>는 별도 태스크로 분리. <small>후속 노트(완료를 막지 않음): 재온보딩 시 도메인 409보다 닉네임중복 400이 먼저 나오는 순서 — 서비스에서 도메인 검증을 앞에 두면 해소 · 미사용 <span class="mono">ConflictException</span> import 정리 · <span class="mono">GeneralUserService</span> 빈 클래스(PUT /users/me 구현 시 채울 자리, 정리 권장) · UserGuard가 <span class="mono">UserRepository</span> 포트 대신 datasource 직접 조회(횡단 관심사라 완전 위반은 아니나 컨벤션과 다름) · UserGuard가 매 인증요청 <span class="mono">consents</span> 조인(필요한 라우트에서만 로드 고려).</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-3, S1-5</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
   </div>
 
@@ -119,10 +127,11 @@
     <div class="ihead"><span class="iid">S1-8</span><span class="ititle">세션 / AuthGate 분기</span><span class="badge app">APP</span><span class="pill">S</span></div>
     <div class="idesc">앱 시작 시 로그인·온보딩 상태에 따라 진입 화면을 결정한다.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>부팅 시 토큰 확인 → 로그인 / 온보딩미완 / 홈 분기</span></li>
-      <li><span class="box"></span><span>로그아웃 시 스택 초기화(이미 UI 존재) + 토큰 삭제</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>부팅 시 토큰 확인 → <b>로그인 / 온보딩미완 / 홈 3분기</b>(<span class="mono">AuthGate</span>, <a href="step1.html#S1-7">S1-7</a> AuthController/AuthState 기반)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>로그아웃 → 토큰 삭제(+서버 무효화) + 스택 초기화</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>재실행 시 세션 유지로 홈 직행, 미온보딩 → 온보딩(secure storage 토큰 복원). 온보딩 완료 시 플래그 세팅으로 다음 부팅 홈 직행 — AuthGate 4분기 + 세션유지 위젯 테스트로 실증 <small>code-reviewer 실측: flutter analyze 무이슈, 테스트 38/38</small></span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 재실행 시 세션 유지로 홈 직행, 미온보딩 계정은 온보딩으로.</div>
+    <div class="iaccept"><b>완료</b> — 재실행 시 세션 유지로 홈 직행, 미온보딩 계정은 온보딩으로. <small>남음(완료를 막지 않음): 온보딩 완료 판정 placeholder는 <a href="step1.html#S1-10">S1-10</a>에서 해소됨 — 서버 <span class="mono">users/me.onboardedOn</span> 기준으로 교체(로컬 플래그 대신 서버 판정, restore/login 시 확정) · 실 소셜 SDK 로그인(현재 mock 토큰)은 <a href="step1.html#S1-9">S1-9</a> · <span class="mono">logout()</span> 로컬 정리를 try/finally로 감싸 서버 무효화 예외와 분리 권장(낮음) · 부팅 시 만료 토큰 검증 없이 홈 잠깐 노출(인터셉터 안전망 존재, MVP 허용, 낮음).</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-7, S1-5</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
   </div>
 
@@ -142,10 +151,11 @@
     <div class="ihead"><span class="iid">S1-10</span><span class="ititle">온보딩 저장</span><span class="badge app">APP</span><span class="pill">S</span></div>
     <div class="idesc">닉네임·러닝레벨을 실제 저장하고 위치 동의를 받아 홈으로 진입.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>닉네임 중복확인(<span class="mono">check-nickname</span>) → 레벨 → <span class="mono">PATCH /users/me</span></span></li>
-      <li><span class="box"></span><span>완료 시 onboardedAt 설정, MainShell 진입</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>닉네임 중복확인(<span class="mono">GET /users/check-nickname</span>) → 레벨 → 약관동의(<a href="step1.html#S1-11">S1-11</a>) → <span class="mono">PUT /users/onboard</span>(nickname·level·consents 한 번에 저장) — 레벨/consents 매핑이 백엔드 enum과 일치, 필수 3종(TERMS·PRIVACY·LOCATION) 게이팅</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>성공 시 서버 <span class="mono">onboardedOn</span> 설정 → <b>MainShell(홈) 진입</b>. 실패(400/409/네트워크)는 스낵바 노출(크래시 없음) + 로딩 처리</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><b>재실행 시 반복 안 함</b> — 온보딩 완료 판정을 서버 <span class="mono">users/me.onboardedOn</span> 기준으로 확정(restore/login), <span class="mono">getMe</span> 실패 시 캐시로 graceful 폴백 <small><a href="step1.html#S1-8">S1-8</a>의 로컬 플래그 placeholder TODO 해소</small></span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 온보딩 입력이 서버에 저장되고 재실행 시 반복되지 않는다.</div>
+    <div class="iaccept"><b>완료</b> — 온보딩 입력이 서버에 저장되고, 재실행 시 서버 <span class="mono">onboardedOn</span> 기준으로 반복되지 않는다. <small>code-reviewer 실측: flutter analyze 무이슈, 테스트 54/54. 후속 노트(완료를 막지 않음, 낮음): 오프라인+캐시부재로 온보딩 화면이 뜬 상태에서 이미 온보딩된 유저가 재제출 → <span class="mono">409</span> → 스낵바만 뜨고 홈 진입 불가(좁은 조건). 권장: <span class="mono">onboard</span>가 409면 성공과 동일 취급(<span class="mono">completeOnboarding</span>) 또는 <span class="mono">getMe</span> 재시도로 회복.</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-8, S1-6</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
   </div>
 
@@ -158,9 +168,9 @@
       <li><span class="box done"></span><span><span class="stag done">완료</span>위치정보 이용동의(필수) 온보딩 동의 단계에 반영 — 위치기반서비스 이용동의(법적) ≠ OS 위치권한, 구분 명시 <small>구현: <span class="mono">onboarding_screen.dart</span>·<span class="mono">terms_doc_screen.dart</span>, 회귀테스트 <span class="mono">test/layout_test.dart</span>, mock 기반(로컬 setState). code-reviewer 실측: flutter analyze 무이슈 + 33/33 테스트 통과</small></span></li>
       <li><span class="box"></span><span><span class="stag todo">남음</span>실제 <b>이용약관·개인정보처리방침 문안</b> — 현재 placeholder("추후 법무 검토", 시행일 <span class="mono">2026-00-00</span>), 실 법무 문서 필요</span></li>
       <li><span class="box"></span><span><span class="stag todo">남음</span><b>개인정보처리방침</b>(상시 고지 문서)을 "수집·이용 동의"와 별도 문서로 추가 — 구현 표기는 "개인정보 수집·이용 동의"라 법적으로 별개, 스토어 심사 대비 후속 검토</span></li>
-      <li><span class="box"></span><span><span class="stag defer">S1-3 이월</span>동의의 서버 기록(<span class="mono">UserConsent</span>: type·documentVersion·agreedAt·철회) — 현재 로컬 setState만, 백엔드 저장은 S1-3(UserConsent)/백엔드 동의 저장으로 이월</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>동의의 서버 기록(<span class="mono">UserConsent</span>: type·documentVersion·agreedOn·철회) — 온보딩 시 <a href="step1.html#S1-6"><span class="mono">PUT /users/onboard</span></a>에서 nickname·level 설정과 함께 원자적으로 기록 <small><a href="step1.html#S1-6">S1-6</a>에서 완료(이월 아님)</small></span></li>
     </ul>
-    <div class="iaccept partial"><b>부분 완료</b> — 온보딩 동의 단계·약관 화면(앱 내 열림)은 구현(mock)됐고, 실제 약관/처리방침 문안과 동의 서버 기록은 남음/이월.</div>
+    <div class="iaccept partial"><b>부분 완료</b> — 온보딩 동의 단계·약관 화면(앱 내 열림)은 구현(mock)됐고, 동의 서버 기록은 <a href="step1.html#S1-6">S1-6</a>에서 완료됐다. 남음 = 실제 이용약관·개인정보처리방침 법무 문안 + 개인정보처리방침 별도 문서.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a><a href="../domain/index.html#model">도메인</a></span></div>
   </div>
 
@@ -173,6 +183,20 @@
     </ul>
     <div class="iaccept"><b>완료</b> — 3사 키가 발급되어 S1-4/S1-9가 실제 검증·로그인에 사용 가능.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a></span></div>
+  </div>
+
+  <div class="issue app" id="S1-13">
+    <div class="ihead"><span class="iid">S1-13</span><span class="ititle">프로필 실데이터 표시</span><span class="badge app">APP</span><span class="pill">S</span></div>
+    <div class="idesc">프로필 화면 상단 신원(아바타·닉네임·레벨·티어)을 <span class="mono">GET /users/me</span> 실데이터로 표시한다.</div>
+    <ul class="isub">
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">meProvider</span>(FutureProvider → <span class="mono">getMe</span>) 도입 + <span class="mono">me.when(data/loading/error)</span> 배선</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>닉네임·레벨(입문/중급/고급)·티어(bronze~diamond) 실데이터 표시, 하드코딩(<span class="mono">러너_추노</span>·<span class="mono">중급 러너</span>·<span class="mono">💎 다이아</span>) 제거</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>로딩 스켈레톤 + 에러 재시도(<span class="mono">invalidate</span>)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>닉네임 null 폴백 · 긴 닉네임 ellipsis 처리 <small>code-reviewer 실측: flutter analyze 무이슈, 테스트 +27, 백엔드 계약 일치</small></span></li>
+      <li><span class="box"></span><span><span class="stag scope">스코프외</span>포인트(Points 컨텍스트 미구현)·랭킹(전체 순위)은 목업 유지, 티어 이모지/색 디자인 확정은 추후</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 온보딩한 유저의 실제 닉네임·레벨·티어가 프로필에 표시된다. <small>후속 노트(완료를 막지 않음, 낮음): 포인트·랭킹은 목업 유지 · 티어 이모지/색 디자인 확정 추후.</small></div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-6, S1-10</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
   </div>
 
   <div class="nav">

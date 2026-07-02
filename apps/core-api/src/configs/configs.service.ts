@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { type DataSourceOptions } from 'typeorm';
-import { GoogleConfig, JwtConfig } from './configuration';
+import { AppleConfig, GoogleConfig, JwtConfig } from './configuration';
 
 @Injectable()
 export class ConfigsService {
@@ -23,7 +23,15 @@ export class ConfigsService {
     return this.configService.get<GoogleConfig>('google')!;
   }
 
+  get apple() {
+    return this.configService.get<AppleConfig>('apple')!;
+  }
+
   get jwt() {
     return this.configService.get<JwtConfig>('jwt')!;
+  }
+
+  get authDevMode() {
+    return this.configService.get<boolean>('authDevMode')!;
   }
 }

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/error/app_exception.dart';
+import '../features/auth/auth_providers.dart';
+import '../features/users/user_models.dart';
+import '../features/users/user_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ui.dart';
-import 'main_shell.dart';
 import 'terms_doc_screen.dart';
 
 class _Step {
@@ -31,13 +35,13 @@ const List<_ConsentItem> _consentItems = [
   _ConsentItem('marketing', false, '마케팅 정보 수신 동의', null),
 ];
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   static const int _consentIndex = 2;
 
   int i = 0;
@@ -46,6 +50,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final Map<String, bool> _consent = {
     for (final it in _consentItems) it.key: false,
   };
+
+  /// 닉네임 중복확인 진행 중.
+  bool _checkingNick = false;
+  /// 닉네임 오류(길이/중복/네트워크) 메시지. null 이면 정상.
+  String? _nickError;
+  /// 마지막 "시작하기"(onboard 저장) 진행 중.
+  bool _submitting = false;
+
+  bool get _busy => _checkingNick || _submitting;
 
   @override
   void dispose() {
@@ -80,7 +93,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   List<_Step> get steps => [
         _Step('🏷️', '닉네임을 정해주세요', const Muted('경주와 랭킹에서 보여질 이름이에요.', size: 14, height: 1.6),
-            AppTextField(controller: _nick, hint: '닉네임 (2~12자)', maxLength: 12), '다음'),
+            _nickField(), '다음'),
         _Step('🎽', '러닝 레벨은?', const Muted('방 추천에 참고돼요.', size: 14, height: 1.6),
             _seg(['입문', '중급', '고급'], _level, (n) => setState(() => _level = n)), '다음'),
         const _Step('📋', '약관에 동의해주세요', SizedBox.shrink(), null, '동의하고 계속', consent: true),
@@ -98,6 +111,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             '위치 권한 허용'),
         _Step('🎯', '준비 완료!', const Muted('이제 추격전에 뛰어들 시간이에요.', size: 14, height: 1.6), null, '시작하기'),
       ];
+
+  Widget _nickField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppTextField(controller: _nick, hint: '닉네임 (2~12자)', maxLength: 12),
+        if (_nickError != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            _nickError!,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12.5, color: AppColors.alert, height: 1.4),
+          ),
+        ],
+      ],
+    );
+  }
 
   static Widget _seg(List<String> items, int active, ValueChanged<int> onTap) {
     return Container(
@@ -245,17 +275,91 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  void _next() {
+  Future<void> _next() async {
     FocusScope.of(context).unfocus();
+    if (_busy) return;
+    // 닉네임 단계: 길이 검증 후 중복확인을 통과해야 진행.
+    if (i == 0) {
+      await _checkNickThenAdvance();
+      return;
+    }
     if (i == _consentIndex && !_allRequired) return; // 필수 미동의 시 진행 차단
     if (i < steps.length - 1) {
       setState(() => i++);
     } else {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const MainShell()),
-        (r) => false,
-      );
+      await _submit();
     }
+  }
+
+  /// 닉네임 중복확인(GET /users/check-nickname) → 사용가능 시 다음 단계로.
+  Future<void> _checkNickThenAdvance() async {
+    final name = _nick.text.trim();
+    if (name.length < 2 || name.length > 12) {
+      setState(() => _nickError = '닉네임은 2~12자로 입력해주세요.');
+      return;
+    }
+    setState(() {
+      _checkingNick = true;
+      _nickError = null;
+    });
+    try {
+      final available = await ref.read(userRepositoryProvider).checkNickname(name);
+      if (!mounted) return;
+      if (!available) {
+        setState(() {
+          _checkingNick = false;
+          _nickError = '이미 사용 중인 닉네임이에요.';
+        });
+        return;
+      }
+      setState(() {
+        _checkingNick = false;
+        i++;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _checkingNick = false;
+        _nickError = _errorMessage(e);
+      });
+    }
+  }
+
+  /// 온보딩 저장(PUT /users/onboard) → 성공 시 세션 온보딩 완료 처리.
+  /// AuthGate 가 상태 전이로 홈(MainShell)을 렌더한다.
+  Future<void> _submit() async {
+    setState(() => _submitting = true);
+    final consents = [
+      for (final it in _consentItems)
+        if (_consent[it.key] == true) Consent(type: it.key, documentVersion: '1.0'),
+    ];
+    try {
+      await ref.read(userRepositoryProvider).onboard(
+            nickname: _nick.text.trim(),
+            level: RunnerLevel.fromIndex(_level).wire,
+            consents: consents,
+          );
+      if (!mounted) return;
+      await ref.read(authControllerProvider.notifier).completeOnboarding();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      _showError(_errorMessage(e));
+    }
+  }
+
+  String _errorMessage(Object e) =>
+      e is AppException ? e.message : '문제가 발생했어요. 잠시 후 다시 시도해주세요.';
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(msg),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.panel2,
+      ));
   }
 
   void _prev() {
@@ -270,7 +374,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final s = steps[i];
-    final ctaEnabled = !(i == _consentIndex && !_allRequired);
+    final ctaEnabled = !_busy && !(i == _consentIndex && !_allRequired);
+    final ctaLabel = _checkingNick
+        ? '확인 중…'
+        : _submitting
+            ? '시작하는 중…'
+            : s.cta;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -329,7 +438,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 36),
               child: Opacity(
                 opacity: ctaEnabled ? 1 : 0.4,
-                child: AppButton(s.cta, onTap: ctaEnabled ? _next : null),
+                child: AppButton(ctaLabel, onTap: ctaEnabled ? _next : null),
               ),
             ),
           ],

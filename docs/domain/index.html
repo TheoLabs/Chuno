@@ -230,16 +230,18 @@
     <div class="cards">
       <div class="card ar">
         <div class="hd"><span class="nm">User</span><span class="badge ar">Aggregate</span></div>
-        <div class="desc">앱 사용자 계정. 닉네임·레벨·티어를 지닌 프로필의 주체이자 모든 활동의 기준점.</div>
+        <div class="desc">앱 사용자 계정. 첫 소셜 로그인 시 온보딩 전(닉네임·레벨 없음) 상태로 먼저 생성되고, 온보딩 완료 시 닉네임·레벨이 채워진다.</div>
         <div class="fields">
           <div class="f"><span class="fn">id</span><span class="ft">UserId</span></div>
-          <div class="f"><span class="fn">nickname</span><span class="ft">Nickname</span><span class="fnote">2~12자·고유</span></div>
-          <div class="f"><span class="fn">level</span><span class="ft">RunnerLevel</span></div>
+          <div class="f"><span class="fn">nickname</span><span class="ft">Nickname?</span><span class="fnote">2~12자·고유 · 온보딩 전 null</span></div>
+          <div class="f"><span class="fn">level</span><span class="ft">RunnerLevel?</span><span class="fnote">온보딩 전 null</span></div>
           <div class="f"><span class="fn">tier</span><span class="ft">Tier</span><span class="fnote">파생(누적점수)</span></div>
           <div class="f"><span class="fn">profileImageFileId</span><span class="ft">FileId?</span><span class="fnote">프로필 사진 참조</span></div>
-          <div class="f"><span class="fn">joinOn</span><span class="ft">Date</span><span class="fnote">가입·온보딩 시각</span></div>
+          <div class="f"><span class="fn">joinOn</span><span class="ft">Date</span><span class="fnote">첫 소셜 로그인(가입) 시각</span></div>
+          <div class="f"><span class="fn">onboardedOn</span><span class="ft">CalendarDate?</span><span class="fnote">온보딩 완료 시각 · null이면 온보딩 전</span></div>
         </div>
         <div class="rel"><b>관계:</b> 1 ── 1 <b>AuthIdentity</b> · 1 ── 1 <b>RunnerStats</b>/<b>PointAccount</b>(참조) · 1 ── 1 <b>File</b>(profileImageFileId 참조)</div>
+        <div class="inv">onboardedOn is null → AuthGate가 온보딩으로 분기(S1-8) · 온보딩 완료(S1-10) 시 nickname·level 채움 + onboardedOn 설정</div>
       </div>
       <div class="card ent">
         <div class="hd"><span class="nm">AuthIdentity</span><span class="badge ent">Entity</span></div>
@@ -248,9 +250,9 @@
           <div class="f"><span class="fn">id</span><span class="ft">AuthIdentityId</span></div>
           <div class="f"><span class="fn">userId</span><span class="ft">UserId</span><span class="fnote">UNIQUE·1:1 강제</span></div>
           <div class="f"><span class="fn">provider</span><span class="ft">AuthProvider</span><span class="fnote">KAKAO·GOOGLE·APPLE</span></div>
-          <div class="f"><span class="fn">providerUserId</span><span class="ft">string</span></div>
+          <div class="f"><span class="fn">sub</span><span class="ft">string</span><span class="fnote">외부 소셜 고유ID(Google/Apple sub·Kakao id) · 조회 키</span></div>
         </div>
-        <div class="inv">UNIQUE(userId) — User당 AuthIdentity 1개(1:1) · UNIQUE(provider, providerUserId) — 소셜 계정당 1 User</div>
+        <div class="inv">UNIQUE(provider, sub) — 소셜 계정당 1 User(같은 소셜 계정이 두 User에 붙는 것 방지) · User와 1:1(userId)</div>
       </div>
       <div class="card ent">
         <div class="hd"><span class="nm">UserConsent</span><span class="badge ent">Entity</span></div>
@@ -260,11 +262,11 @@
           <div class="f"><span class="fn">userId</span><span class="ft">UserId</span></div>
           <div class="f"><span class="fn">type</span><span class="ft">ConsentType</span><span class="fnote">TERMS·PRIVACY·LOCATION·MARKETING?</span></div>
           <div class="f"><span class="fn">documentVersion</span><span class="ft">string</span><span class="fnote">동의한 문서 버전, 예 "v1.0"</span></div>
-          <div class="f"><span class="fn">agreedAt</span><span class="ft">Date</span></div>
-          <div class="f"><span class="fn">revokedAt</span><span class="ft">Date?</span><span class="fnote">철회 시각 · 위치동의는 철회 가능</span></div>
+          <div class="f"><span class="fn">agreedOn</span><span class="ft">Date</span></div>
+          <div class="f"><span class="fn">revokeOn</span><span class="ft">Date?</span><span class="fnote">철회 시각 · 위치동의는 철회 가능</span></div>
         </div>
         <div class="rel"><b>관계:</b> N ── 1 <b>User</b>(동의 이력)</div>
-        <div class="inv">약관 개정 시 재동의는 새 레코드로 append — type·documentVersion·agreedAt으로 "언제 어떤 버전에 동의했는지" 법적 입증(위치정보법·개인정보보호법·스토어 심사). 필수(TERMS·PRIVACY·LOCATION)/선택(MARKETING) 구분은 스키마 변경 없이 type으로 처리</div>
+        <div class="inv">약관 개정 시 재동의는 새 레코드로 append — type·documentVersion·agreedOn으로 "언제 어떤 버전에 동의했는지" 법적 입증(위치정보법·개인정보보호법·스토어 심사). 필수(TERMS·PRIVACY·LOCATION)/선택(MARKETING) 구분은 스키마 변경 없이 type으로 처리</div>
       </div>
       <div class="card vo">
         <div class="hd"><span class="nm">값 객체</span><span class="badge vo">Value Object</span></div>

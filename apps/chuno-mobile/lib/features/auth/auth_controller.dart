@@ -1,7 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/network/tokens.dart';
+import '../../core/storage/key_value_store.dart';
 import '../../core/storage/token_store.dart';
+import '../users/user_providers.dart';
+import '../users/user_repository.dart';
 import 'auth_providers.dart';
 import 'auth_repository.dart';
 import 'auth_state.dart';
@@ -9,32 +12,43 @@ import 'auth_state.dart';
 /// 인증 세션 컨트롤러. 토큰 보유 여부로 로그인 상태를 판단하고,
 /// 로그인/로그아웃/세션 만료를 처리한다.
 ///
-/// S1-7 범위: 세션 상태·컨트롤러 골격. 화면 배선은 S1-8 이후.
+/// 온보딩 완료 판정은 서버 권위(`GET /users/me` 의 `onboardedOn`)로 하며,
+/// 네트워크 실패 시 마지막으로 확인한 값을 로컬 캐시에서 폴백한다.
 class AuthController extends Notifier<AuthState> {
+  /// 서버 온보딩 판정 결과의 로컬 캐시 키.(오프라인/일시 실패 시 폴백용)
+  static const _onboardedCacheKey = 'chuno.session.onboarded';
+
   TokenStore get _tokenStore => ref.read(tokenStoreProvider);
   AuthRepository get _authRepository => ref.read(authRepositoryProvider);
+  UserRepository get _userRepository => ref.read(userRepositoryProvider);
+  KeyValueStore get _kv => ref.read(keyValueStoreProvider);
 
   @override
   AuthState build() {
     // 최초엔 미확정 상태로 시작하고, 비동기로 토큰 유무를 확인한다.
-    _restore();
+    restore();
     return const AuthState.unknown();
   }
 
-  Future<void> _restore() async {
+  /// 부팅 시 세션 복원. 저장된 토큰이 있으면 users/me 로 온보딩 여부를 확정한다.
+  Future<void> restore() async {
     final hasTokens = await _tokenStore.hasTokens();
-    state = hasTokens
-        ? const AuthState.authenticated()
-        : const AuthState.unauthenticated();
+    if (!hasTokens) {
+      state = const AuthState.unauthenticated();
+      return;
+    }
+    final onboarded = await _resolveOnboarded();
+    state = AuthState.authenticated(onboarded: onboarded);
   }
 
   /// 이미 발급된 토큰 쌍으로 세션을 확립한다.(로그인 성공 후)
   Future<void> establishSession(TokenPair tokens) async {
     await _tokenStore.save(tokens);
-    state = const AuthState.authenticated();
+    final onboarded = await _resolveOnboarded();
+    state = AuthState.authenticated(onboarded: onboarded);
   }
 
-  /// 소셜 자격으로 로그인.(실제 화면 연동은 S1-8 이후)
+  /// 소셜 자격으로 로그인.(실제 SDK 연동은 S1-9 범위)
   Future<void> login({
     required String provider,
     required String credential,
@@ -44,6 +58,15 @@ class AuthController extends Notifier<AuthState> {
       credential: credential,
     );
     await establishSession(tokens);
+  }
+
+  /// 온보딩 저장 성공 후 호출. 서버가 onboardedOn 을 세팅했으므로 상태를
+  /// onboarded=true 로 전이하고 로컬 캐시도 갱신한다.(재실행 시 폴백용)
+  Future<void> completeOnboarding() async {
+    await _writeCache(true);
+    if (state.isAuthenticated) {
+      state = const AuthState.authenticated(onboarded: true);
+    }
   }
 
   /// 사용자 로그아웃. 서버 세션 무효화(best-effort) + 로컬 토큰 삭제.
@@ -60,4 +83,22 @@ class AuthController extends Notifier<AuthState> {
   void onSessionExpired() {
     state = const AuthState.unauthenticated();
   }
+
+  /// users/me 로 온보딩 여부를 서버 권위로 확정한다. 실패 시(네트워크 등)
+  /// 세션은 유지하고 마지막으로 확인한 로컬 캐시 값으로 폴백한다.
+  Future<bool> _resolveOnboarded() async {
+    try {
+      final me = await _userRepository.getMe();
+      await _writeCache(me.isOnboarded);
+      return me.isOnboarded;
+    } catch (_) {
+      // graceful: 세션 유지, 캐시된 값으로 폴백(없으면 미완으로 간주).
+      return await _readCache();
+    }
+  }
+
+  Future<bool> _readCache() async => (await _kv.read(_onboardedCacheKey)) == 'true';
+
+  Future<void> _writeCache(bool v) async =>
+      _kv.write(_onboardedCacheKey, v ? 'true' : 'false');
 }

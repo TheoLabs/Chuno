@@ -1,9 +1,15 @@
 // 레이아웃 오버플로우 회귀 테스트 — 작은 화면(390x700)에서 각 화면이
 // RenderFlex overflow 없이 렌더링되는지 확인.
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:chuno_mobile/core/storage/key_value_store.dart';
 import 'package:chuno_mobile/data/mock.dart';
+import 'package:chuno_mobile/features/auth/auth_providers.dart';
+import 'package:chuno_mobile/features/users/user_models.dart';
+import 'package:chuno_mobile/features/users/user_providers.dart';
+import 'package:chuno_mobile/features/users/user_repository.dart';
 import 'package:chuno_mobile/theme/app_theme.dart';
 import 'package:chuno_mobile/screens/login_screen.dart';
 import 'package:chuno_mobile/screens/onboarding_screen.dart';
@@ -18,9 +24,33 @@ import 'package:chuno_mobile/screens/profile_screen.dart';
 import 'package:chuno_mobile/screens/store_screen.dart';
 import 'package:chuno_mobile/screens/terms_doc_screen.dart';
 
+/// 온보딩 닉네임 확인이 네트워크 없이 통과하도록 하는 fake.
+class _FakeUserRepository implements UserRepository {
+  @override
+  Future<bool> checkNickname(String nickname) async => true;
+  @override
+  Future<void> onboard({
+    required String nickname,
+    required String level,
+    required List<Consent> consents,
+  }) async {}
+  @override
+  Future<MeModel> getMe() async => const MeModel(id: 'u1');
+}
+
 void main() {
   // 탭 바디(Scaffold 없음)는 Scaffold로 감싼다.
   Widget wrapTab(Widget child) => Scaffold(body: SafeArea(child: child));
+
+  // Consumer 화면(로그인/온보딩/프로필)을 위해 ProviderScope 로 감싼다.
+  // 보안 저장소는 인메모리로, users API 는 fake 로 override 해 네트워크/플러그인 의존을 제거한다.
+  Widget app(Widget home) => ProviderScope(
+        overrides: [
+          keyValueStoreProvider.overrideWithValue(InMemoryKeyValueStore()),
+          userRepositoryProvider.overrideWithValue(_FakeUserRepository()),
+        ],
+        child: MaterialApp(theme: buildAppTheme(), home: home),
+      );
 
   final cases = <String, Widget>{
     'login': const LoginScreen(),
@@ -46,7 +76,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(MaterialApp(theme: buildAppTheme(), home: screen));
+      await tester.pumpWidget(app(screen));
       await tester.pump();
       expect(tester.takeException(), isNull, reason: '$name 렌더 예외');
     });
@@ -58,7 +88,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(MaterialApp(theme: buildAppTheme(), home: RaceScreen(room: Mock.rooms[0])));
+    await tester.pumpWidget(app(RaceScreen(room: Mock.rooms[0])));
     await tester.pump();
     expect(tester.takeException(), isNull, reason: 'race 렌더 예외');
     // 타이머 정리를 위해 위젯 폐기
@@ -71,7 +101,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(MaterialApp(theme: buildAppTheme(), home: const OnboardingScreen()));
+    await tester.pumpWidget(app(const OnboardingScreen()));
     await tester.pump();
     // 닉네임 → 러닝레벨 → 약관 동의 (2번 다음)
     await tester.tap(find.text('다음'));
@@ -90,7 +120,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(MaterialApp(theme: buildAppTheme(), home: const OnboardingScreen()));
+    await tester.pumpWidget(app(const OnboardingScreen()));
     await tester.pump();
     await tester.tap(find.text('다음'));
     await tester.pumpAndSettle();

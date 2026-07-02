@@ -2,11 +2,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:chuno_mobile/core/error/app_exception.dart';
 import 'package:chuno_mobile/core/network/tokens.dart';
 import 'package:chuno_mobile/core/storage/key_value_store.dart';
 import 'package:chuno_mobile/features/auth/auth_providers.dart';
 import 'package:chuno_mobile/features/auth/auth_repository.dart';
 import 'package:chuno_mobile/features/auth/auth_state.dart';
+import 'package:chuno_mobile/features/users/user_models.dart';
+import 'package:chuno_mobile/features/users/user_providers.dart';
+import 'package:chuno_mobile/features/users/user_repository.dart';
 
 class _FakeAuthRepository implements AuthRepository {
   int logoutCalls = 0;
@@ -23,13 +27,41 @@ class _FakeAuthRepository implements AuthRepository {
   Future<void> logout(String refreshToken) async => logoutCalls++;
 }
 
+/// 온보딩 판정을 위한 fake users API. getMe 결과/실패를 제어한다.
+class _FakeUserRepository implements UserRepository {
+  bool onboarded;
+  bool throwOnGetMe;
+  int getMeCalls = 0;
+  _FakeUserRepository({this.onboarded = false, this.throwOnGetMe = false});
+
+  @override
+  Future<bool> checkNickname(String nickname) async => true;
+
+  @override
+  Future<void> onboard({
+    required String nickname,
+    required String level,
+    required List<Consent> consents,
+  }) async =>
+      onboarded = true;
+
+  @override
+  Future<MeModel> getMe() async {
+    getMeCalls++;
+    if (throwOnGetMe) throw const NetworkFailure();
+    return MeModel(id: 'u1', onboardedOn: onboarded ? DateTime(2026) : null);
+  }
+}
+
 ProviderContainer _container({
   Map<String, String>? seedTokens,
   _FakeAuthRepository? repo,
+  _FakeUserRepository? users,
 }) {
   return ProviderContainer(overrides: [
     keyValueStoreProvider.overrideWithValue(InMemoryKeyValueStore(seedTokens)),
     authRepositoryProvider.overrideWithValue(repo ?? _FakeAuthRepository()),
+    userRepositoryProvider.overrideWithValue(users ?? _FakeUserRepository()),
   ]);
 }
 
@@ -97,6 +129,71 @@ void main() {
     expect(repo.logoutCalls, 1);
     expect(await c.read(tokenStoreProvider).read(), isNull);
     expect(c.read(authControllerProvider), const AuthState.unauthenticated());
+  });
+
+  test('restore: users/me.onboardedOn 있으면 onboarded=true', () async {
+    final c = _container(
+      seedTokens: {
+        'chuno.auth.accessToken': 'a1',
+        'chuno.auth.refreshToken': 'r1',
+      },
+      users: _FakeUserRepository(onboarded: true),
+    );
+    addTearDown(c.dispose);
+    await _settle(c);
+
+    final s = c.read(authControllerProvider);
+    expect(s.isAuthenticated, isTrue);
+    expect(s.onboarded, isTrue);
+  });
+
+  test('restore: users/me.onboardedOn null 이면 onboarded=false(온보딩 필요)', () async {
+    final c = _container(
+      seedTokens: {
+        'chuno.auth.accessToken': 'a1',
+        'chuno.auth.refreshToken': 'r1',
+      },
+      users: _FakeUserRepository(onboarded: false),
+    );
+    addTearDown(c.dispose);
+    await _settle(c);
+
+    expect(c.read(authControllerProvider).needsOnboarding, isTrue);
+  });
+
+  test('getMe 실패 시 세션 유지 + 캐시된 onboarded 로 폴백', () async {
+    final c = _container(
+      seedTokens: {
+        'chuno.auth.accessToken': 'a1',
+        'chuno.auth.refreshToken': 'r1',
+        'chuno.session.onboarded': 'true',
+      },
+      users: _FakeUserRepository(throwOnGetMe: true),
+    );
+    addTearDown(c.dispose);
+    await _settle(c);
+
+    final s = c.read(authControllerProvider);
+    expect(s.isAuthenticated, isTrue);
+    expect(s.onboarded, isTrue); // 캐시 폴백
+  });
+
+  test('completeOnboarding → onboarded=true + 캐시 갱신', () async {
+    final c = _container(
+      seedTokens: {
+        'chuno.auth.accessToken': 'a1',
+        'chuno.auth.refreshToken': 'r1',
+      },
+      users: _FakeUserRepository(onboarded: false),
+    );
+    addTearDown(c.dispose);
+    await _settle(c);
+    expect(c.read(authControllerProvider).needsOnboarding, isTrue);
+
+    await c.read(authControllerProvider.notifier).completeOnboarding();
+
+    expect(c.read(authControllerProvider).onboarded, isTrue);
+    expect(await c.read(keyValueStoreProvider).read('chuno.session.onboarded'), 'true');
   });
 
   test('onSessionExpired → unauthenticated', () async {

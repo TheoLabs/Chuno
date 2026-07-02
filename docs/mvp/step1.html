@@ -22,30 +22,36 @@
 
   <div class="callout"><b>목표</b> — 카카오/구글/애플로 로그인해서 닉네임·레벨을 저장하고 홈에 들어간다. (아직 방·경주는 mock이어도 됨)</div>
 
-  <p style="margin:-6px 0 18px;"><a href="../issue/step1.html" style="color:var(--coral); font-weight:600; font-size:13px;">🎫 이 스텝의 상세 이슈 (12) →</a></p>
+  <p style="margin:-6px 0 18px;"><a href="../issue/step1.html" style="color:var(--coral); font-weight:600; font-size:13px;">🎫 이 스텝의 상세 이슈 (13) →</a></p>
 
   <div class="dep"><b>선행:</b> 없음 (시작점)</div>
 
   <div class="group card">
     <div class="gh"><span class="badge be">BACKEND</span> core-api 골격 &amp; Auth</div>
-    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>ConfigModule</b>(@nestjs/config, 환경파일+validate) <b>+ TypeORM forRootAsync 연결</b>(MySQL, charset <span class="mono">utf8mb4</span>) <small>로컬 도커 MySQL, synchronize:true — false 전환은 S1-3에서</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>ConfigModule</b>(@nestjs/config, 환경파일+validate) <b>+ TypeORM forRootAsync 연결</b>(MySQL, charset <span class="mono">utf8mb4</span>) <small>로컬 도커 MySQL, <span class="mono">synchronize:true</span> 유지 — 마이그레이션 스크립트는 미도입 결정</small></div></div>
     <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span>헬스체크 <span class="mono">GET /api/health</span> 200 실측 + graceful shutdown(<span class="mono">enableShutdownHooks</span> · <span class="mono">datasource.destroy()</span>) <small>DB ping은 스코프 제외로 확정</small></div></div>
     <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>DDD 공용 기본형</b>(<span class="mono">libs/ddd</span>) — AggregateRoot·DomainEvent 기본형 + 리포지토리/서비스 포트 골격 <small>공용 DDD 기본형 골격 완료(<span class="mono">@libs/ddd</span>)</small></div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>User / AuthIdentity 엔티티</b> + 마이그레이션 <small>Nickname·RunnerLevel·Tier</small></div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>UserConsent 엔티티</b> — 약관·개인정보·위치 동의 기록(type·documentVersion·agreedAt·revokedAt?) <small>법적 입증용, User와 1:N</small></div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>소셜 검증</b> — google-auth-library / apple(jose) / kakao API로 idToken 검증, provider별</div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>JWT 액세스(15m) + opaque 리프레시 회전</b>, 재사용 감지 시 401</div></div>
-    <div class="task"><div class="box"></div><div class="k">엔드포인트 <span class="mono">POST /auth/social-login·refresh·logout</span>, <span class="mono">GET·PATCH /users/me</span>, <span class="mono">GET /users/check-nickname</span></div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>AUTH_DEV_MODE</b> — 키 없이 테스트할 dev 토큰 경로(카카오/애플 실키 발급 전 개발용)</div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>User / AuthIdentity 엔티티</b> <small>1:1 관계·UserConsent·UserRepository까지 완료(앱 부팅·스키마 생성 실측). 소셜 조회 키는 <span class="mono">sub</span>(Google/Apple <span class="mono">sub</span>, Kakao <span class="mono">id</span>) — <span class="mono">UNIQUE(provider, sub)</span>로 동일 소셜 신원 중복 거부(User와는 계속 1:1). 첫 소셜 로그인은 온보딩 전 User 생성(<span class="mono">nickname</span>·<span class="mono">level</span> nullable, <span class="mono">onboardedOn</span> null). 마이그레이션 스크립트는 미도입 결정(<span class="mono">synchronize</span> 유지) — <a href="../issue/step1.html#S1-3">S1-3</a>·<a href="../issue/step1.html#S1-4">S1-4</a></small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>UserConsent 엔티티</b> — 약관·개인정보·위치 동의 기록(type·documentVersion·agreedOn·revokeOn?) <small>법적 입증용, User와 1:N. <span class="mono">UserConsentType</span>에 <span class="mono">MARKETING</span>(선택 동의) 타입 추가 완료 — <a href="../issue/step1.html#S1-3">S1-3</a></small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>소셜 검증</b> — google(<span class="mono">google-auth-library</span> <span class="mono">verifyIdToken</span>) / apple(<span class="mono">jose</span> JWKS) / kakao(사용자 API)로 idToken 검증, <span class="mono">sub</span>로 <span class="mono">(provider, sub)</span> 조회·온보딩 전 User 생성 <small>code-reviewer 실측: build/lint OK, 테스트 12/12 — <a href="../issue/step1.html#S1-4">S1-4</a></small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>JWT 액세스(15m) + opaque 리프레시 회전</b>(sha256 해시 저장, 원문 미저장), 재사용 감지 시 <span class="mono">401</span> + 계열(family) 전체 무효화 <small>code-reviewer 실측: build/lint OK, 테스트 22/22, 부팅 E2E 전 흐름 실증 — <a href="../issue/step1.html#S1-5">S1-5</a></small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span>엔드포인트 <span class="mono">POST /api/auth/social-login · /api/auth/refresh · /api/auth/logout</span> + 전역 ValidationPipe(DTO 400 검증), logout이 family 폐기 <small>후속: 프로덕션 <span class="mono">JWT_ACCESS_SECRET</span> 강제 fail-fast — <a href="../issue/step1.html#S1-5">S1-5</a></small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>JWT 가드</b>(<span class="mono">UserGuard</span>) — Bearer 액세스 토큰 검증(무토큰·잘못된 토큰 401 실측), 성공 시 User 객체(consents 포함)를 <span class="mono">Context</span>에 주입 <small>code-reviewer 실측: build/lint OK, 부팅+엔드투엔드 — <a href="../issue/step1.html#S1-6">S1-6</a></small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><span class="mono">GET /users/me</span> — 200으로 내 정보 반환, 무토큰·손상토큰·존재하지 않는 유저 401 분기 실측, <span class="mono">onboardedOn</span> 문자열 직렬화·민감정보 미노출(직전 500 버그 해소) <small>code-reviewer 실측: build/lint OK, 부팅 후 엔드투엔드 — <a href="../issue/step1.html#S1-6">S1-6</a></small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><span class="mono">GET /users/check-nickname</span> — <span class="mono">@Query()</span> 전환·<span class="mono">@Length(2,12)</span>·<span class="mono">count</span> 기반 고유성 실측(직전 차단 버그 해소) <small>code-reviewer 재검증 — <a href="../issue/step1.html#S1-6">S1-6</a></small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span>온보딩 <span class="mono">PUT /users/onboard</span> — 필수 동의 3종(TERMS·PRIVACY·LOCATION) 전부 포함 검증 반영(도메인 <span class="mono">User.onboard</span>), 부분 동의 400 실측. happy path(<span class="mono">onboardedOn</span>·UserConsent <span class="mono">agreedOn</span> 서버 KST 원자 저장)·재온보딩 409·<span class="mono">consents</span> 누락/빈배열 400·응답 <span class="mono">{data}</span>·<span class="mono">MARKETING</span> enum·닉네임 2~12·중복 400 모두 정상 <small>code-reviewer 재검증: build/lint OK, 일회용 DB E2E. <a href="../issue/step1.html#S1-11">S1-11</a>의 동의 서버 기록 요구사항을 이 엔드포인트에서 완료(이월 아님)</small> — <a href="../issue/step1.html#S1-6">S1-6</a></div></div>
+    <div class="task"><div class="box"></div><div class="k"><span class="stag scope">스코프외</span>프로필 수정 <span class="mono">PUT /users/me</span>는 별도 태스크로 분리(추후) — <a href="../issue/step1.html#S1-6">S1-6</a></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>AUTH_DEV_MODE</b> — <span class="mono">"dev:&lt;sub&gt;:&lt;email&gt;"</span> 토큰으로 키 없이 로컬 테스트, 플래그 on일 때만 동작(기본 off) <small>후속: 프로덕션 <span class="mono">isProduction()</span> fail-fast 다중 방어 — <a href="../issue/step1.html#S1-4">S1-4</a></small></div></div>
   </div>
 
   <div class="group card">
     <div class="gh"><span class="badge app">APP</span> Flutter 실연동 기반</div>
     <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>상태관리·네트워킹 도입</b> — <b>Riverpod 확정</b>(ProviderScope) + dio + flutter_secure_storage 실제 보안 저장 <small>S1-7, code-reviewer 실측: flutter analyze 무이슈 + 33/33 테스트 통과</small></div></div>
     <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>api_client</b> — 401 시 refresh 회전 + single-flight + 재시도 후 요청 재개(TokenStore·Env·AppException·ApiResponse 포함) <small>실 E2E 왕복은 백엔드 S1-5 확정 후 잔여 확인</small></div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>session/AuthGate</b>(로그인 여부 분기)</div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>session/AuthGate</b> — 부팅 시 로그인/온보딩미완/홈 3분기, 재실행 시 세션 유지 홈 직행, 로그아웃 시 토큰 삭제+스택 초기화 <small>S1-8, code-reviewer 실측: flutter analyze 무이슈 + 38/38 테스트 통과. 온보딩완료 판정 로컬 플래그 placeholder는 <a href="../issue/step1.html#S1-10">S1-10</a>에서 서버 <span class="mono">onboardedOn</span> 기준으로 교체</small></div></div>
     <div class="task"><div class="box"></div><div class="k"><b>소셜 로그인 SDK</b> — google_sign_in / sign_in_with_apple / kakao (iOS 네이티브 클라이언트 주의)</div></div>
-    <div class="task"><div class="box"></div><div class="k">로그인 화면 실동작, <b>온보딩 저장</b>(닉네임 중복확인·레벨 → PATCH /users/me)</div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span>로그인 화면 실동작, <b>온보딩 저장</b>(닉네임 중복확인·레벨·약관동의 → <span class="mono">PUT /users/onboard</span>에 동의도 함께 전송) — 성공 시 <span class="mono">onboardedOn</span> 설정·홈 진입, 재실행 시 서버 판정으로 반복 안 함 <small>S1-10, code-reviewer 실측: flutter analyze 무이슈 + 54/54 테스트 통과</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>프로필 실데이터 표시</b> — <span class="mono">meProvider</span>(<span class="mono">GET /users/me</span>)로 아바타·닉네임·레벨·티어 표시, 하드코딩 제거 + 로딩 스켈레톤·에러 재시도 <small>S1-13, code-reviewer 실측: flutter analyze 무이슈, 테스트 +27. 포인트·전체 랭킹은 목업 유지(Points 컨텍스트 미구현)</small></div></div>
     <div class="task"><div class="box"></div><div class="k">권한 요청 플로우(위치) 연결 — 실제 권한 요청은 Step 3에서 사용</div></div>
   </div>
 
@@ -53,7 +59,7 @@
     <div class="gh"><span class="badge design">DESIGN</span> 법적/동의</div>
     <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>온보딩 약관 동의 단계</b> + 약관/개인정보/위치 문서 뷰어 화면(앱 내 열림) <small>mock 구현(로컬 setState), code-reviewer 실측: flutter analyze 무이슈 + 33/33 테스트 통과</small></div></div>
     <div class="task"><div class="box"></div><div class="k"><span class="stag todo">남음</span><b>이용약관·개인정보처리방침 실제 문안</b> — 현재 placeholder(시행일 2026-00-00), 법무 검토 필요 + 개인정보처리방침 별도 문서화 검토</div></div>
-    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>위치정보 이용동의</b>(위치정보법 필수) 온보딩 동의 단계 반영(mock) <small>동의 서버 기록(<span class="mono">UserConsent</span>: type·documentVersion·agreedAt)은 S1-3으로 이월</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>위치정보 이용동의</b>(위치정보법 필수) 온보딩 동의 단계 반영(mock) <small>동의 서버 기록(<span class="mono">UserConsent</span>: type·documentVersion·agreedOn)은 온보딩 <span class="mono">PUT /users/onboard</span>에서 완료 — <a href="../issue/step1.html#S1-6">S1-6</a></small></div></div>
     <div class="task"><div class="box"></div><div class="k">소셜 개발자 콘솔 앱 등록(카카오·구글 GCP·Apple) — 키/클라이언트 ID 발급 <small>리드타임 있음, 미리</small></div></div>
   </div>
 

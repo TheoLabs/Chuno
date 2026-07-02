@@ -20,7 +20,8 @@
 
     "paths": {
       "@configs": ["src/configs"],
-      "@libs/*": ["src/libs/*"]
+      "@libs/*": ["src/libs/*"],
+      "@modules/*": ["src/modules/*"]
     }
   },
   "exclude": ["node_modules", "dist"]

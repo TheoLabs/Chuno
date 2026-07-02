@@ -27,14 +27,14 @@ model: sonnet
 - SVG 다이어그램(예: 도메인 ERD)은 엣지가 노드 박스를 관통하지 않게 좌표를 배치하고, 참조/이벤트 관계에만 점선·곡선을 쓴다.
 
 ## 검증
-- HTML 수정 후 `open <경로>`로 렌더를 확인한다(무해한 정적 파일).
-- 링크·앵커가 제대로 걸리는지, 레이아웃이 깨지지 않는지 점검한다.
+- **브라우저를 자동으로 열지 마라 — `open`(또는 브라우저 실행) 금지.** 매번 새 창이 떠서 방해된다.
+- 대신 비주얼 없이 점검한다: 태그 균형(`div`/`nav`/`section` 등 여닫이 카운트 일치), `data-go`/`href`/앵커 `id` 참조가 실재하는지, 클래스명·구조 일치 여부를 grep/파싱으로 확인.
 - 무엇을 바꿨는지 짧게 요약해 보고한다 — 파일 내용을 통째로 덤프하지 않는다.
 
 ## 파일 맵
 - `docs/README.md` — 전체 문서 인덱스
 - `docs/chuno-mobile-design.md` — 모바일 설계 스펙(화면·규칙·컬러의 원천)
-- `docs/wireframes/index.html` — 인터랙티브 프로토타입("추격전" 소프트 코랄 정체성)
+- `docs/wireframes/index.html` — 인터랙티브 프로토타입("추격전" 소프트 코랄 정체성). **이 프로토타입 편집은 전용 `wireframe-designer` 에이전트 담당** — docs-editor는 여기 손대지 않는다(보드·MVP·도메인·README·스타일시트만).
 - `docs/domain/index.html` — DDD 도메인 설계(컨텍스트·애그리거트·이벤트·상태머신·ERD)
 - `docs/mvp/` — MVP 로드맵: `index.html` + `step1..5.html` + 공용 `style.css`
 - `docs/issue/` — 이슈 보드: `index.html` + `step1..5.html` + 공용 `style.css`; 이슈 ID는 `S<스텝>-<번호>`(예: `S3-4`)이며 앵커와 일치시킨다
