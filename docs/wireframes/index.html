@@ -787,7 +787,19 @@
   function stopRace(){ if(raceTimer){ clearInterval(raceTimer); raceTimer=null; } if(cdTimer) clearInterval(cdTimer); }
   function toggleDiscon(){ document.getElementById('discon').classList.toggle('on'); }
 
-  show('login');
+  /* ===== URL 해시 딥링크 ===== */
+  /* #login, #home, #profile 등 해시가 화면 id와 일치하면 해당 화면으로 진입.
+     기존 show()를 재사용하므로 좌측 인덱스 on 상태·경주 애니메이션 등도 그대로 동작. */
+  const screenIds = new Set(screens.map(s=>s.id));
+  function applyHash(){
+    const id = decodeURIComponent(location.hash.replace(/^#/, '')).trim();
+    if(id && screenIds.has(id)){ show(id); return true; }
+    return false;
+  }
+  window.addEventListener('hashchange', applyHash);
+
+  /* 로드 시: 해시가 매칭되면 그 화면, 아니면 기본(로그인) */
+  if(!applyHash()){ show('login'); }
 </script>
 </body>
 </html>

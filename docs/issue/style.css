@@ -42,3 +42,9 @@
 .ilinks a{color:var(--muted); border:1px solid var(--line); border-radius:6px; padding:2px 8px; margin-left:6px; font-size:11px;}
 .ilinks a:hover{color:var(--coral); border-color:var(--coral);}
 .imono{font-family:var(--mono);}
+
+/* 이슈별 "관련" 화면/도메인/MVP 딥링크 행 */
+.irelated{display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:9px; padding-top:9px; border-top:1px dashed #1c202a;}
+.irelated .irl-lbl{font-size:11px; color:var(--muted); margin-right:2px;}
+.irelated a{display:inline-flex; align-items:center; gap:4px; color:var(--muted); border:1px solid var(--line); border-radius:6px; padding:3px 9px; font-size:11px; transition:.12s;}
+.irelated a:hover{color:var(--coral); border-color:var(--coral);}

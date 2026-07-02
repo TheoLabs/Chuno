@@ -75,15 +75,15 @@
   .badge.vo{background:color-mix(in srgb,var(--vo) 18%,transparent); color:var(--vo);}
   .badge.rm{background:color-mix(in srgb,var(--rm) 18%,transparent); color:var(--rm);}
   .fields{padding:6px 13px 10px;}
-  .f{display:flex; gap:8px; padding:5px 0; font-size:12px; border-bottom:1px dashed #1e222a;}
+  .f{display:flex; flex-wrap:wrap; gap:2px 8px; padding:5px 0; font-size:12px; border-bottom:1px dashed #1e222a;}
   .f:last-child{border-bottom:0;}
   .f .fn{font-family:var(--mono); color:#d7dce3; flex:none;}
-  .f .ft{color:var(--vo); font-family:var(--mono); font-size:11px;}
-  .f .fnote{color:var(--muted); font-size:11px; margin-left:auto; text-align:right;}
-  .rel{padding:9px 13px; background:var(--bg2); border-top:1px solid var(--line); font-size:11px; color:var(--muted); line-height:1.7;}
+  .f .ft{color:var(--vo); font-family:var(--mono); font-size:11px; min-width:0; overflow-wrap:anywhere; word-break:break-word;}
+  .f .fnote{color:var(--muted); font-size:11px; margin-left:auto; text-align:right; min-width:0; max-width:100%; overflow-wrap:anywhere; word-break:break-word;}
+  .rel{padding:9px 13px; background:var(--bg2); border-top:1px solid var(--line); font-size:11px; color:var(--muted); line-height:1.7; overflow-wrap:anywhere; word-break:break-word;}
   .rel b{color:#c3c9d2; font-weight:600;}
-  .inv{padding:9px 13px; border-top:1px solid var(--line); font-size:11px; color:#e0b48a; line-height:1.7; background:color-mix(in srgb,var(--evt) 6%,transparent);}
-  .card .desc{padding:9px 13px 3px; font-size:12px; color:#aab0b9; line-height:1.55;}
+  .inv{padding:9px 13px; border-top:1px solid var(--line); font-size:11px; color:#e0b48a; line-height:1.7; background:color-mix(in srgb,var(--evt) 6%,transparent); overflow-wrap:anywhere; word-break:break-word;}
+  .card .desc{padding:9px 13px 3px; font-size:12px; color:#aab0b9; line-height:1.55; overflow-wrap:anywhere; word-break:break-word;}
 
   /* ERD */
   .erd-wrap{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; overflow-x:auto;}
@@ -158,7 +158,7 @@
 
 <!-- ========== 컨텍스트 개요 ========== -->
 <section id="overview">
-  <h2>바운디드 컨텍스트 (7)</h2>
+  <h2>바운디드 컨텍스트 (8)</h2>
   <div class="desc">각 컨텍스트 = core-api의 모듈 경계 후보. 컨텍스트 간에는 도메인 이벤트로 느슨하게 연결(EDA).</div>
   <div class="ctx-grid">
     <div class="ctx" style="border-top-color:var(--ar)">
@@ -216,6 +216,13 @@
         <li><b style="background:var(--vo)"></b>FileKind</li>
       </ul>
     </div>
+    <div class="ctx" style="border-top-color:var(--ent)">
+      <div class="en">Legal &amp; Compliance</div><h3>약관 · 정책</h3>
+      <ul>
+        <li><b style="background:var(--ent)"></b>LegalDocument</li>
+        <li><b style="background:var(--vo)"></b>LegalDocumentType · Status</li>
+      </ul>
+    </div>
   </div>
 </section>
 
@@ -228,7 +235,7 @@
   <div class="ctx-block">
     <h3>🔐 인증 · 사용자 <span class="en">Identity &amp; Access</span></h3>
     <div class="cards">
-      <div class="card ar">
+      <div class="card ar" id="ent-user">
         <div class="hd"><span class="nm">User</span><span class="badge ar">Aggregate</span></div>
         <div class="desc">앱 사용자 계정. 첫 소셜 로그인 시 온보딩 전(닉네임·레벨 없음) 상태로 먼저 생성되고, 온보딩 완료 시 닉네임·레벨이 채워진다.</div>
         <div class="fields">
@@ -243,7 +250,7 @@
         <div class="rel"><b>관계:</b> 1 ── 1 <b>AuthIdentity</b> · 1 ── 1 <b>RunnerStats</b>/<b>PointAccount</b>(참조) · 1 ── 1 <b>File</b>(profileImageFileId 참조)</div>
         <div class="inv">onboardedOn is null → AuthGate가 온보딩으로 분기(S1-8) · 온보딩 완료(S1-10) 시 nickname·level 채움 + onboardedOn 설정</div>
       </div>
-      <div class="card ent">
+      <div class="card ent" id="ent-authidentity">
         <div class="hd"><span class="nm">AuthIdentity</span><span class="badge ent">Entity</span></div>
         <div class="desc">소셜 로그인 수단(카카오·구글·애플)과 User를 잇는 연결. 유저당 소셜 신원 1개(1:1) — 통합 소셜로그인(다중 provider 연동) 미지원.</div>
         <div class="fields">
@@ -254,19 +261,20 @@
         </div>
         <div class="inv">UNIQUE(provider, sub) — 소셜 계정당 1 User(같은 소셜 계정이 두 User에 붙는 것 방지) · User와 1:1(userId)</div>
       </div>
-      <div class="card ent">
+      <div class="card ent" id="ent-userconsent">
         <div class="hd"><span class="nm">UserConsent</span><span class="badge ent">Entity</span></div>
         <div class="desc">약관·개인정보·위치 동의를 "받았다"는 사실의 append 기록. User 필드로 흡수하지 않고 별도 이력으로 분리.</div>
         <div class="fields">
           <div class="f"><span class="fn">id</span><span class="ft">UserConsentId</span></div>
           <div class="f"><span class="fn">userId</span><span class="ft">UserId</span></div>
           <div class="f"><span class="fn">type</span><span class="ft">ConsentType</span><span class="fnote">TERMS·PRIVACY·LOCATION·MARKETING?</span></div>
-          <div class="f"><span class="fn">documentVersion</span><span class="ft">string</span><span class="fnote">동의한 문서 버전, 예 "v1.0"</span></div>
+          <div class="f"><span class="fn">legalDocumentId</span><span class="ft">LegalDocumentId</span><span class="fnote">논리 FK · 물리 FK 아님, 앱/서버 검증</span></div>
+          <div class="f"><span class="fn">documentVersion</span><span class="ft">string</span><span class="fnote">동의 시점 version 서버 스냅샷, 예 "v1.0"</span></div>
           <div class="f"><span class="fn">agreedOn</span><span class="ft">Date</span></div>
           <div class="f"><span class="fn">revokeOn</span><span class="ft">Date?</span><span class="fnote">철회 시각 · 위치동의는 철회 가능</span></div>
         </div>
-        <div class="rel"><b>관계:</b> N ── 1 <b>User</b>(동의 이력)</div>
-        <div class="inv">약관 개정 시 재동의는 새 레코드로 append — type·documentVersion·agreedOn으로 "언제 어떤 버전에 동의했는지" 법적 입증(위치정보법·개인정보보호법·스토어 심사). 필수(TERMS·PRIVACY·LOCATION)/선택(MARKETING) 구분은 스키마 변경 없이 type으로 처리</div>
+        <div class="rel"><b>관계:</b> N ── 1 <b>User</b>(동의 이력) · <b>legalDocumentId</b> ┄▷ <b>LegalDocument</b>(논리 참조, 물리 FK 아님 · Legal &amp; Compliance 컨텍스트와의 유일한 연결)</div>
+        <div class="inv">약관 개정 시 재동의는 새 레코드로 append — 클라는 <b>legalDocumentId</b>만 전송, 서버가 그 시점 <b>documentVersion</b>을 스냅샷 기록. type·legalDocumentId·documentVersion 스냅샷으로 "언제 어떤 버전에 동의했는지" 법적 입증(위치정보법·개인정보보호법·스토어 심사). 필수(TERMS·PRIVACY·LOCATION)/선택(MARKETING) 구분은 스키마 변경 없이 type으로 처리</div>
       </div>
       <div class="card vo">
         <div class="hd"><span class="nm">값 객체</span><span class="badge vo">Value Object</span></div>
@@ -284,7 +292,7 @@
   <div class="ctx-block">
     <h3>🏁 런닝방 · 매칭 <span class="en">Room</span></h3>
     <div class="cards">
-      <div class="card ar">
+      <div class="card ar" id="ent-room">
         <div class="hd"><span class="nm">Room</span><span class="badge ar">Aggregate</span></div>
         <div class="desc">한 번의 경주를 위한 모집 단위. 목표·시작시각·정원을 정하고 참가자를 모은다.</div>
         <div class="fields">
@@ -293,19 +301,19 @@
           <div class="f"><span class="fn">name</span><span class="ft">string</span></div>
           <div class="f"><span class="fn">goal</span><span class="ft">RaceGoal</span><span class="fnote">거리+제한시간</span></div>
           <div class="f"><span class="fn">maxParticipants</span><span class="ft">int</span></div>
-          <div class="f"><span class="fn">scheduledStartAt</span><span class="ft">Date</span></div>
+          <div class="f"><span class="fn">scheduledStartOn</span><span class="ft">CalendarDate</span><span class="fnote">KST · YYYY-MM-DD HH:mm:ss</span></div>
           <div class="f"><span class="fn">status</span><span class="ft">RoomStatus</span></div>
           <div class="f"><span class="fn">participants</span><span class="ft">Participant[]</span></div>
         </div>
         <div class="rel"><b>관계:</b> 1 ── N <b>Participant</b> · 1 ──▶ <b>Race</b>(LIVE 전환 시 생성)</div>
         <div class="inv">불변식: 2 ≤ max · 정원 초과 join 불가 · 시작 후 join 불가 · 시작 시각 2명 미만 → CANCELLED</div>
       </div>
-      <div class="card ent">
+      <div class="card ent" id="ent-participant">
         <div class="hd"><span class="nm">Participant</span><span class="badge ent">Entity</span></div>
         <div class="desc">특정 방에 참가한 한 명. Room 애그리거트 내부에서만 존재하는 자식 엔티티.</div>
         <div class="fields">
           <div class="f"><span class="fn">userId</span><span class="ft">UserId</span></div>
-          <div class="f"><span class="fn">joinedAt</span><span class="ft">Date</span></div>
+          <div class="f"><span class="fn">joinedOn</span><span class="ft">CalendarDate</span><span class="fnote">KST · YYYY-MM-DD HH:mm:ss</span></div>
           <div class="f"><span class="fn">isHost</span><span class="ft">bool</span></div>
         </div>
         <div class="rel">Room 애그리거트 내부 자식(별도 조회 X)</div>
@@ -325,7 +333,7 @@
   <div class="ctx-block">
     <h3>🏃 경주 (실시간) <span class="en">Race</span></h3>
     <div class="cards">
-      <div class="card ar">
+      <div class="card ar" id="ent-race">
         <div class="hd"><span class="nm">Race</span><span class="badge ar">Aggregate</span></div>
         <div class="desc">방이 출발하면 생성되는 실시간 경주 세션. 진행을 모아 순위를 매기고 종료를 판정.</div>
         <div class="fields">
@@ -340,7 +348,7 @@
         <div class="rel"><b>관계:</b> 1 ── N <b>RaceParticipant</b> · 종료 시 N개 <b>RaceResult</b> 생성</div>
         <div class="inv">종료 조건: 전원 완주 OR 제한시간 경과 · finalize 멱등</div>
       </div>
-      <div class="card ent">
+      <div class="card ent" id="ent-raceparticipant">
         <div class="hd"><span class="nm">RaceParticipant</span><span class="badge ent">Entity</span></div>
         <div class="desc">경주 중 한 러너의 실시간 진행 상태(거리·상태). 좌표 없이 거리만 보고받는다.</div>
         <div class="fields">
@@ -367,7 +375,7 @@
   <div class="ctx-block">
     <h3>🏆 점수 · 랭킹 <span class="en">Scoring &amp; Ranking</span></h3>
     <div class="cards">
-      <div class="card ar">
+      <div class="card ar" id="ent-raceresult">
         <div class="hd"><span class="nm">RaceResult</span><span class="badge ar">Aggregate</span></div>
         <div class="desc">경주 종료 시 유저 1명에 대해 확정되는 성적 기록. 기록·랭킹·포인트의 원천.</div>
         <div class="fields">
@@ -382,7 +390,7 @@
         </div>
         <div class="rel">기록/랭킹/포인트의 원천. 날짜 윈도우로 주간·월간 집계.</div>
       </div>
-      <div class="card ar">
+      <div class="card ar" id="ent-runnerstats">
         <div class="hd"><span class="nm">RunnerStats</span><span class="badge ar">Aggregate</span></div>
         <div class="desc">유저별 누적 전적(총점·거리·경기수·승수)과 티어를 관리하는 집계.</div>
         <div class="fields">
@@ -406,7 +414,7 @@
         </div>
         <div class="inv">서버 권위 계산 · 배점 밸런싱은 MVP 이후</div>
       </div>
-      <div class="card rm">
+      <div class="card rm" id="ent-leaderboard">
         <div class="hd"><span class="nm">Leaderboard</span><span class="badge rm">Read Model</span></div>
         <div class="desc">누적/주간/월간 순위를 빠르게 조회하기 위한 읽기 전용 투영(Redis ZSET).</div>
         <div class="fields">
@@ -422,7 +430,7 @@
   <div class="ctx-block">
     <h3>🎟️ 포인트 · 보상 <span class="en">Points &amp; Rewards</span></h3>
     <div class="cards">
-      <div class="card ar">
+      <div class="card ar" id="ent-pointaccount">
         <div class="hd"><span class="nm">PointAccount</span><span class="badge ar">Aggregate</span></div>
         <div class="desc">유저의 포인트 잔액과 거래 내역을 관리하는 지갑. 잔액 일관성의 경계.</div>
         <div class="fields">
@@ -432,7 +440,7 @@
         </div>
         <div class="inv">잔액 ≥ 0 · 적립/차감은 트랜잭션으로만</div>
       </div>
-      <div class="card ent">
+      <div class="card ent" id="ent-pointtransaction">
         <div class="hd"><span class="nm">PointTransaction</span><span class="badge ent">Entity</span></div>
         <div class="desc">포인트 적립·차감 한 건의 불변 기록(사유·참조 포함).</div>
         <div class="fields">
@@ -441,7 +449,7 @@
           <div class="f"><span class="fn">refId</span><span class="ft">string</span></div>
         </div>
       </div>
-      <div class="card ent">
+      <div class="card ent" id="ent-entitlement">
         <div class="hd"><span class="nm">Entitlement</span><span class="badge ent">Entity</span></div>
         <div class="desc">구매로 부여된 권리(예: 광고 제거)와 만료 시점.</div>
         <div class="fields">
@@ -457,7 +465,7 @@
   <div class="ctx-block">
     <h3>🔔 알림 <span class="en">Notification</span></h3>
     <div class="cards">
-      <div class="card ent">
+      <div class="card ent" id="ent-devicetoken">
         <div class="hd"><span class="nm">DeviceToken</span><span class="badge ent">Entity</span></div>
         <div class="desc">푸시 발송 대상 기기 토큰. 유저당 여러 기기 가능.</div>
         <div class="fields">
@@ -465,7 +473,7 @@
           <div class="f"><span class="fn">token · platform</span><span class="ft">string</span></div>
         </div>
       </div>
-      <div class="card rm">
+      <div class="card rm" id="ent-notification">
         <div class="hd"><span class="nm">Notification</span><span class="badge rm">Projection</span></div>
         <div class="desc">타 컨텍스트 이벤트를 구독해 생성되는 알림 발송 기록(순수 소비자).</div>
         <div class="fields">
@@ -481,7 +489,7 @@
   <div class="ctx-block">
     <h3>🗂️ 파일 · 미디어 <span class="en">File / Media</span></h3>
     <div class="cards">
-      <div class="card ar">
+      <div class="card ar" id="ent-file">
         <div class="hd"><span class="nm">File</span><span class="badge ar">Aggregate</span></div>
         <div class="desc">사진·영상 등 정적 파일 1건. S3에 저장하고 공개 URL로 서빙 — 프로필 사진 등이 이 파일을 참조한다.</div>
         <div class="fields">
@@ -503,6 +511,37 @@
         <div class="fields">
           <div class="f"><span class="fn">IMAGE</span><span class="fnote">사진</span></div>
           <div class="f"><span class="fn">VIDEO</span><span class="fnote">영상</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legal & Compliance -->
+  <div class="ctx-block">
+    <h3>📜 약관 · 정책 <span class="en">Legal &amp; Compliance</span></h3>
+    <div class="cards">
+      <div class="card ent" id="ent-legaldocument">
+        <div class="hd"><span class="nm">LegalDocument</span><span class="badge ent">Entity</span></div>
+        <div class="desc">이용약관·개인정보처리방침 등 법적 문서의 버전 관리. type별로 버전을 append하고, 그중 활성(ACTIVE) 버전은 항상 1개만 유지한다.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">id</span><span class="ft">LegalDocumentId</span></div>
+          <div class="f"><span class="fn">type</span><span class="ft">LegalDocumentType</span><span class="fnote">TERMS·PRIVACY·PRIVACY_NOTICE·LOCATION·MARKETING</span></div>
+          <div class="f"><span class="fn">version</span><span class="ft">string</span><span class="fnote">예 "v1.0"</span></div>
+          <div class="f"><span class="fn">title</span><span class="ft">string</span></div>
+          <div class="f"><span class="fn">content</span><span class="ft">text</span><span class="fnote">DB text 컬럼 · 다국어 locale은 후속</span></div>
+          <div class="f"><span class="fn">expectedActivateOn</span><span class="ft">CalendarDate</span><span class="fnote">KST · 예약 활성 시각</span></div>
+          <div class="f"><span class="fn">status</span><span class="ft">LegalDocumentStatus</span><span class="fnote">DRAFT·ACTIVE·ARCHIVED · 외부 호출 활성화 API로 전이</span></div>
+          <div class="f"><span class="fn">createdAt / updatedAt</span><span class="ft">Date</span><span class="fnote">UTC</span></div>
+        </div>
+        <div class="rel"><b>관계:</b> ◁┄┄ <b>UserConsent.legalDocumentId</b>(논리 참조 · 물리 FK 아님) — Identity &amp; Access 컨텍스트와는 이 ID 참조 하나로만 연결</div>
+        <div class="inv">불변식: <b>UNIQUE(type, version)</b> + <b>type별 ACTIVE 1개</b> — 개정 시 새 버전을 DRAFT로 <b>expectedActivateOn</b>과 함께 append. 활성 전이는 <b>외부 호출 활성화 API</b>가 <b>expectedActivateOn</b> 도달 문서를 DRAFT→ACTIVE, 직전 ACTIVE→ARCHIVED로 전이(내부 스케줄러 아님, type별 ACTIVE 1개 유지, 멱등). 조회(GET)는 공개(온보딩 열람) · 등록/설정(POST/PUT)은 관리자 role(백오피스 미구현 — 후속/최소 인증)</div>
+      </div>
+      <div class="card vo">
+        <div class="hd"><span class="nm">값 객체</span><span class="badge vo">Value Object</span></div>
+        <div class="desc">문서 종류와 상태를 표현하는 불변 타입.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">LegalDocumentType</span><span class="fnote">TERMS·PRIVACY·PRIVACY_NOTICE·LOCATION·MARKETING</span></div>
+          <div class="f"><span class="fn">LegalDocumentStatus</span><span class="fnote">DRAFT·ACTIVE·ARCHIVED</span></div>
         </div>
       </div>
     </div>
@@ -542,6 +581,7 @@
       <!-- references (점선) -->
       <path class="edge ref" d="M75,106 Q55,772 518,712" marker-end="url(#arw)"/>
       <path class="edge ref" d="M100,106 Q332,796 743,626" marker-end="url(#arw)"/>
+      <path class="edge ref" d="M485,193 Q760,230 1020,198" marker-end="url(#arw)"/>
       <!-- events (점선, Race·RaceResult ⇢ Notification) -->
       <path class="edge evt" d="M440,388 Q780,240 975,103" marker-end="url(#arwE)"/>
       <path class="edge evt" d="M555,545 Q905,345 1003,103" marker-end="url(#arwE)"/>
@@ -562,6 +602,7 @@
       <g><rect class="nbox" x="770" y="705" width="150" height="46" rx="9"/><rect x="770" y="705" width="4" height="46" rx="2" fill="#5B9BFF"/><text class="nname" x="786" y="726">PointTransaction</text><text class="ntype" x="786" y="742">ENTITY</text></g>
       <g><rect class="nbox" x="955" y="705" width="150" height="46" rx="9"/><rect x="955" y="705" width="4" height="46" rx="2" fill="#5B9BFF"/><text class="nname" x="971" y="726">Entitlement</text><text class="ntype" x="971" y="742">ENTITY</text></g>
       <g><rect class="nbox" x="915" y="55" width="150" height="46" rx="9"/><rect x="915" y="55" width="4" height="46" rx="2" fill="#B98BFF"/><text class="nname" x="931" y="76">Notification</text><text class="ntype" x="931" y="92">READ MODEL</text></g>
+      <g><rect class="nbox" x="1020" y="175" width="150" height="46" rx="9"/><rect x="1020" y="175" width="4" height="46" rx="2" fill="#5B9BFF"/><text class="nname" x="1036" y="196">LegalDocument</text><text class="ntype" x="1036" y="212">ENTITY</text></g>
 
       <!-- edge labels (top) -->
       <text class="elabel" x="248" y="60">1 · 1</text>
@@ -581,6 +622,7 @@
       <text class="elabel" x="26" y="28">1·1 ref</text>
       <text class="elabel" x="172" y="34">N·1 owner</text>
       <text class="elabel" x="792" y="150">이벤트 구독 → 푸시</text>
+      <text class="elabel" x="660" y="250">legalDocumentId (논리참조)</text>
     </svg>
   </div>
 </section>
@@ -661,7 +703,7 @@
   <table>
     <thead><tr><th style="width:22%">화면</th><th style="width:34%">애그리거트 / 값객체</th><th>유스케이스 · 비고</th></tr></thead>
     <tbody>
-      <tr class="maprow"><td>로그인 · 온보딩</td><td><span class="pill">User</span><span class="pill">AuthIdentity</span><span class="pill">UserConsent</span><span class="pill">Nickname</span><span class="pill">RunnerLevel</span></td><td>소셜로그인, 닉네임/레벨/위치권한, 약관·위치동의 기록</td></tr>
+      <tr class="maprow"><td>로그인 · 온보딩</td><td><span class="pill">User</span><span class="pill">AuthIdentity</span><span class="pill">UserConsent</span><span class="pill">LegalDocument</span><span class="pill">Nickname</span><span class="pill">RunnerLevel</span></td><td>소셜로그인, 닉네임/레벨/위치권한, 약관·위치동의 기록, 약관전문(doc-viewer)은 활성 LegalDocument 조회</td></tr>
       <tr class="maprow"><td>홈 (방 목록)</td><td><span class="pill">Room</span><span class="pill">RoomStatus</span></td><td>모집중/곧시작/LIVE 조회 · 필터</td></tr>
       <tr class="maprow"><td>방 생성</td><td><span class="pill">Room</span><span class="pill">RaceGoal</span></td><td>거리·제한시간·인원·시작시각</td></tr>
       <tr class="maprow"><td>방 로비</td><td><span class="pill">Room</span><span class="pill">Participant</span></td><td>실시간 입퇴장(WS) · 자동 출발 대기</td></tr>

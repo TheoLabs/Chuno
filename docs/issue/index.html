@@ -44,6 +44,10 @@
       <a class="row" href="step1.html#S1-11"><span class="iid">S1-11</span><span class="rt">약관·개인정보·위치 동의 화면 + 문서</span><span class="badge design">DES</span><span class="pill">M</span></a>
       <a class="row" href="step1.html#S1-12"><span class="iid">S1-12</span><span class="rt">소셜 개발자 콘솔 앱 등록 · 키 발급</span><span class="badge ops">OPS</span><span class="pill">M</span></a>
       <a class="row" href="step1.html#S1-13"><span class="iid">S1-13</span><span class="rt">프로필 실데이터 표시 (GET /users/me 실연동) <span class="stag done">완료</span></span><span class="badge app">APP</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#S1-14"><span class="iid">S1-14</span><span class="rt">법적 문서 버전관리 도메인 설계 (Legal &amp; Compliance)</span><span class="badge design">DES</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#S1-15"><span class="iid">S1-15</span><span class="rt">LegalDocument 엔티티 + 리포지토리 + seed</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step1.html#S1-16"><span class="iid">S1-16</span><span class="rt">법적 문서 조회 + 발행 API</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step1.html#S1-17"><span class="iid">S1-17</span><span class="rt">문서 하드코딩 제거 → 활성 문서 API 연동</span><span class="badge app">APP</span><span class="pill">M</span></a>
     </div>
   </div>
 
@@ -51,16 +55,18 @@
   <div class="stepsec">
     <div class="sh"><span class="snum">STEP 2</span><span class="stitle">방 &amp; 실시간 로비</span><span class="sgo"><a href="step2.html">상세 →</a> · <a href="../mvp/step2.html">MVP</a></span></div>
     <div class="rows">
-      <a class="row" href="step2.html#S2-1"><span class="iid">S2-1</span><span class="rt">Room 애그리거트 + Participant + 마이그레이션</span><span class="badge be">BE</span><span class="pill">M</span></a>
-      <a class="row" href="step2.html#S2-2"><span class="iid">S2-2</span><span class="rt">Room API (생성/목록/참가/나가기/삭제)</span><span class="badge be">BE</span><span class="pill">M</span></a>
-      <a class="row" href="step2.html#S2-3"><span class="iid">S2-3</span><span class="rt">예약 스케줄러 (상태전환·인원미달 취소)</span><span class="badge be">BE</span><span class="pill">M</span></a>
-      <a class="row" href="step2.html#S2-4"><span class="iid">S2-4</span><span class="rt">로비 socket.io 게이트웨이 (입퇴장 브로드캐스트)</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step2.html#S2-1"><span class="iid">S2-1</span><span class="rt">Room 애그리거트 + Participant + 스키마</span><span class="badge be">BE</span><span class="pill">L</span></a>
+      <a class="row" href="step2.html#S2-2"><span class="iid">S2-2</span><span class="rt">Room API (생성·탐색·참가·나가기·삭제)</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step2.html#S2-3"><span class="iid">S2-3</span><span class="rt">예약 스케줄러 (동시출발 트리거)</span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step2.html#S2-4"><span class="iid">S2-4</span><span class="rt">로비 socket.io 게이트웨이 (+서버시각 소스)</span><span class="badge be">BE</span><span class="pill">M</span></a>
       <a class="row" href="step2.html#S2-5"><span class="iid">S2-5</span><span class="rt">Room 도메인 이벤트 (인프로세스)</span><span class="badge be">BE</span><span class="pill">S</span></a>
       <a class="row" href="step2.html#S2-6"><span class="iid">S2-6</span><span class="rt">홈 방목록 실연동 + 필터</span><span class="badge app">APP</span><span class="pill">M</span></a>
       <a class="row" href="step2.html#S2-7"><span class="iid">S2-7</span><span class="rt">방 생성 실연동</span><span class="badge app">APP</span><span class="pill">S</span></a>
-      <a class="row" href="step2.html#S2-8"><span class="iid">S2-8</span><span class="rt">로비 실시간 (socket.io·입퇴장·나가기/삭제)</span><span class="badge app">APP</span><span class="pill">M</span></a>
+      <a class="row" href="step2.html#S2-8"><span class="iid">S2-8</span><span class="rt">로비 실시간</span><span class="badge app">APP</span><span class="pill">M</span></a>
       <a class="row" href="step2.html#S2-9"><span class="iid">S2-9</span><span class="rt">서버시계 동기 카운트다운</span><span class="badge app">APP</span><span class="pill">S</span></a>
-      <a class="row" href="step2.html#S2-10"><span class="iid">S2-10</span><span class="rt">방 엣지 상태 (취소/빈 목록)</span><span class="badge design">DES</span><span class="pill">S</span></a>
+      <a class="row" href="step2.html#S2-10"><span class="iid">S2-10</span><span class="rt">방 엣지 상태 UX</span><span class="badge design">DES</span><span class="pill">S</span></a>
+      <a class="row" href="step2.html#S2-11"><span class="iid">S2-11</span><span class="rt">방 참가 → 로비 진입 플로우</span><span class="badge app">APP</span><span class="pill">S</span></a>
+      <a class="row" href="step2.html#S2-12"><span class="iid">S2-12</span><span class="rt">Redis / BullMQ 인프라</span><span class="badge ops">OPS</span><span class="pill">S</span></a>
     </div>
   </div>
 

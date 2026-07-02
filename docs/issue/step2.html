@@ -19,121 +19,180 @@
 <div class="wrap">
   <div class="crumb"><a href="index.html">이슈 보드</a><span class="sep">/</span>Step 2<span class="sep">·</span><a href="../mvp/step2.html">MVP Step 2</a></div>
   <h1><b>Step 2</b> · 방 &amp; 실시간 로비</h1>
-  <p class="lead">방 생성·참가와 실시간(socket.io) 로비. 예약 시각 대기까지. (총 10 이슈)</p>
+  <p class="lead">방 생성·참가와 실시간(socket.io) 로비. 예약 시각 대기까지. (총 12 이슈)</p>
   <div class="boardnote">
     <a class="linkbtn" href="../mvp/step2.html">📋 <b>MVP Step 2</b></a>
     <a class="linkbtn" href="index.html">← 이슈 보드</a>
   </div>
 
   <div class="issue" id="S2-1">
-    <div class="ihead"><span class="iid">S2-1</span><span class="ititle">Room 애그리거트 + Participant + 마이그레이션</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="ihead"><span class="iid">S2-1</span><span class="ititle">Room 애그리거트 + Participant + 스키마</span><span class="badge be">BACKEND</span><span class="pill">L</span></div>
     <div class="idesc">한 번의 경주를 위한 모집 단위. 목표·시작시각·정원과 참가자를 담는 일관성 경계.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>Room(hostUserId·name·RaceGoal·max·scheduledStartAt·RoomStatus) + Participant(userId·joinedAt·isHost)</span></li>
-      <li><span class="box"></span><span>RaceGoal(targetKm·limitMinutes)·RoomStatus VO, RoomRepository</span></li>
-      <li><span class="box"></span><span>TypeORM 매핑·마이그레이션</span></li>
+      <li><span class="box"></span><span>Room(<span class="mono">hostUserId</span>·<span class="mono">name</span>·<span class="mono">RaceGoal</span>·<span class="mono">maxParticipants</span>·<span class="mono">scheduledStartOn</span>·<span class="mono">RoomStatus</span>·<span class="mono">participants</span>, <span class="mono">DddAggregate</span>)</span></li>
+      <li><span class="box"></span><span>Participant(<span class="mono">userId</span>·<span class="mono">joinedOn</span>·<span class="mono">isHost</span>, 애그리거트 내부 자식)</span></li>
+      <li><span class="box"></span><span>RaceGoal(<span class="mono">targetKm</span>·<span class="mono">limitMinutes</span>)·RoomStatus(<span class="mono">RECRUITING</span>·<span class="mono">STARTING</span>·<span class="mono">LIVE</span>·<span class="mono">FINISHED</span>·<span class="mono">CANCELLED</span>) VO</span></li>
+      <li><span class="box"></span><span>도메인 메서드 <span class="mono">create</span>(방장 자동 첫 Participant)·<span class="mono">join</span>·<span class="mono">leave</span>·<span class="mono">markStarting</span>·<span class="mono">markLive</span>·<span class="mono">cancel</span>(불변식 강제)</span></li>
+      <li><span class="box"></span><span>RoomRepository(포트, <span class="mono">DddRepository</span>) — <span class="mono">participants</span> 애그리거트 단위 로드</span></li>
+      <li><span class="box"></span><span><span class="stag scope">결정</span>TypeORM 매핑, <span class="mono">synchronize</span>로 스키마 관리(마이그레이션 미도입, Step1과 동일 결정)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — Room 저장·조회 시 participants가 애그리거트 단위로 로드된다.</div>
+    <div class="iaccept"><b>완료</b> — Room 저장·조회 시 participants가 애그리거트 단위로 로드되고, <span class="mono">create()</span>가 방장을 <span class="mono">isHost</span>로 포함한다.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-2, S1-3</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#ent-room">📦 Room</a><a href="../domain/index.html#ent-participant">📦 Participant</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S2-2">
-    <div class="ihead"><span class="iid">S2-2</span><span class="ititle">Room API</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
-    <div class="idesc">방 생성·탐색·참가·나가기·삭제. 불변식을 서비스에서 강제.</div>
+    <div class="ihead"><span class="iid">S2-2</span><span class="ititle">Room API (생성·탐색·참가·나가기·삭제)</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">방 생성·탐색·참가·나가기·삭제. 불변식을 서비스에서 강제한다.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="mono">POST /rooms</span>, <span class="mono">GET /rooms</span>(거리/시간/빈자리 필터), <span class="mono">POST /rooms/:id/join·leave</span>, <span class="mono">DELETE /rooms/:id</span>(방장·모집중)</span></li>
-      <li><span class="box"></span><span>불변식 — 정원 초과 join 불가, 시작 후 join 불가, 최소 2명</span></li>
+      <li><span class="box"></span><span><span class="mono">POST /rooms</span>(<span class="mono">name</span>·<span class="mono">targetKm</span>·<span class="mono">limitMinutes</span>·<span class="mono">maxParticipants</span>·<span class="mono">scheduledStartOn</span>, 미래시각만)</span></li>
+      <li><span class="box"></span><span><span class="mono">GET /rooms</span>(공개목록+필터 거리·제한시간·빈자리, 상태필터, 임박순=<span class="mono">scheduledStartOn</span> asc, 좌표 미전송)</span></li>
+      <li><span class="box"></span><span><span class="mono">POST /rooms/:id/join</span> · <span class="mono">/leave</span></span></li>
+      <li><span class="box"></span><span><span class="mono">DELETE /rooms/:id</span>(방장·RECRUITING만)</span></li>
+      <li><span class="box"></span><span>불변식 — 정원초과·시작후 join 금지(늦참)·중복 join 금지</span></li>
+      <li><span class="box"></span><span><span class="stag scope">결정</span>방장 leave = <b>방 취소(CANCELLED)</b></span></li>
+      <li><span class="box"></span><span>위반 시 <span class="mono">409</span>/<span class="mono">400</span>, <span class="mono">PATCH</span> 미사용</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 목록/생성/참가/나가기/삭제가 동작하고, 불변식 위반 시 명확한 에러.</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S2-1</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+    <div class="iaccept"><b>완료</b> — 목록·생성·참가·나가기·삭제가 동작하고, 정원초과·늦참·중복참가·비방장삭제가 명확히 거부된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S2-1</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#ent-room">📦 Room</a><a href="../wireframes/index.html#home">🎨 홈</a><a href="../wireframes/index.html#create">🎨 방 생성</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S2-3">
-    <div class="ihead"><span class="iid">S2-3</span><span class="ititle">예약 스케줄러</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="ihead"><span class="iid">S2-3</span><span class="ititle">예약 스케줄러 (동시출발 트리거)</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">예약 시각에 방 상태를 자동 전환. 인원 미달이면 취소. 동시출발의 트리거.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>BullMQ 지연잡 or <span class="mono">@Interval</span> — scheduledStartAt 도달 시 RECRUITING→STARTING→LIVE</span></li>
-      <li><span class="box"></span><span><b>2명 미만이면 CANCELLED</b> (경주 미성립)</span></li>
-      <li><span class="box"></span><span>전환 시 도메인 이벤트 발행(RoomStarting 등)</span></li>
+      <li><span class="box"></span><span><span class="stag scope">결정</span><b>BullMQ 지연잡</b> — <span class="mono">scheduledStartOn</span>(서버 KST) 도달 시 RECRUITING→STARTING, Δ 후 →LIVE</span></li>
+      <li><span class="box"></span><span>시작시각 2명 미만 → <b>CANCELLED</b>(soft) 목록 비노출·통지</span></li>
+      <li><span class="box"></span><span><span class="stag scope">스코프외</span>LIVE 시 Race 생성은 Step3 경계(여기선 이벤트까지)</span></li>
+      <li><span class="box"></span><span>방 삭제·취소·시각변경 시 잡 취소·재등록</span></li>
+      <li><span class="box"></span><span>도메인 이벤트 발행(<span class="mono">RoomStarting</span>·<span class="mono">RoomCancelled</span>)</span></li>
+      <li><span class="box"></span><span>멱등성(중복·재시작 이중전환 방지)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 예약 시각에 자동 전환·LIVE 진입, 미달 방은 취소 처리된다.</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S2-1, S2-2</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+    <div class="iaccept"><b>완료</b> — 예약시각 자동 STARTING→LIVE, 2명 미만 CANCELLED, 이벤트 발행, 재시작에도 이중전환이 없다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S2-1, S2-2, S2-5</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#ent-room">📦 Room</a><a href="../domain/index.html#states">📦 상태 머신</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S2-4">
-    <div class="ihead"><span class="iid">S2-4</span><span class="ititle">로비 socket.io 게이트웨이</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
-    <div class="idesc">로비 참가자에게 입퇴장·상태전환을 실시간 브로드캐스트.</div>
+    <div class="ihead"><span class="iid">S2-4</span><span class="ititle">로비 socket.io 게이트웨이 (+서버시각 소스)</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">로비 참가자에게 입퇴장·상태전환을 실시간 브로드캐스트. 클라 카운트다운을 위한 서버시각도 함께 제공.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>방 룸 조인/이탈, <span class="mono">participantJoined·participantLeft·roomStatusChanged</span> 브로드캐스트</span></li>
-      <li><span class="box"></span><span>JWT 핸드셰이크 인증</span></li>
+      <li><span class="box"></span><span>JWT 핸드셰이크 인증(Step1 시크릿)</span></li>
+      <li><span class="box"></span><span>방 룸 조인·이탈, 참가자격 검증(해당 방 Participant만)</span></li>
+      <li><span class="box"></span><span>브로드캐스트 <span class="mono">participantJoined</span>·<span class="mono">participantLeft</span>·<span class="mono">roomStatusChanged</span>·<span class="mono">roomCancelled</span></span></li>
+      <li><span class="box"></span><span>핸드셰이크/응답에 <b>서버 now</b>(<span class="mono">serverTime</span>, KST·epoch) 제공 — S2-9 오프셋 보정용</span></li>
+      <li><span class="box"></span><span>S2-5 이벤트 구독 → 브로드캐스트 배선</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 한 클라이언트의 참가/나가기가 같은 방 다른 클라이언트에 즉시 반영.</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S2-1</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+    <div class="iaccept"><b>완료</b> — 참가/이탈·상태전환이 같은 방 클라이언트에 즉시 반영되고, 미인증 소켓은 거부되며, 클라가 서버시각 오프셋을 획득할 수 있다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S2-1, S2-5</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#ent-participant">📦 Participant</a><a href="../wireframes/index.html#lobby">🎨 로비</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S2-5">
     <div class="ihead"><span class="iid">S2-5</span><span class="ititle">Room 도메인 이벤트 (인프로세스)</span><span class="badge be">BACKEND</span><span class="pill">S</span></div>
-    <div class="idesc">컨텍스트 간 연결을 위한 이벤트 발행. MVP는 인프로세스 EventBus로.</div>
+    <div class="idesc">컨텍스트 간 연결을 위한 이벤트 발행. MVP는 인프로세스로.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>RoomCreated·ParticipantJoined·RoomStarting·RoomCancelled 정의·발행</span></li>
-      <li><span class="box"></span><span>구독자 배선(로비 게이트웨이·이후 알림)</span></li>
+      <li><span class="box"></span><span><span class="mono">RoomCreated</span>·<span class="mono">ParticipantJoined</span>·<span class="mono">RoomStarting</span>·<span class="mono">RoomCancelled</span> 정의(payload <span class="mono">roomId</span>·식별자·발생시각)</span></li>
+      <li><span class="box"></span><span><span class="mono">DddAggregate</span> 이벤트 수집 → 커밋 시 발행</span></li>
+      <li><span class="box"></span><span>구독자 = 로비 게이트웨이(S2-4). <span class="stag scope">스코프외</span>알림·환불 구독은 후속 스텝 훅 지점만 표시</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 방 상태 변화가 이벤트로 발행되고 구독자가 반응한다.</div>
+    <div class="iaccept"><b>완료</b> — 방 상태 변화가 이벤트로 발행되고 로비 게이트웨이가 반응한다.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S2-1</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#ent-room">📦 Room</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S2-6">
     <div class="ihead"><span class="iid">S2-6</span><span class="ititle">홈 방목록 실연동 + 필터</span><span class="badge app">APP</span><span class="pill">M</span></div>
-    <div class="idesc">mock 목록을 실 API로 교체하고 필터·카운트다운을 실데이터로.</div>
+    <div class="idesc">mock 목록을 실 API로 교체하고 필터·상태·카운트다운을 실데이터로.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="mono">GET /rooms</span> 연동, 거리/제한시간/빈자리 필터, 상태 뱃지(모집중/곧시작/LIVE)</span></li>
-      <li><span class="box"></span><span>시작까지 카운트다운, 빈 상태 처리</span></li>
+      <li><span class="box"></span><span><span class="mono">GET /rooms</span> 연동(provider), 거리·제한시간·빈자리 필터칩 → 서버쿼리</span></li>
+      <li><span class="box"></span><span>상태뱃지(모집중·곧시작·LIVE)·임박순</span></li>
+      <li><span class="box"></span><span>카드 카운트다운(목록은 서버시각 근사)</span></li>
+      <li><span class="box"></span><span>당겨서 새로고침·스켈레톤, 빈 목록 → <span class="mono">#home-empty</span> 분기</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 홈에 실제 방 목록이 뜨고 필터가 서버 결과에 반영된다.</div>
+    <div class="iaccept"><b>완료</b> — 실제 방 목록이 표시되고, 필터/정렬이 서버에 반영되며, 방이 없으면 빈 상태로 분기한다.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S2-2, S1-7</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#home">🎨 홈</a><a href="../wireframes/index.html#home-empty">🎨 빈 목록</a><a href="../domain/index.html#ent-room">📦 Room</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S2-7">
     <div class="ihead"><span class="iid">S2-7</span><span class="ititle">방 생성 실연동</span><span class="badge app">APP</span><span class="pill">S</span></div>
     <div class="idesc">생성 폼 입력을 실 API로 보내고 성공 시 로비로 이동.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>이름·거리·제한시간·인원·시작시각 → <span class="mono">POST /rooms</span></span></li>
-      <li><span class="box"></span><span>성공 시 생성된 방 로비로 pushReplacement</span></li>
+      <li><span class="box"></span><span>이름·목표거리(seg)·제한시간·최대인원·시작시각 → <span class="mono">POST /rooms</span></span></li>
+      <li><span class="box"></span><span>시작시각 피커(KST 미래만)·최대인원 2+ 클라검증</span></li>
+      <li><span class="box"></span><span>"2명 미만 자동 취소" 안내(<span class="mono">#create</span> 경고패널)</span></li>
+      <li><span class="box"></span><span>성공 시 로비 <span class="mono">pushReplacement</span>, 실패 스낵바</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 폼으로 방을 만들면 서버에 생성되고 로비로 진입한다.</div>
+    <div class="iaccept"><b>완료</b> — 폼으로 방을 만들면 서버에 생성되고 방장으로 로비에 진입한다.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S2-2</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#create">🎨 방 생성</a><a href="../wireframes/index.html#lobby">🎨 로비</a><a href="../domain/index.html#ent-room">📦 Room</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S2-8">
     <div class="ihead"><span class="iid">S2-8</span><span class="ititle">로비 실시간</span><span class="badge app">APP</span><span class="pill">M</span></div>
     <div class="idesc">socket.io로 참가자 입퇴장을 실시간 반영하고 나가기/방삭제 연동.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>socket.io 연결·방 조인, 입퇴장 이벤트 → 참가자 그리드 갱신</span></li>
-      <li><span class="box"></span><span>나가기(leave)·방삭제(방장) 연동, 방 취소 안내</span></li>
+      <li><span class="box"></span><span>socket.io 연결·방 조인(JWT)</span></li>
+      <li><span class="box"></span><span><span class="mono">participantJoined</span>·<span class="mono">Left</span> → 그리드 갱신, <span class="mono">roomStatusChanged</span> 반영</span></li>
+      <li><span class="box"></span><span>나가기·방삭제(방장) 연동, <span class="mono">roomCancelled</span> 수신 시 홈 복귀+안내</span></li>
+      <li><span class="box"></span><span>연결끊김 재접속·재입장(자격 재검증)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 다른 사람이 참가/이탈하면 내 로비 화면이 즉시 갱신된다.</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S2-4</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="iaccept"><b>완료</b> — 타인이 참가/이탈하면 로비가 즉시 갱신되고, 방 취소 시 안내 후 홈으로 복귀한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S2-4, S2-7</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#lobby">🎨 로비</a><a href="../domain/index.html#ent-participant">📦 Participant</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S2-9">
     <div class="ihead"><span class="iid">S2-9</span><span class="ititle">서버시계 동기 카운트다운</span><span class="badge app">APP</span><span class="pill">S</span></div>
     <div class="idesc">공정한 동시출발을 위해 클라 로컬시계가 아닌 서버 시각 기준으로 계산.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>서버 시각 오프셋 보정, <span class="mono">elapsed = now − scheduledStartAt</span></span></li>
-      <li><span class="box"></span><span>STARTING 진입 시 카운트다운 화면 전환</span></li>
+      <li><span class="box"></span><span>서버시각 오프셋 보정(S2-4 <span class="mono">serverTime</span> 수신 → offset), <span class="mono">remaining = scheduledStartOn − (localNow + offset)</span></span></li>
+      <li><span class="box"></span><span>STARTING(<span class="mono">roomStatusChanged</span>) 시 <span class="mono">#countdown</span> 전환</span></li>
+      <li><span class="box"></span><span><span class="stag scope">스코프외</span>종료=LIVE, Race 진입은 Step3 경계</span></li>
     </ul>
     <div class="iaccept"><b>완료</b> — 여러 기기의 카운트다운이 서버 기준으로 거의 동시에 0이 된다.</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S2-3</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S2-3, S2-8, S2-4</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#countdown">🎨 카운트다운</a><a href="../wireframes/index.html#lobby">🎨 로비</a><a href="../domain/index.html#ent-room">📦 Room</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue design" id="S2-10">
     <div class="ihead"><span class="iid">S2-10</span><span class="ititle">방 엣지 상태 UX</span><span class="badge design">DESIGN</span><span class="pill">S</span></div>
-    <div class="idesc">인원 미달 취소, 빈 목록 등 예외 상황의 안내 화면.</div>
+    <div class="idesc">인원 미달 취소, 방장 이탈, 늦참 거부, 빈 목록 등 예외 상황의 안내.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>인원미달 취소 안내(환불/재모집 유도), 목록 빈 상태</span></li>
+      <li><span class="box"></span><span>인원미달 취소 안내("자동 취소", 재모집 유도 · 환불은 후속 훅) · 빈 목록(<span class="mono">#home-empty</span>)</span></li>
+      <li><span class="box"></span><span>방장 이탈 → 방 취소 안내 · 늦참 거부 안내 카피</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 방이 취소되거나 목록이 비었을 때 사용자에게 명확히 안내된다.</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S2-6</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="iaccept"><b>완료</b> — 방 취소·빈 목록·방장 이탈·늦참 시 사용자에게 명확히 안내된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S2-6, S2-8</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#home-empty">🎨 빈 목록</a><a href="../wireframes/index.html#lobby">🎨 로비</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue app" id="S2-11">
+    <div class="ihead"><span class="iid">S2-11</span><span class="ititle">방 참가 → 로비 진입 플로우</span><span class="badge app">APP</span><span class="pill">S</span></div>
+    <div class="idesc">홈에서 방 카드의 참가 버튼을 눌러 서버에 반영하고 로비로 진입한다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>방카드 "참가" → <span class="mono">POST /rooms/:id/join</span> → 성공 시 로비 push</span></li>
+      <li><span class="box"></span><span>정원초과·늦참·중복·취소된 방 실패 안내(S2-10 카피)</span></li>
+      <li><span class="box"></span><span>이미 참가 중이면 바로 로비로</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 홈에서 참가하면 서버에 반영되고 로비에 진입하며, 실패는 명확히 안내된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S2-2, S2-6</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#home">🎨 홈</a><a href="../wireframes/index.html#lobby">🎨 로비</a><a href="../domain/index.html#ent-participant">📦 Participant</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue ops" id="S2-12">
+    <div class="ihead"><span class="iid">S2-12</span><span class="ititle">Redis / BullMQ 인프라</span><span class="badge ops">OPS</span><span class="pill">S</span></div>
+    <div class="idesc">예약 스케줄러(S2-3)가 기대는 지연잡 큐 인프라.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>Redis 연결·설정(<span class="mono">@configs</span>, 로컬 docker)</span></li>
+      <li><span class="box"></span><span>BullMQ 큐 모듈(지연잡용)·헬스체크·graceful shutdown 연동</span></li>
+      <li><span class="box"></span><span><span class="stag scope">스코프외</span>socket.io Redis 어댑터 — 단일 인스턴스라 스코프 밖</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 부팅 시 Redis 연결이 성공하고, BullMQ가 지연잡을 수용한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-1</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
 
   <div class="nav">
