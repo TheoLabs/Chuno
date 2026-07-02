@@ -219,10 +219,11 @@
       <li><span class="box"></span><span>신규 <b>"Legal &amp; Compliance"</b> 컨텍스트(컨텍스트 개요 7→8) + <span class="mono">LegalDocument</span> 엔티티 카드·<span class="mono">#ent-legaldocument</span> 앵커</span></li>
       <li><span class="box"></span><span><span class="mono">LegalDocumentType</span>(TERMS·PRIVACY·<b>PRIVACY_NOTICE</b>·LOCATION·MARKETING, PRIVACY_NOTICE 별도 포함) · <span class="mono">LegalDocumentStatus</span>(DRAFT·ACTIVE·ARCHIVED) 값객체</span></li>
       <li><span class="box"></span><span>불변식: <span class="mono">UNIQUE(type, version)</span> + type별 ACTIVE 1개(개정 = 새 버전 append 후 이전 ARCHIVED)</span></li>
-      <li><span class="box"></span><span><span class="mono">UserConsent.documentVersion → LegalDocument</span> 관계 + ERD 노드/엣지(점선 참조) 반영</span></li>
-      <li><span class="box"></span><span><span class="mono">content</span> = DB <span class="mono">text</span> 컬럼, <span class="mono">effectiveOn</span> = CalendarDate(KST)</span></li>
+      <li><span class="box"></span><span><span class="mono">UserConsent.legalDocumentId → LegalDocument</span>(논리 FK, 물리 FK 아님) 관계 + ERD 노드/엣지(점선 참조) 반영</span></li>
+      <li><span class="box"></span><span><span class="mono">content</span> = DB <span class="mono">text</span> 컬럼, <span class="mono">expectedActivateOn</span> = CalendarDate(KST, 예약 활성 시각)</span></li>
+      <li><span class="box"></span><span>활성화 전이 설계 — <b>외부 호출 활성화 API</b>(내부 스케줄러 아님)가 <span class="mono">expectedActivateOn</span> 도달 문서를 DRAFT→ACTIVE, 직전 ACTIVE→ARCHIVED로 전이(type별 ACTIVE 1개 유지)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 도메인 문서(<span class="mono">docs/domain/index.html</span>)에서 LegalDocument 엔티티·불변식·UserConsent 참조 관계를 조회할 수 있고, <span class="mono">#ent-legaldocument</span> 딥링크가 정상 동작한다.</div>
+    <div class="iaccept"><b>완료</b> — 도메인 문서(<span class="mono">docs/domain/index.html</span>)에서 LegalDocument 엔티티·불변식(<span class="mono">expectedActivateOn</span> 기반 외부호출 활성화)·<span class="mono">UserConsent.legalDocumentId</span> 참조 관계를 조회할 수 있고, <span class="mono">#ent-legaldocument</span> 딥링크가 정상 동작한다.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> — <small>(S1-3 참고)</small></span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html#model">도메인</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../domain/index.html#ent-userconsent">📦 UserConsent</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
@@ -231,13 +232,13 @@
     <div class="ihead"><span class="iid">S1-15</span><span class="ititle">LegalDocument 엔티티 + 리포지토리 + seed</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">설계된 LegalDocument를 DDD 레이어 엔티티로 구현하고, 초기 법적 문서 4종을 seed로 채운다.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>DDD 레이어 <span class="mono">LegalDocument</span> TypeORM 엔티티 — <span class="mono">content</span>(text) · <span class="mono">effectiveOn</span>(CalendarDate/KST) · <span class="mono">createdAt</span>/<span class="mono">updatedAt</span>(UTC)</span></li>
-      <li><span class="box"></span><span><span class="mono">UNIQUE(type, version)</span> + type별 ACTIVE 1개 불변식을 도메인 메서드(<span class="mono">publish()</span>/<span class="mono">archive()</span>)로 강제</span></li>
-      <li><span class="box"></span><span><span class="mono">LegalDocumentRepository</span> 포트 — <span class="mono">findActiveByType</span> · <span class="mono">findByTypeAndVersion</span></span></li>
-      <li><span class="box"></span><span>초기 seed — TERMS·PRIVACY·PRIVACY_NOTICE·LOCATION v1.0(와이어프레임 placeholder 문안 이관, 시행일 확정)</span></li>
+      <li><span class="box"></span><span>DDD 레이어 <span class="mono">LegalDocument</span> TypeORM 엔티티 — <span class="mono">content</span>(text) · <span class="mono">expectedActivateOn</span>(CalendarDate/KST, 예약 활성 시각) · <span class="mono">createdAt</span>/<span class="mono">updatedAt</span>(UTC)</span></li>
+      <li><span class="box"></span><span><span class="mono">UNIQUE(type, version)</span> + type별 ACTIVE 1개 불변식을 도메인 메서드 <span class="mono">activate()</span>(DRAFT→ACTIVE + 직전 ACTIVE→ARCHIVED, 원자적)로 강제</span></li>
+      <li><span class="box"></span><span><span class="mono">LegalDocumentRepository</span> 포트 — <span class="mono">findActiveByType</span> · <span class="mono">findByTypeAndVersion</span> · <span class="mono">findDueForActivation(now)</span>(<span class="mono">expectedActivateOn</span> 지난 DRAFT 조회, <a href="step1.html#S1-18">S1-18</a> 활성화 API가 사용)</span></li>
+      <li><span class="box"></span><span>초기 seed — TERMS·PRIVACY·PRIVACY_NOTICE·LOCATION v1.0(와이어프레임 placeholder 문안 이관, <span class="mono">expectedActivateOn</span> 확정) — 부팅 시점에 이미 <span class="mono">expectedActivateOn</span>이 지났다면 초기 status를 ACTIVE로 부여</span></li>
       <li><span class="box"></span><span><span class="mono">synchronize</span>로 스키마 반영(마이그레이션 스크립트 미도입 결정 유지)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 앱 부팅 시 스키마+seed가 반영되어 type별 활성 문서를 조회할 수 있고, <span class="mono">(type, version)</span> 중복 저장은 거부된다.</div>
+    <div class="iaccept"><b>완료</b> — 앱 부팅 시 스키마+seed가 반영되어 type별 활성 문서를 조회할 수 있고, <span class="mono">(type, version)</span> 중복 저장은 거부되며, <span class="mono">expectedActivateOn</span>이 이미 지난 seed 문서는 부팅 시 ACTIVE 상태로 생성된다.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-1, S1-2, S1-14</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
@@ -246,14 +247,14 @@
     <div class="ihead"><span class="iid">S1-16</span><span class="ititle">법적 문서 조회 + 발행 API</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">활성 법적 문서를 앱에서 조회하고, 새 버전을 초안 등록·발행할 수 있는 API.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="mono">GET /legal-documents?type=</span> — 활성 버전 반환(content·version·effectiveOn·title)</span></li>
+      <li><span class="box"></span><span><span class="mono">GET /legal-documents?type=</span> — 활성 버전 반환(content·version·<span class="mono">expectedActivateOn</span>·title)</span></li>
       <li><span class="box"></span><span><span class="mono">GET /legal-documents/:type/:version</span> — 특정 버전 조회</span></li>
-      <li><span class="box"></span><span><span class="mono">POST /legal-documents</span> — 초안(DRAFT) 등록</span></li>
-      <li><span class="box"></span><span><span class="mono">PUT /legal-documents/:id</span> — 발행(ACTIVE)·보관(ARCHIVED) 상태 전이(<b>PATCH 금지</b>)</span></li>
-      <li><span class="box"></span><span>authz — 조회는 공개(온보딩 열람), 발행은 관리자 role(백오피스 미구현 → <b>후속/최소 인증</b>으로 표기)</span></li>
+      <li><span class="box"></span><span><span class="mono">POST /legal-documents</span> — 초안(DRAFT) 등록(<span class="mono">expectedActivateOn</span> 포함)</span></li>
+      <li><span class="box"></span><span><span class="mono">PUT /legal-documents/:id</span> — 초안 확정/<span class="mono">expectedActivateOn</span> 설정(발행 예약, <b>즉시 ACTIVE 전이 아님</b> — 실제 DRAFT→ACTIVE 전이는 <a href="step1.html#S1-18">S1-18</a> 활성화 API가 담당, <b>PATCH 금지</b>)</span></li>
+      <li><span class="box"></span><span>authz — 조회는 공개(온보딩 열람), 등록/설정은 관리자 role(백오피스 미구현 → <b>후속/최소 인증</b>으로 표기)</span></li>
       <li><span class="box"></span><span>응답 <span class="mono">{data}</span> 공통 포맷</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — <span class="mono">GET</span> active가 seed 활성 문서를 반환하고 잘못된 type은 400, <span class="mono">POST</span>→<span class="mono">PUT</span> 발행 시 이전 버전이 ARCHIVED로 전이된다.</div>
+    <div class="iaccept"><b>완료</b> — <span class="mono">GET</span> active가 seed 활성 문서(<span class="mono">expectedActivateOn</span> 포함)를 반환하고 잘못된 type은 400, <span class="mono">POST</span>→<span class="mono">PUT</span>으로 DRAFT 등록·<span class="mono">expectedActivateOn</span> 설정까지 완료된다(실제 ACTIVE 전이·이전 버전 ARCHIVED는 <a href="step1.html#S1-18">S1-18</a> 활성화 API 호출로 확정).</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-15</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../wireframes/index.html#doc-viewer">🎨 약관전문</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
@@ -262,14 +263,29 @@
     <div class="ihead"><span class="iid">S1-17</span><span class="ititle">문서 하드코딩 제거 → 활성 문서 API 연동</span><span class="badge app">APP</span><span class="pill">M</span></div>
     <div class="idesc"><span class="mono">TermsDocScreen</span>의 하드코딩 문안을 제거하고 활성 법적 문서 API로 교체한다.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="mono">#doc-viewer</span>(<span class="mono">TermsDocScreen</span>)가 <span class="mono">GET /legal-documents</span> 활성 문서(title·version·effectiveOn·content) 렌더</span></li>
+      <li><span class="box"></span><span><span class="mono">#doc-viewer</span>(<span class="mono">TermsDocScreen</span>)가 <span class="mono">GET /legal-documents</span> 활성 문서(title·version·<span class="mono">expectedActivateOn</span>·content) 렌더 — 화면 표시는 version/<span class="mono">expectedActivateOn</span> 유지</span></li>
       <li><span class="box"></span><span>하드코딩 <span class="mono">docsData</span> · <span class="mono">v1.0</span>/<span class="mono">시행일 2026-00-00</span> placeholder 제거</span></li>
-      <li><span class="box"></span><span>동의 제출 시 fetch한 활성 <span class="mono">version</span>을 기록(<b>클라값 신뢰 유지</b>, 서버 강제 검증은 후속)</span></li>
+      <li><span class="box"></span><span>동의 제출 시 fetch한 활성 문서의 <span class="mono">legalDocumentId</span>를 기록(<b>version이 아닌 id 전송</b>, 서버가 version 스냅샷) <small><a href="step1.html#S1-10">S1-10</a> onboard 페이로드와 결합</small></span></li>
       <li><span class="box"></span><span>로딩·에러(fetch 실패) 처리 + 회귀테스트</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 뷰어가 서버 문서를 표시하고, 동의 시 실제 활성 버전이 UserConsent에 기록되며, 하드코딩 문안이 남아있지 않다.</div>
+    <div class="iaccept"><b>완료</b> — 뷰어가 서버 문서(title·version·<span class="mono">expectedActivateOn</span>·content)를 표시하고, 동의 시 fetch한 활성 문서의 <span class="mono">legalDocumentId</span>가 UserConsent에 기록되며(서버가 <span class="mono">documentVersion</span>을 스냅샷), 하드코딩 문안이 남아있지 않다.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-16, S1-11, S1-10</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#doc-viewer">🎨 약관전문</a><a href="../wireframes/index.html#onboarding">🎨 온보딩</a><a href="../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../domain/index.html#ent-userconsent">📦 UserConsent</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="S1-18">
+    <div class="ihead"><span class="iid">S1-18</span><span class="ititle">법적 문서 예약 활성화 트리거 API</span><span class="badge be">BACKEND</span><span class="pill">S</span></div>
+    <div class="idesc"><span class="mono">expectedActivateOn</span>이 지난 법적 문서를 <b>외부에서 호출하는 API</b>가 활성화한다. 내부 스케줄러·BullMQ는 사용하지 않는다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>엔드포인트(예: <span class="mono">POST /legal-documents/activate-due</span> 또는 <span class="mono">/legal-documents/:id/activate</span>) — 호출 시 <span class="mono">expectedActivateOn</span>이 지난 DRAFT 문서를 조회(<span class="mono">findDueForActivation(now)</span>, <a href="step1.html#S1-15">S1-15</a>)해 <span class="mono">activate()</span> 실행</span></li>
+      <li><span class="box"></span><span><span class="mono">activate()</span> — 대상 DRAFT → ACTIVE, 직전 ACTIVE(같은 type) → ARCHIVED를 원자적으로 전이해 type별 ACTIVE 1개 불변식 유지</span></li>
+      <li><span class="box"></span><span><b>멱등</b> — 이미 ACTIVE거나 활성화 대상이 없으면 재호출해도 상태 변화 없이 200(no-op)</span></li>
+      <li><span class="box"></span><span>호출자 인증 — 시스템/관리자 토큰(백오피스 미구현 → 후속/최소 인증으로 표기, <a href="step1.html#S1-16">S1-16</a> 발행 API와 동일한 authz 수준)</span></li>
+      <li><span class="box"></span><span><b>내부 스케줄러(@Interval)·BullMQ 미사용</b> — 활성화는 오직 이 외부 호출 API로만 트리거</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — <span class="mono">expectedActivateOn</span>이 지난 DRAFT 문서가 이 API 호출 시 ACTIVE로 전이되고 직전 ACTIVE 버전이 ARCHIVED로 바뀌며, 재호출해도 멱등하게 동일 결과를 유지한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-15, S1-16</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="nav">
