@@ -7,7 +7,6 @@ import { Column, Entity, PrimaryGeneratedColumn, Unique } from 'typeorm';
 export enum LegalDocumentType {
   TERMS_OF_SERVICE = 'terms-of-service',
   PRIVACY_POLICY = 'privacy-policy',
-  PRIVACY_NOTICE = 'privacy-notice',
   LOCATION_SERVICE = 'location-service',
   MARKETING = 'marketing',
 }
@@ -23,6 +22,7 @@ type Ctor = {
   version: string;
   title: string;
   content: string;
+  isRequired: boolean;
   expectedActivateOn: CalendarDate;
 };
 
@@ -47,6 +47,9 @@ export class LegalDocument extends DddAggregate {
   @Column()
   expectedActivateOn: CalendarDate;
 
+  @Column()
+  isRequired: boolean;
+
   @Column({ type: 'enum', enum: LegalDocumentStatus })
   status: LegalDocumentStatus;
 
@@ -60,6 +63,7 @@ export class LegalDocument extends DddAggregate {
       this.content = args.content;
       this.expectedActivateOn = args.expectedActivateOn;
       this.status = LegalDocumentStatus.DRAFT;
+      this.isRequired = args.isRequired;
     }
   }
 
@@ -91,5 +95,9 @@ export class LegalDocument extends DddAggregate {
     }
 
     this.status = LegalDocumentStatus.ARCHIVED;
+  }
+
+  static getRequiredLegalDocumentTypes() {
+    return [LegalDocumentType.TERMS_OF_SERVICE, LegalDocumentType.PRIVACY_POLICY, LegalDocumentType.LOCATION_SERVICE];
   }
 }

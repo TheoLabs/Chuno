@@ -14,48 +14,52 @@ export class LegalDocumentRepository extends DddRepository<LegalDocument> {
 
   async find(
     conditions: {
-      id?: number;
+      ids?: number[];
       version?: string;
       types?: LegalDocumentType[];
       statuses?: LegalDocumentStatus[];
       expectedActivateOn?: CalendarDate;
       minExpectedActivateOn?: CalendarDate;
       maxExpectedActivateOn?: CalendarDate;
+      isRequired?: boolean;
     },
     options?: TypeormRelationOptions<LegalDocument>
   ) {
     return this.entityManager.find(this.entityClass, {
       where: stripUndefined({
-        id: conditions.id,
+        id: checkInValue(conditions.ids),
         version: conditions.version,
         type: checkInValue(conditions.types),
         status: checkInValue(conditions.statuses),
         expectedActivateOn:
           conditions.expectedActivateOn ??
           checkRangeValue(conditions.minExpectedActivateOn, conditions.maxExpectedActivateOn),
+        isRequired: conditions.isRequired,
       }),
       ...convertOptions(options),
     });
   }
 
   async count(conditions: {
-    id?: number;
+    ids?: number[];
     version?: string;
     types?: LegalDocumentType[];
     statuses?: LegalDocumentStatus[];
     expectedActivateOn?: CalendarDate;
     minExpectedActivateOn?: CalendarDate;
     maxExpectedActivateOn?: CalendarDate;
+    isRequired?: boolean;
   }) {
     return this.entityManager.count(this.entityClass, {
       where: stripUndefined({
-        id: conditions.id,
+        id: checkInValue(conditions.ids),
         version: conditions.version,
         type: checkInValue(conditions.types),
         status: checkInValue(conditions.statuses),
         expectedActivateOn:
           conditions.expectedActivateOn ??
           checkRangeValue(conditions.minExpectedActivateOn, conditions.maxExpectedActivateOn),
+        isRequired: conditions.isRequired,
       }),
     });
   }

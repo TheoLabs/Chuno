@@ -1,34 +1,24 @@
 import { UserGuard } from '@libs/guards';
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { GeneralLegalDocumentService } from '@modules/legal-document/applications/general-legal-document.service';
+import { GeneralLegalDocumentQueryDto } from '@modules/legal-document/presentation/dto';
+import { Controller, Get, Param, ParseIntPipe, Query, UseGuards } from '@nestjs/common';
 
 @Controller('legal-documents')
 @UseGuards(UserGuard)
 export class GeneralLegalDocumentController {
-  @Post()
-  async create(@Body() body: any) {
-    // 1. Destructure body, params, query
-    // 2. Get context
-    // 3. Get result
-    // 4. Send response
-    return { data: {} };
-  }
+  constructor(private readonly generalLegalDocumentService: GeneralLegalDocumentService) {}
 
   @Get()
-  async list(@Query() query: any) {
+  async list(@Query() query: GeneralLegalDocumentQueryDto) {
     // 1. Destructure body, params, query
-    // 2. Get context
-    // 3. Get result
-    // 4. Send response
-    return { data: {} };
-  }
+    const { types, ...options } = query;
 
-  @Get('active')
-  async getActiveLegalDocuments() {
-    // 1. Destructure body, params, query
     // 2. Get context
     // 3. Get result
+    const data = await this.generalLegalDocumentService.list({ types }, options);
+
     // 4. Send response
-    return { data: {} };
+    return { data };
   }
 
   @Get(':id')
@@ -36,16 +26,9 @@ export class GeneralLegalDocumentController {
     // 1. Destructure body, params, query
     // 2. Get context
     // 3. Get result
-    // 4. Send response
-    return { data: {} };
-  }
+    const data = await this.generalLegalDocumentService.retrieve({ id });
 
-  @Put(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() body: any) {
-    // 1. Destructure body, params, query
-    // 2. Get context
-    // 3. Get result
     // 4. Send response
-    return { data: {} };
+    return { data };
   }
 }
