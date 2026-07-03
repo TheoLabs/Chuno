@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BO Step 4 · 게임 · 경주 운영 — 추노 백오피스 MVP</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary>사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../product/issue/index.html">이슈</a>
+      <a href="../../product/mvp/index.html">MVP</a>
+      <a href="../../product/wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary class="on">백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html">이슈</a>
+      <a href="../mvp/index.html" class="on">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+</div></nav>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">백오피스 MVP 로드맵</a><span class="sep">/</span>BO Step 4</div>
+  <h1><b>BO Step 4</b> · 게임 · 경주 운영</h1>
+  <p class="lead">멈춘 방·경주를 강제 정리하고, 부정 결과를 무효화·재계산한다. 서버 권위 점수 원칙은 유지.</p>
+
+  <div class="callout"><b>목표</b> — 관리자가 멈춘 방/경주를 강제로 정리하고, 부정 결과를 무효화하면 통계·랭킹까지 재계산된다.</div>
+
+  <p style="margin:-6px 0 18px;"><a href="../issue/step4.html" style="color:var(--coral); font-weight:600; font-size:13px;">🎫 이 스텝의 상세 이슈 (4) →</a></p>
+
+  <div class="dep"><b>선행:</b> BO Step 1</div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge be">BACKEND</span> 방 · 경주 · 결과 운영</div>
+    <div class="task"><div class="box"></div><div class="k"><b>방 운영 API</b> — <span class="mono">GET /api/admins/rooms</span>(상태·호스트 필터), <span class="mono">PUT /:id/cancel</span>·<span class="mono">DELETE</span>, RoomCancelled 이벤트 재사용 — <a href="../issue/step4.html#BO4-1">BO4-1</a></div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>경주 운영 API</b> — <span class="mono">GET /api/admins/races</span>(LIVE), <span class="mono">PUT /:id/finalize</span>(멱등), 안티치트 리젝 로그 — <a href="../issue/step4.html#BO4-2">BO4-2</a></div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>결과 · 점수 정정 API</b> — <span class="mono">PUT /api/admins/results/:id/invalidate</span>, 재계산 트리거, <b>서버 권위 점수 유지</b>(임의 입력 아님) — <a href="../issue/step4.html#BO4-3">BO4-3</a></div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge app">UI</span> 백오피스 프론트</div>
+    <div class="task"><div class="box"></div><div class="k">라이브 경주 운영 대시보드(<span class="mono">#admin-race-ops</span>) — <a href="../issue/step4.html#BO4-4">BO4-4</a> <small>needsWireframe: true</small></div></div>
+  </div>
+
+  <div class="done-when"><b>완료 기준</b> — 멈춘 방/경주를 강제 취소·종료할 수 있고, 부정 결과 무효화가 RunnerStats·랭킹에 반영된다.</div>
+
+  <div class="nav">
+    <a href="step3.html"><span class="lbl">이전</span>← BO Step 3</a>
+    <a class="next" href="step5.html"><span class="lbl">다음</span>BO Step 5 · 포인트·랭킹·공지 →</a>
+  </div>
+</div>
+</body>
+</html>

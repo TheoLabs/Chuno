@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BO Step 5 이슈 · 포인트 · 랭킹 · 티어 · 공지 · 지표 — 추노 백오피스</title>
+<link rel="stylesheet" href="../mvp/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary>사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../product/issue/index.html">이슈</a>
+      <a href="../../product/mvp/index.html">MVP</a>
+      <a href="../../product/wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary class="on">백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html" class="on">이슈</a>
+      <a href="../mvp/index.html">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+</div></nav>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">백오피스 이슈</a><span class="sep">/</span>BO Step 5<span class="sep">·</span><a href="../mvp/step5.html">BO MVP Step 5</a></div>
+  <h1><b>BO Step 5</b> · 포인트 · 랭킹 · 티어 · 공지 · 지표</h1>
+  <p class="lead">보상/보정 포인트, 랭킹·티어 운영, 공지 발송, 운영 대시보드 지표. 일부는 아직 미구현 컨텍스트(Points)에 의존. (총 5 이슈, 전부 미착수)</p>
+  <div class="boardnote">
+    <a class="linkbtn" href="../mvp/step5.html">📋 <b>BO MVP Step 5</b></a>
+    <a class="linkbtn" href="index.html">← 백오피스 이슈</a>
+  </div>
+
+  <div class="issue" id="BO5-1">
+    <div class="ihead"><span class="iid">BO5-1</span><span class="ititle">포인트 수동 조정 API</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">Points&amp;Rewards가 MVP 제외라 <b>컨텍스트 구현 후속 의존</b>. 잔액≥0 불변식·PointTransaction으로만 조정.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">POST /api/admins/users/:id/points</span>(사유·refId)</span></li>
+      <li><span class="box"></span><span>Entitlement 부여</span></li>
+      <li><span class="box"></span><span>OPERATOR 이상 role</span></li>
+      <li><span class="box"></span><span>감사 기록</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 관리자가 보상/보정 포인트를 트랜잭션으로 조정할 수 있다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-3 <small>(Points 컨텍스트 구현 후속)</small></span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-pointaccount">📦 PointAccount</a><a href="../../domain/index.html#ent-pointtransaction">📦 PointTransaction</a><a href="../mvp/step5.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO5-2">
+    <div class="ihead"><span class="iid">BO5-2</span><span class="ititle">랭킹 · 티어 운영</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">티어 컷 관리·랭킹 재빌드·부정 유저 제외·시즌 리셋.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>티어 컷 조회/변경</span></li>
+      <li><span class="box"></span><span>랭킹 리빌드 트리거</span></li>
+      <li><span class="box"></span><span>부정 유저 제외</span></li>
+      <li><span class="box"></span><span>OPERATOR 이상 role</span></li>
+      <li><span class="box"></span><span>감사 기록</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 티어 컷 변경·랭킹 재빌드·제외가 반영된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-3, <a href="../../product/issue/step4.html">사용자 이슈 Step4</a></span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-runnerstats">📦 RunnerStats</a><a href="../../domain/index.html#ent-leaderboard">📦 Leaderboard</a><a href="../../product/mvp/step4.html">🗺️ 사용자 MVP Step4</a><a href="../mvp/step5.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO5-3">
+    <div class="ihead"><span class="iid">BO5-3</span><span class="ititle">공지/이벤트 푸시 발송 API</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">Notification이 현재 순수 소비자라 발신 경로가 신규다. 공지 도메인 신설 여부는 열린 질문.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">POST /api/admins/notifications/broadcast</span>(전체/세그먼트)</span></li>
+      <li><span class="box"></span><span>발송 이력</span></li>
+      <li><span class="box"></span><span>OPERATOR 이상 role</span></li>
+      <li><span class="box"></span><span><a href="../../product/issue/step5.html#S5-1">S5-1</a> 발송기 재사용</span></li>
+      <li><span class="box"></span><span>감사 기록</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 관리자가 공지를 발송하고 이력을 조회할 수 있다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-3, <a href="../../product/issue/step5.html">사용자 이슈 Step5</a></span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-notification">📦 Notification</a><a href="../../domain/index.html#ent-devicetoken">📦 DeviceToken</a><a href="../../product/mvp/step5.html">🗺️ 사용자 MVP Step5</a><a href="../mvp/step5.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO5-4">
+    <div class="ihead"><span class="iid">BO5-4</span><span class="ititle">운영 대시보드 지표 API</span><span class="badge be">BACKEND</span><span class="pill">S</span></div>
+    <div class="idesc"><b>S5-7(분석)과 인접 → 중복 방지 보강 관계.</b> 읽기 전용 집계 API.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">GET /api/admins/metrics</span>(기간별 집계)</span></li>
+      <li><span class="box"></span><span>읽기 전용</span></li>
+      <li><span class="box"></span><span>SUPPORT 이상 role</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 관리자 대시보드 핵심 지표를 조회할 수 있다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-3</span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../product/mvp/step5.html">🗺️ 사용자 MVP Step5</a><a href="../mvp/step5.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue app" id="BO5-5">
+    <div class="ihead"><span class="iid">BO5-5</span><span class="ititle">백오피스 대시보드·공지·포인트 화면</span><span class="badge app">UI</span><span class="pill">M</span></div>
+    <div class="idesc">운영 대시보드, 공지 발송, 포인트 조정 관리자 UX.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">#admin-dashboard</span>·<span class="mono">#admin-notice</span>·<span class="mono">#admin-points</span></span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 대시보드·공지·포인트 화면이 존재한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO5-1, BO5-3, BO5-4</span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#admin-dashboard">🎨 admin-dashboard</a><a href="../wireframes/index.html#admin-notice">🎨 admin-notice</a><a href="../wireframes/index.html#admin-points">🎨 admin-points</a><a href="../mvp/step5.html">🗺️ MVP</a></div>
+  </div>
+
+</div>
+</body>
+</html>

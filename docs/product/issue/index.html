@@ -10,20 +10,33 @@
 <body>
 <nav class="sitenav"><div class="inner">
   <span class="sn-brand">추노 <b>docs</b></span>
-  <a href="../README.md">개요</a>
-  <a href="../mvp/index.html">MVP 로드맵</a>
-  <span class="on">이슈 보드</span>
-  <a href="../domain/index.html">도메인(DDD)</a>
-  <a href="../wireframes/index.html">와이어프레임</a>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary class="on">사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html" class="on">이슈</a>
+      <a href="../mvp/index.html">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary>백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../backoffice/issue/index.html">이슈</a>
+      <a href="../../backoffice/mvp/index.html">MVP</a>
+      <a href="../../backoffice/wireframes/index.html">화면</a>
+    </div>
+  </details>
 </div></nav>
 <div class="wrap">
-  <div class="crumb"><a href="../README.md">docs</a><span class="sep">/</span>issue</div>
+  <div class="crumb"><a href="../../README.md">docs</a><span class="sep">/</span>issue</div>
   <h1>추노 <b>이슈</b> 보드</h1>
   <p class="lead">MVP 로드맵의 각 스텝을 실행 가능한 상세 티켓으로 분해. 각 이슈는 관련 MVP 스텝·도메인·화면과 연결돼 있다.</p>
 
   <div class="boardnote">
     <a class="linkbtn" href="../mvp/index.html">📋 <b>MVP 로드맵</b> 보기</a>
-    <a class="linkbtn" href="../domain/index.html">🧩 도메인 설계</a>
+    <a class="linkbtn" href="../../domain/index.html">🧩 도메인 설계</a>
     <a class="linkbtn" href="../wireframes/index.html">📱 와이어프레임</a>
   </div>
 
@@ -33,22 +46,22 @@
     <div class="rows">
       <a class="row" href="step1.html#S1-1"><span class="iid">S1-1</span><span class="rt">core-api 인프라 세팅 (TypeORM·MySQL·Config) <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">M</span></a>
       <a class="row" href="step1.html#S1-2"><span class="iid">S1-2</span><span class="rt">DDD 공용 기본형 (libs/ddd) <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">S</span></a>
-      <a class="row" href="step1.html#S1-3"><span class="iid">S1-3</span><span class="rt">User / AuthIdentity 엔티티 + 마이그레이션 <span class="stag defer">재검증</span></span><span class="badge be">BE</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#S1-3"><span class="iid">S1-3</span><span class="rt">User / AuthIdentity 엔티티 + 마이그레이션 <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">S</span></a>
       <a class="row" href="step1.html#S1-4"><span class="iid">S1-4</span><span class="rt">소셜 토큰 검증 (google·apple·kakao) + DEV_MODE <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">M</span></a>
       <a class="row" href="step1.html#S1-5"><span class="iid">S1-5</span><span class="rt">JWT 액세스 + 리프레시 회전 + auth 엔드포인트 <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">M</span></a>
-      <a class="row" href="step1.html#S1-6"><span class="iid">S1-6</span><span class="rt">users/me API (조회·온보딩 저장·닉네임 중복확인) <span class="stag defer">재검증</span></span><span class="badge be">BE</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#S1-6"><span class="iid">S1-6</span><span class="rt">users/me API (조회·온보딩 저장·닉네임 중복확인) <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">S</span></a>
       <a class="row" href="step1.html#S1-7"><span class="iid">S1-7</span><span class="rt">앱 네트워킹/상태관리 기반 (dio·secure·provider) <span class="stag done">완료</span></span><span class="badge app">APP</span><span class="pill">M</span></a>
       <a class="row" href="step1.html#S1-8"><span class="iid">S1-8</span><span class="rt">세션 / AuthGate 분기 <span class="stag done">완료</span></span><span class="badge app">APP</span><span class="pill">S</span></a>
       <a class="row" href="step1.html#S1-9"><span class="iid">S1-9</span><span class="rt">소셜 로그인 SDK 3종 연동</span><span class="badge app">APP</span><span class="pill">L</span></a>
-      <a class="row" href="step1.html#S1-10"><span class="iid">S1-10</span><span class="rt">온보딩 저장 (닉네임·레벨 → API) <span class="stag defer">재검증</span></span><span class="badge app">APP</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#S1-10"><span class="iid">S1-10</span><span class="rt">온보딩 저장 (닉네임·레벨 → API) <span class="stag done">완료</span></span><span class="badge app">APP</span><span class="pill">S</span></a>
       <a class="row" href="step1.html#S1-11"><span class="iid">S1-11</span><span class="rt">약관·개인정보·위치 동의 화면 + 문서</span><span class="badge design">DES</span><span class="pill">M</span></a>
       <a class="row" href="step1.html#S1-12"><span class="iid">S1-12</span><span class="rt">소셜 개발자 콘솔 앱 등록 · 키 발급</span><span class="badge ops">OPS</span><span class="pill">M</span></a>
       <a class="row" href="step1.html#S1-13"><span class="iid">S1-13</span><span class="rt">프로필 실데이터 표시 (GET /users/me 실연동) <span class="stag done">완료</span></span><span class="badge app">APP</span><span class="pill">S</span></a>
       <a class="row" href="step1.html#S1-14"><span class="iid">S1-14</span><span class="rt">법적 문서 버전관리 도메인 설계 (Legal &amp; Compliance)</span><span class="badge design">DES</span><span class="pill">S</span></a>
       <a class="row" href="step1.html#S1-15"><span class="iid">S1-15</span><span class="rt">LegalDocument 엔티티 + 리포지토리 + seed <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">M</span></a>
-      <a class="row" href="step1.html#S1-16"><span class="iid">S1-16</span><span class="rt">법적 문서 조회 + 발행 API</span><span class="badge be">BE</span><span class="pill">M</span></a>
-      <a class="row" href="step1.html#S1-17"><span class="iid">S1-17</span><span class="rt">문서 하드코딩 제거 → 활성 문서 API 연동</span><span class="badge app">APP</span><span class="pill">M</span></a>
-      <a class="row" href="step1.html#S1-18"><span class="iid">S1-18</span><span class="rt">법적 문서 예약 활성화 트리거 API (외부 호출, 멱등)</span><span class="badge be">BE</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#S1-16"><span class="iid">S1-16</span><span class="rt">법적 문서 조회 + 발행 API <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step1.html#S1-17"><span class="iid">S1-17</span><span class="rt">문서 하드코딩 제거 → 활성 문서 API 연동 <span class="stag done">완료</span></span><span class="badge app">APP</span><span class="pill">M</span></a>
+      <a class="row" href="step1.html#S1-18" style="opacity:.55;"><span class="iid">S1-18</span><span class="rt">법적 문서 예약 활성화 트리거 API <span class="stag scope">→ BO1-6 이전</span></span><span class="badge be">BE</span><span class="pill">S</span></a>
     </div>
   </div>
 

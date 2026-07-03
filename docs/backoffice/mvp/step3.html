@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BO Step 3 · 모더레이션 · 신고 · 파일 — 추노 백오피스 MVP</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary>사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../product/issue/index.html">이슈</a>
+      <a href="../../product/mvp/index.html">MVP</a>
+      <a href="../../product/wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary class="on">백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html">이슈</a>
+      <a href="../mvp/index.html" class="on">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+</div></nav>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">백오피스 MVP 로드맵</a><span class="sep">/</span>BO Step 3</div>
+  <h1><b>BO Step 3</b> · 모더레이션 · 신고 · 파일</h1>
+  <p class="lead">신고 접수·처리 큐와 부적절 파일 정리. 신고 도메인 신설 여부는 열린 질문.</p>
+
+  <div class="callout"><b>목표</b> — 신고가 접수되면 관리자 큐에서 처리하고, 필요 시 제재로 연계하거나 부적절 파일을 정리한다.</div>
+
+  <p style="margin:-6px 0 18px;"><a href="../issue/step3.html" style="color:var(--coral); font-weight:600; font-size:13px;">🎫 이 스텝의 상세 이슈 (4) →</a></p>
+
+  <div class="dep"><b>선행:</b> BO Step 1</div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge design">DESIGN</span> 신고 · 모더레이션 도메인</div>
+    <div class="task"><div class="box"></div><div class="k"><b>신고 · 모더레이션 도메인 신설 여부 결정/설계</b> — Report 엔티티 신설 여부, 대상 타입·사유·상태(OPEN·RESOLVED) — <a href="../issue/step3.html#BO3-1">BO3-1</a> <small>열린 질문</small></div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge be">BACKEND</span> 신고 · 파일 모더레이션</div>
+    <div class="task"><div class="box"></div><div class="k"><b>신고 접수 + 관리자 신고 큐/처리 API</b> — <span class="mono">GET /api/admins/reports</span> 큐, <span class="mono">PUT /:id/resolve</span>, 제재 연계 — <a href="../issue/step3.html#BO3-2">BO3-2</a></div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>파일 / 미디어 모더레이션 API</b> — <span class="mono">GET/DELETE /api/admins/files</span>, OPERATOR 이상 — <a href="../issue/step3.html#BO3-3">BO3-3</a></div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge app">UI</span> 백오피스 프론트</div>
+    <div class="task"><div class="box"></div><div class="k">모더레이션 큐 화면(<span class="mono">#admin-moderation</span>) — <a href="../issue/step3.html#BO3-4">BO3-4</a> <small>needsWireframe: true</small></div></div>
+  </div>
+
+  <div class="done-when"><b>완료 기준</b> — 신고 접수 → 관리자 큐 처리 → (선택) 제재 연계 플로우가 동작하고, 부적절 파일을 조회·삭제할 수 있다.</div>
+
+  <div class="nav">
+    <a href="step2.html"><span class="lbl">이전</span>← BO Step 2</a>
+    <a class="next" href="step4.html"><span class="lbl">다음</span>BO Step 4 · 게임 운영 →</a>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BO Step 1 이슈 · IAM 기반 + 법적문서 관리 재스코프 — 추노 백오피스</title>
+<link rel="stylesheet" href="../mvp/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary>사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../product/issue/index.html">이슈</a>
+      <a href="../../product/mvp/index.html">MVP</a>
+      <a href="../../product/wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary class="on">백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html" class="on">이슈</a>
+      <a href="../mvp/index.html">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+</div></nav>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">백오피스 이슈</a><span class="sep">/</span>BO Step 1<span class="sep">·</span><a href="../mvp/step1.html">BO MVP Step 1</a></div>
+  <h1><b>BO Step 1</b> · IAM 기반 + 법적문서 관리 재스코프</h1>
+  <p class="lead">관리자 계정·역할·감사로그 도메인을 세우고, 사용자 트랙 S1-15/S1-16/S1-18의 "관리자 authz" 빈틈을 실제 role-RBAC로 메운다. (총 7 이슈, 전부 미착수)</p>
+  <div class="boardnote">
+    <a class="linkbtn" href="../mvp/step1.html">📋 <b>BO MVP Step 1</b></a>
+    <a class="linkbtn" href="index.html">← 백오피스 이슈</a>
+  </div>
+
+  <div class="issue design" id="BO1-1">
+    <div class="ihead"><span class="iid">BO1-1</span><span class="ititle">Admin &amp; IAM 바운디드 컨텍스트 도메인 설계</span><span class="badge design">DESIGN</span><span class="pill">S</span></div>
+    <div class="idesc">관리자 신원·역할·감사이력을 담을 새 바운디드 컨텍스트를 도메인 문서에 설계한다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>신규 <b>"Admin &amp; IAM"</b> 컨텍스트 카드 추가</span></li>
+      <li><span class="box"></span><span><span class="mono">AdminAccount</span>·<span class="mono">Role</span>·<span class="mono">AdminAuditLog</span> 엔티티 카드 + <span class="mono">#ent-adminaccount</span>·<span class="mono">#ent-role</span>·<span class="mono">#ent-adminauditlog</span> 앵커</span></li>
+      <li><span class="box"></span><span><b>role-only RBAC 불변식</b> — <span class="mono">Permission</span> 엔티티 없음, <span class="mono">Role</span>(SUPER_ADMIN·OPERATOR·SUPPORT)이 곧 역할 단위 게이팅 경계</span></li>
+      <li><span class="box"></span><span>감사로그 <b>append-only</b> + 논리참조(대상 엔티티에 물리 FK 아님) 규칙 명문화</span></li>
+      <li><span class="box"></span><span>ERD 노드·엣지 반영(엔티티 박스 관통 없이, 참조는 점선)</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 도메인 문서에서 AdminAccount·Role·AdminAuditLog 3개 엔티티, role-only RBAC 불변식, 감사 append 규칙을 조회할 수 있고, <span class="mono">#ent-adminaccount</span> 딥링크가 정상 동작한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-adminaccount">📦 AdminAccount</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO1-2">
+    <div class="ihead"><span class="iid">BO1-2</span><span class="ititle">AdminAccount · Role 엔티티 + 리포지토리 + seed</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">외부 IdP 신원 기반 관리자 계정과 역할을 DDD 레이어로 구현하고 최초 super admin을 심는다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">modules/admin/</span> 신규 컨텍스트</span></li>
+      <li><span class="box"></span><span><span class="mono">AdminAccount</span>(외부 IdP 신원: <span class="mono">provider</span>+<span class="mono">subject</span>, <b>passwordHash 없음</b>, <span class="mono">status</span>, <span class="mono">lastLoginAt</span>, <span class="mono">roleIds[]</span>)</span></li>
+      <li><span class="box"></span><span><span class="mono">Role</span>(SUPER_ADMIN·OPERATOR·SUPPORT)</span></li>
+      <li><span class="box"></span><span><span class="mono">UNIQUE(provider, subject)</span></span></li>
+      <li><span class="box"></span><span>seed super admin — 직접 주입(<a href="../../product/issue/step1.html#S1-15">S1-15</a> seed 방식 재사용)</span></li>
+      <li><span class="box"></span><span><span class="mono">synchronize</span>로 스키마 관리</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 부팅 시 스키마가 생성되고, super admin·role seed가 DB에서 조회된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-1, <a href="../../product/issue/step1.html#S1-2">S1-2</a></span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-adminaccount">📦 AdminAccount</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO1-3">
+    <div class="ihead"><span class="iid">BO1-3</span><span class="ititle">관리자 SSO 인증 + AdminGuard + role 게이팅</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">관리자는 외부 IdP 토큰을 검증해 별도 admin JWT를 발급받고, role 기반 가드로 API를 보호한다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">POST /api/admins/auth/login</span>(외부 IdP 토큰 검증 → admin JWT) · <span class="mono">/refresh</span> · <span class="mono">/logout</span></span></li>
+      <li><span class="box"></span><span>별도 JWT 시크릿 · 짧은 만료(<a href="../../product/issue/step1.html#S1-5">S1-5</a> 리프레시 회전 패턴 재사용)</span></li>
+      <li><span class="box"></span><span><span class="mono">AdminGuard</span> + <span class="mono">ContextKey.ADMIN</span></span></li>
+      <li><span class="box"></span><span><span class="mono">@RequireRoles(...)</span> 데코레이터 — <b>role 기반</b>, permission-key 아님</span></li>
+      <li><span class="box"></span><span>SUSPENDED 관리자 거부</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 관리자 자격으로만 <span class="mono">/api/admins/*</span> 접근 가능하고, 역할 미달 시 403.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-2</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-adminaccount">📦 AdminAccount</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO1-4">
+    <div class="ihead"><span class="iid">BO1-4</span><span class="ititle">AdminAuditLog 기록 인프라</span><span class="badge be">BACKEND</span><span class="pill">S</span></div>
+    <div class="idesc">관리자 변경 행위를 빠짐없이 남기는 감사 인터셉터와 조회 API.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>엔티티/리포지토리</span></li>
+      <li><span class="box"></span><span>감사 인터셉터 — <span class="mono">adminId</span>·<span class="mono">action</span>·<span class="mono">target</span>·<span class="mono">before</span>/<span class="mono">after</span>·<span class="mono">ip</span></span></li>
+      <li><span class="box"></span><span><span class="mono">GET /api/admins/audit-logs</span>(필터)</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 관리 변경 시 감사 로그가 남고 조회 가능하다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-2</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-adminauditlog">📦 AdminAuditLog</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO1-5">
+    <div class="ihead"><span class="iid">BO1-5</span><span class="ititle">관리자 법적문서 관리 API — S1-16 POST/PUT 재스코프</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc"><span class="mono">/api/admins/legal-documents</span> — 초안 등록·확정을 role-RBAC로 보호하는 관리자 전용 엔드포인트로 재스코프한다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">GET /api/admins/legal-documents</span>(전체 status·버전이력·DRAFT/ARCHIVED 포함)</span></li>
+      <li><span class="box"></span><span><span class="mono">POST</span>(초안)</span></li>
+      <li><span class="box"></span><span><span class="mono">PUT /:id</span>(확정·<span class="mono">expectedActivateOn</span>, <b>PATCH 금지</b>)</span></li>
+      <li><span class="box"></span><span>AdminGuard + OPERATOR 이상 role</span></li>
+      <li><span class="box"></span><span>감사 기록</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 관리자만 초안 등록·예약설정할 수 있고, 공개 GET은 active만 노출한다. <a href="../../product/issue/step1.html#S1-16">S1-16</a>의 "후속/최소 인증" 항목이 실 role-RBAC로 대체돼 재검증을 통과한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-3, <a href="../../product/issue/step1.html#S1-15">S1-15</a>, <a href="../../product/issue/step1.html#S1-16">S1-16</a></span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO1-6">
+    <div class="ihead"><span class="iid">BO1-6</span><span class="ititle">관리자 법적문서 활성화 API — 원 S1-18(예약 활성화 트리거)에서 이전</span><span class="badge be">BACKEND</span><span class="pill">S</span></div>
+    <div class="idesc">예약 활성화 트리거를 관리자 호출 + role-RBAC로 재스코프한다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">POST /api/admins/legal-documents/activate-due</span>(또는 <span class="mono">/:id/activate</span>)</span></li>
+      <li><span class="box"></span><span>OPERATOR 이상 role</span></li>
+      <li><span class="box"></span><span>멱등(no-op 200)</span></li>
+      <li><span class="box"></span><span>감사 기록</span></li>
+      <li><span class="box"></span><span>내부 스케줄러·BullMQ 미사용 재확인</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 관리자 호출로 due DRAFT→ACTIVE·직전 ARCHIVED 전이가 일어나고, 재호출은 멱등하다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-3, <a href="../../product/issue/step1.html#S1-18">S1-18</a></span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue app" id="BO1-7">
+    <div class="ihead"><span class="iid">BO1-7</span><span class="ititle">백오피스 프론트 셸 + 관리자 로그인·법적문서 관리 화면</span><span class="badge app">UI</span><span class="pill">M</span></div>
+    <div class="idesc"><b>프론트 스택 확정</b> — React + TypeScript + React Query + React Router DOM + Ant Design (별도 웹 SPA, 미래 <span class="mono">apps/back-office</span>).</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">#admin-login</span>·<span class="mono">#admin-legal</span> 화면</span></li>
+      <li><span class="box"></span><span>문서 목록·버전이력·초안편집·예약활성 UX</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 관리자 로그인→법적문서 CRUD 플로우 와이어프레임이 존재한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-3, BO1-5</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#admin-login">🎨 admin-login</a><a href="../wireframes/index.html#admin-legal">🎨 admin-legal</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+  </div>
+
+</div>
+</body>
+</html>

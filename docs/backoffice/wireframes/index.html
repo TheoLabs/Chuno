@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>추노 백오피스 와이어프레임 — Ant Design 콘솔</title>
+<style>
+  :root{
+    /* site-wide dark sitenav tokens (shared docs pattern) */
+    --sn-bg:#08090c; --sn-line:#16181d; --sn-muted:#aeb4bc; --sn-text:#E7EAF0; --sn-coral:#FF6B4A;
+    --sn-mono:"SF Mono","JetBrains Mono","Roboto Mono",ui-monospace,Menlo,monospace;
+
+    /* Ant Design light console tokens */
+    --primary:#1677ff; --primary-hover:#4096ff;
+    --bg:#f0f2f5; --card:#ffffff;
+    --text:rgba(0,0,0,.88); --text-sec:rgba(0,0,0,.45); --text-tert:rgba(0,0,0,.25);
+    --border:#f0f0f0; --border-strong:#d9d9d9;
+    --success:#52c41a; --error:#ff4d4f; --gold:#d48806;
+    --radius:8px; --radius-sm:6px;
+    --sider-bg:#001529;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",Arial,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.5; letter-spacing:-.1px;}
+  a{color:inherit; text-decoration:none;}
+  button{font:inherit;}
+
+  /* ---- site-wide dark top bar (same pattern as every docs/ page) ---- */
+  nav.sitenav{position:sticky; top:0; z-index:200; background:var(--sn-bg); border-bottom:1px solid var(--sn-line); height:46px;}
+  nav.sitenav .inner{max-width:1400px; margin:0 auto; height:100%; display:flex; align-items:center; gap:2px; padding:0 24px; overflow:visible;}
+  nav.sitenav .sn-brand{font-family:var(--sn-mono); font-size:11px; color:var(--sn-muted); letter-spacing:.3px; margin-right:14px; white-space:nowrap;}
+  nav.sitenav .sn-brand b{color:var(--sn-coral); font-weight:700;}
+  nav.sitenav a, nav.sitenav span.on{font-size:12.5px; padding:6px 12px; border-radius:8px; white-space:nowrap;}
+  nav.sitenav a{color:var(--sn-muted); transition:.12s;}
+  nav.sitenav a:hover{background:#14161d; color:var(--sn-text);}
+  nav.sitenav span.on{background:rgba(255,107,74,.16); color:var(--sn-coral); font-weight:700; cursor:default;}
+
+  nav.sitenav details.navmenu{position:relative; display:inline-block;}
+  nav.sitenav details.navmenu summary{list-style:none; cursor:pointer; font-size:12.5px; padding:6px 12px; border-radius:8px; color:var(--sn-muted); white-space:nowrap; transition:.12s;}
+  nav.sitenav details.navmenu summary::-webkit-details-marker{display:none;}
+  nav.sitenav details.navmenu summary:hover,
+  nav.sitenav details.navmenu[open] summary{background:#14161d; color:var(--sn-text);}
+  nav.sitenav details.navmenu summary.on{background:rgba(255,107,74,.16); color:var(--sn-coral); font-weight:700;}
+  nav.sitenav .navmenu-pop{position:absolute; top:calc(100% + 4px); left:0; z-index:220; display:flex; flex-direction:column; min-width:130px; padding:4px; gap:2px; background:#0d0f13; border:1px solid #1c1f26; border-radius:10px; box-shadow:0 10px 28px rgba(0,0,0,.55);}
+  nav.sitenav .navmenu-pop a{display:block; font-size:12.5px; padding:6px 12px; border-radius:6px; color:var(--sn-muted); white-space:nowrap; transition:.12s;}
+  nav.sitenav .navmenu-pop a:hover{background:#14161d; color:var(--sn-text);}
+  nav.sitenav .navmenu-pop a.on{background:rgba(255,107,74,.16); color:var(--sn-coral); font-weight:700;}
+
+  /* ---- doc header block ---- */
+  .docmeta{max-width:1400px; margin:0 auto; padding:26px 24px 4px;}
+  .docmeta .crumb{font-size:12px; color:var(--text-sec); margin-bottom:10px;}
+  .docmeta .crumb a:hover{color:var(--primary);}
+  .docmeta .crumb .sep{opacity:.5; margin:0 6px;}
+  .docmeta h1{margin:0 0 6px; font-size:22px; letter-spacing:-.3px; font-weight:700;}
+  .docmeta h1 b{color:var(--primary);}
+  .docmeta .lead{margin:0 0 14px; font-size:13.5px; color:var(--text-sec); max-width:960px;}
+  .docmeta .quicklinks{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;}
+  .docmeta .quicklinks a{font-size:12.5px; padding:6px 13px; border-radius:20px; border:1px solid var(--border-strong); background:#fff; color:var(--text); transition:.12s;}
+  .docmeta .quicklinks a:hover{border-color:var(--primary); color:var(--primary);}
+
+  /* ---- issue backlink chips (per screen) ---- */
+  .ao-issuechips{display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+  .ao-issuechips .lbl{font-size:11px; color:var(--text-tert); text-transform:uppercase; letter-spacing:.5px;}
+  .ao-issuechips a{font-size:12px; padding:2px 11px; border-radius:20px; background:#e6f4ff; border:1px solid #91caff; color:#1677ff; transition:.12s;}
+  .ao-issuechips a:hover{background:#bae0ff;}
+
+  /* ---- login screen (pre-auth, no shell) ---- */
+  .ao-loginpage{max-width:1400px; margin:0 auto 28px; padding:0 24px;}
+  .ao-loginwrap{background:linear-gradient(180deg,#f5f7fb,#eef1f6); border:1px solid var(--border); border-radius:12px;
+    min-height:460px; display:flex; align-items:center; justify-content:center; padding:40px 20px;}
+  .ao-logincard{width:360px; background:#fff; border-radius:var(--radius); box-shadow:0 2px 8px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    padding:36px 32px; text-align:center;}
+  .ao-loginlogo{font-size:18px; font-weight:700; margin-bottom:6px;}
+  .ao-loginlogo span{color:var(--primary);}
+  .ao-logintitle{font-size:16px; font-weight:600; margin-bottom:4px;}
+  .ao-loginsub{font-size:12.5px; color:var(--text-sec); margin-bottom:22px;}
+  .ao-loginnote{font-size:12px; color:var(--text-sec); margin-top:18px; display:flex; gap:6px; justify-content:center; flex-wrap:wrap;}
+  .ao-loginfoot{font-size:11.5px; color:var(--text-tert); margin-top:14px;}
+
+  /* ---- app shell: sider + header + content ---- */
+  .ao-shell{display:flex; max-width:1400px; margin:0 auto; align-items:flex-start;}
+  .ao-sider{width:220px; flex:none; background:var(--sider-bg); padding:14px 0 24px;
+    position:sticky; top:46px; align-self:flex-start; max-height:calc(100vh - 46px); overflow-y:auto;}
+  .ao-sider-logo{color:#fff; font-weight:700; font-size:14.5px; padding:0 20px 14px; display:flex; align-items:center; gap:8px;
+    border-bottom:1px solid rgba(255,255,255,.12); margin-bottom:6px; white-space:nowrap;}
+  .ao-menu-group{color:rgba(255,255,255,.35); font-size:11px; text-transform:uppercase; letter-spacing:.6px; padding:14px 20px 6px;}
+  .ao-menu-item{display:block; color:rgba(255,255,255,.65); font-size:13.5px; padding:10px 20px; border-left:3px solid transparent; transition:.12s;}
+  .ao-menu-item:hover{background:rgba(255,255,255,.08); color:#fff;}
+  .ao-menu-item.sub{padding-left:40px; font-size:12.5px; color:rgba(255,255,255,.5);}
+  .ao-menu-item.active{background:var(--primary); color:#fff; border-left-color:#69b1ff;}
+
+  .ao-main{flex:1; min-width:0;}
+  .ao-header{height:56px; background:#fff; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+    position:sticky; top:46px; z-index:20;}
+  .ao-header-left{font-size:15px; font-weight:600;}
+  .ao-header-right{display:flex; align-items:center; gap:12px;}
+  .ao-avatar{width:26px; height:26px; border-radius:50%; background:var(--primary); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; flex:none;}
+  .ao-admin-name{font-size:13px; color:var(--text-sec);}
+
+  .ao-content{padding:24px;}
+  .ao-screen{margin-bottom:36px; padding-top:8px; scroll-margin-top:112px;}
+  .ao-screen + .ao-screen{border-top:1px dashed var(--border-strong); padding-top:28px;}
+
+  .ao-breadcrumb{font-size:12.5px; color:var(--text-sec); margin-bottom:6px;}
+  .ao-breadcrumb .sep{margin:0 6px; color:var(--text-tert);}
+  .ao-breadcrumb .cur{color:var(--text);}
+  .ao-pagetitle{font-size:19px; font-weight:600; margin:0 0 16px;}
+
+  /* ---- generic panel/card ---- */
+  .ao-panel{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:18px;}
+  .ao-panel-title{font-size:15px; font-weight:600; margin:0 0 16px; display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .ao-panel-title small{font-size:12px; font-weight:400; color:var(--text-sec);}
+
+  .ao-cardrow{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:16px; margin-bottom:18px;}
+  .ao-card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px;}
+  .ao-card-title{font-size:13.5px; font-weight:600; margin:0 0 12px; padding-bottom:10px; border-bottom:1px solid var(--border);}
+  .ao-desc-row{display:flex; justify-content:space-between; gap:10px; font-size:13px; padding:5px 0;}
+  .ao-desc-row .k{color:var(--text-sec); flex:none;}
+  .ao-desc-row .v{text-align:right; font-weight:500;}
+  .ao-desc-row.no{color:var(--text-tert);}
+
+  /* ---- statistic tiles ---- */
+  .ao-statgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:18px;}
+  .ao-stat{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px;}
+  .ao-stat-title{font-size:13px; color:var(--text-sec); margin-bottom:8px;}
+  .ao-stat-value{font-size:26px; font-weight:600; letter-spacing:-.5px;}
+  .ao-stat-desc{font-size:12px; color:var(--text-sec); margin-top:6px;}
+  .ao-stat-desc.up{color:var(--success);} .ao-stat-desc.down{color:var(--error);}
+
+  /* ---- table ---- */
+  .ao-table-wrap{overflow-x:auto;}
+  table.ao-table{width:100%; border-collapse:collapse; font-size:13px; white-space:nowrap;}
+  table.ao-table thead th{background:#fafafa; color:rgba(0,0,0,.88); font-weight:600; text-align:left; padding:11px 16px; border-bottom:1px solid var(--border);}
+  table.ao-table tbody td{padding:11px 16px; border-bottom:1px solid var(--border); color:rgba(0,0,0,.88);}
+  table.ao-table tbody tr:last-child td{border-bottom:none;}
+  .ao-pagination{display:flex; justify-content:flex-end; align-items:center; gap:6px; margin-top:14px; font-size:13px; color:var(--text-sec);}
+  .ao-pagination .pg{min-width:26px; height:26px; padding:0 4px; border-radius:6px; border:1px solid var(--border-strong);
+    display:inline-flex; align-items:center; justify-content:center;}
+  .ao-pagination .pg.on{border-color:var(--primary); color:var(--primary);}
+
+  /* ---- tags ---- */
+  .ao-tag{display:inline-block; padding:0 8px; height:22px; line-height:20px; border-radius:4px; font-size:12px; border:1px solid; white-space:nowrap;}
+  .ao-tag-default{background:#fafafa; border-color:#d9d9d9; color:rgba(0,0,0,.88);}
+  .ao-tag-blue{background:#e6f4ff; border-color:#91caff; color:#1677ff;}
+  .ao-tag-green{background:#f6ffed; border-color:#b7eb8f; color:#389e0d;}
+  .ao-tag-red{background:#fff1f0; border-color:#ffa39e; color:#cf1322;}
+  .ao-tag-gold{background:#fffbe6; border-color:#ffe58f; color:#d48806;}
+  .ao-tag-purple{background:#f9f0ff; border-color:#d3adf7; color:#722ed1;}
+  .ao-tag-cyan{background:#e6fffb; border-color:#87e8de; color:#08979c;}
+
+  /* ---- buttons ---- */
+  .ao-btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; height:32px; padding:0 15px;
+    border-radius:var(--radius-sm); font-size:14px; border:1px solid transparent; cursor:default; white-space:nowrap;}
+  .ao-btn-default{background:#fff; border-color:#d9d9d9; color:rgba(0,0,0,.88);}
+  .ao-btn-primary{background:var(--primary); color:#fff; border-color:var(--primary);}
+  .ao-btn-danger{background:#fff; border-color:#ff4d4f; color:#ff4d4f;}
+  .ao-btn-danger-solid{background:#ff4d4f; color:#fff; border-color:#ff4d4f;}
+  .ao-btn-sm{height:24px; padding:0 9px; font-size:12px; border-radius:4px;}
+  .ao-btn-block{width:100%; height:40px; font-size:14px;}
+  .ao-btn-link{border:none; background:transparent; color:var(--primary); padding:0; height:auto; font-size:13px;}
+  .ao-btnrow{display:flex; gap:8px; flex-wrap:wrap;}
+
+  /* ---- forms (static mockup controls, not real inputs) ---- */
+  .ao-formgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px 18px; margin-bottom:6px;}
+  .ao-field{display:flex; flex-direction:column; gap:5px;}
+  .ao-field.wide{grid-column:1 / -1;}
+  .ao-field-label{font-size:13.5px; color:rgba(0,0,0,.88);}
+  .ao-field-label .req{color:#ff4d4f; margin-right:3px;}
+  .ao-ctrl{border:1px solid #d9d9d9; border-radius:var(--radius-sm); padding:0 11px; font-size:13.5px; color:rgba(0,0,0,.88);
+    background:#fff; height:32px; display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  .ao-ctrl.ph{color:var(--text-tert);}
+  .ao-ctrl.area{height:auto; min-height:76px; align-items:flex-start; padding:8px 11px; white-space:pre-wrap;}
+  .ao-ctrl .caret{color:var(--text-tert); font-size:11px; flex:none;}
+  .ao-filterbar{display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:16px;}
+  .ao-filterbar .ao-field{min-width:160px;}
+
+  /* ---- modal preview ---- */
+  .ao-modalpreview{background:rgba(0,0,0,.45); border-radius:var(--radius); padding:36px 16px; display:flex; justify-content:center;}
+  .ao-modal{width:420px; max-width:100%; background:#fff; border-radius:var(--radius); overflow:hidden; box-shadow:0 6px 16px rgba(0,0,0,.16);}
+  .ao-modal-head{padding:14px 22px; border-bottom:1px solid var(--border); font-weight:600; font-size:15.5px;
+    display:flex; align-items:center; justify-content:space-between;}
+  .ao-modal-head .x{color:var(--text-tert); font-weight:400;}
+  .ao-modal-body{padding:20px 22px;}
+  .ao-modal-foot{padding:10px 16px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px;}
+
+  /* ---- timeline ---- */
+  .ao-timeline{list-style:none; margin:0; padding:0;}
+  .ao-timeline li{position:relative; padding:0 0 18px 22px; border-left:2px solid var(--border); margin-left:6px;}
+  .ao-timeline li:last-child{border-left-color:transparent; padding-bottom:2px;}
+  .ao-timeline li::before{content:""; position:absolute; left:-7px; top:2px; width:11px; height:11px; border-radius:50%;
+    background:var(--primary); border:2px solid #fff; box-shadow:0 0 0 1px var(--border);}
+  .ao-timeline .t-date{font-size:11.5px; color:var(--text-sec);}
+  .ao-timeline .t-title{font-size:13.5px; font-weight:600; margin:2px 0;}
+  .ao-timeline .t-desc{font-size:12.5px; color:var(--text-sec);}
+
+  /* ---- race ops live cards ---- */
+  .ao-racegrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-bottom:18px;}
+  .ao-racecard{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px;}
+  .ao-racecard .rid{font-size:12px; color:var(--text-sec); margin-bottom:2px;}
+  .ao-racecard .rname{font-size:14.5px; font-weight:600; margin-bottom:8px;}
+  .ao-racecard .rmeta{font-size:12.5px; color:var(--text-sec); margin-bottom:12px; display:flex; gap:10px; flex-wrap:wrap;}
+
+  .ao-toggle{display:flex; gap:8px; margin-bottom:14px;}
+  .ao-toggle .t{padding:5px 16px; border-radius:20px; font-size:13px; border:1px solid var(--border-strong); color:var(--text-sec); background:#fff;}
+  .ao-toggle .t.on{background:var(--primary); border-color:var(--primary); color:#fff;}
+
+  .ao-mono{font-family:"SF Mono","Roboto Mono",ui-monospace,Menlo,monospace; font-size:12.5px;}
+
+  html{scroll-behavior:smooth;}
+</style>
+</head>
+<body>
+
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary>사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../product/issue/index.html">이슈</a>
+      <a href="../../product/mvp/index.html">MVP</a>
+      <a href="../../product/wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary class="on">백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html">이슈</a>
+      <a href="../mvp/index.html">MVP</a>
+      <a href="../wireframes/index.html" class="on">화면</a>
+    </div>
+  </details>
+</div></nav>
+
+<div class="docmeta">
+  <div class="crumb"><a href="../../README.md">docs</a><span class="sep">/</span>backoffice<span class="sep">/</span>wireframes</div>
+  <h1>추노 <b>백오피스</b> 와이어프레임</h1>
+  <p class="lead">관리자 전용 React + TypeScript SPA(React Query · React Router · <b>Ant Design</b>)의 정적 화면 목업. 사용자 앱의 다크+코랄 "추격전" 정체성과는 완전히 다른 표면 — 라이트 테마의 표준 어드민 콘솔(Sider·Header·Table·Form·Modal)이다. 좌측 메뉴로 9개 화면을 이동할 수 있고, 각 화면 상단의 칩은 관련 백오피스 이슈로 연결된다.</p>
+  <div class="quicklinks">
+    <a href="../issue/index.html">🎫 백오피스 이슈 보드</a>
+    <a href="../mvp/index.html">🗺️ 백오피스 MVP</a>
+    <a href="../../domain/index.html">🧩 도메인 설계</a>
+    <a href="../../product/wireframes/index.html">📱 사용자 와이어프레임</a>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 1 — admin-login (pre-auth, no shell)                  -->
+<!-- ============================================================ -->
+<section class="ao-loginpage screen" id="admin-login">
+  <div class="ao-issuechips">
+    <span class="lbl">관련 이슈</span>
+    <a href="../issue/step1.html#BO1-3">BO1-3</a>
+    <a href="../issue/step1.html#BO1-7">BO1-7</a>
+  </div>
+  <div class="ao-loginwrap">
+    <div class="ao-logincard">
+      <div class="ao-loginlogo">추노 <span>Admin</span></div>
+      <div class="ao-logintitle">백오피스 로그인</div>
+      <div class="ao-loginsub">관리자 계정으로 SSO 인증 후 이용할 수 있습니다.</div>
+      <button class="ao-btn ao-btn-primary ao-btn-block">SSO로 로그인</button>
+      <div class="ao-loginnote">
+        <span class="ao-tag ao-tag-blue">SUPER_ADMIN</span>
+        <span class="ao-tag ao-tag-blue">OPERATOR</span>
+        <span class="ao-tag ao-tag-blue">SUPPORT</span>
+      </div>
+      <div class="ao-loginfoot">아이디/비밀번호 로그인은 지원하지 않습니다 · 문의 <span class="ao-mono">ops@chuno.example</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- APP SHELL — Sider + Header + Content                          -->
+<!-- ============================================================ -->
+<div class="ao-shell">
+  <aside class="ao-sider">
+    <div class="ao-sider-logo">🐺 추노 Admin</div>
+    <nav>
+      <div class="ao-menu-group">인증</div>
+      <a class="ao-menu-item" href="#admin-login">🔐 로그인</a>
+
+      <div class="ao-menu-group">대시보드</div>
+      <a class="ao-menu-item active" href="#admin-dashboard">📊 운영 대시보드</a>
+
+      <div class="ao-menu-group">정책관리</div>
+      <a class="ao-menu-item" href="#admin-legal">📄 법적문서 관리</a>
+
+      <div class="ao-menu-group">사용자관리</div>
+      <a class="ao-menu-item" href="#admin-users">👤 사용자 목록</a>
+      <a class="ao-menu-item sub" href="#admin-user-detail">↳ 사용자 상세</a>
+
+      <div class="ao-menu-group">모더레이션</div>
+      <a class="ao-menu-item" href="#admin-moderation">🚩 신고 큐</a>
+
+      <div class="ao-menu-group">게임운영</div>
+      <a class="ao-menu-item" href="#admin-race-ops">🏁 라이브 경주 운영</a>
+
+      <div class="ao-menu-group">CS · 마케팅</div>
+      <a class="ao-menu-item" href="#admin-notice">📣 공지/이벤트 발송</a>
+      <a class="ao-menu-item" href="#admin-points">💰 포인트 조정</a>
+    </nav>
+  </aside>
+
+  <div class="ao-main">
+    <header class="ao-header">
+      <div class="ao-header-left">추노 백오피스</div>
+      <div class="ao-header-right">
+        <span class="ao-tag ao-tag-blue">OPERATOR</span>
+        <div class="ao-avatar">김</div>
+        <span class="ao-admin-name">김운영 관리자 ▾</span>
+      </div>
+    </header>
+
+    <main class="ao-content">
+
+      <!-- ============================================ -->
+      <!-- SCREEN 2 — admin-dashboard                     -->
+      <!-- ============================================ -->
+      <section class="ao-screen screen" id="admin-dashboard">
+        <div class="ao-issuechips">
+          <span class="lbl">관련 이슈</span>
+          <a href="../issue/step5.html#BO5-4">BO5-4</a>
+          <a href="../issue/step5.html#BO5-5">BO5-5</a>
+        </div>
+        <div class="ao-breadcrumb">홈 <span class="sep">/</span> <span class="cur">대시보드</span></div>
+        <h2 class="ao-pagetitle">운영 대시보드</h2>
+
+        <div class="ao-statgrid">
+          <div class="ao-stat">
+            <div class="ao-stat-title">신규 가입 (D-1)</div>
+            <div class="ao-stat-value">128<small style="font-size:13px;font-weight:400;">명</small></div>
+            <div class="ao-stat-desc up">▲ 전일 대비 +12%</div>
+          </div>
+          <div class="ao-stat">
+            <div class="ao-stat-title">활성 방</div>
+            <div class="ao-stat-value">42<small style="font-size:13px;font-weight:400;">개</small></div>
+            <div class="ao-stat-desc">실시간</div>
+          </div>
+          <div class="ao-stat">
+            <div class="ao-stat-title">진행중 경주</div>
+            <div class="ao-stat-value">17<small style="font-size:13px;font-weight:400;">개</small></div>
+            <div class="ao-stat-desc">LIVE</div>
+          </div>
+          <div class="ao-stat">
+            <div class="ao-stat-title">완주율 (7일)</div>
+            <div class="ao-stat-value">87.3<small style="font-size:13px;font-weight:400;">%</small></div>
+            <div class="ao-stat-desc down">▼ 전주 대비 -1.4%p</div>
+          </div>
+        </div>
+
+        <div class="ao-panel">
+          <div class="ao-panel-title">최근 경주 <small>최신순 4건</small></div>
+          <div class="ao-table-wrap">
+            <table class="ao-table">
+              <thead><tr><th>경주ID</th><th>방 이름</th><th>참가자</th><th>상태</th><th>시작 시각</th></tr></thead>
+              <tbody>
+                <tr><td class="ao-mono">RCE-88231</td><td>야근탈출 5인방</td><td>5명</td><td><span class="ao-tag ao-tag-green">FINISHED</span></td><td>07-03 09:12</td></tr>
+                <tr><td class="ao-mono">RCE-88230</td><td>새벽러너</td><td>8명</td><td><span class="ao-tag ao-tag-blue">LIVE</span></td><td>07-03 09:05</td></tr>
+                <tr><td class="ao-mono">RCE-88229</td><td>지각방지단</td><td>4명</td><td><span class="ao-tag ao-tag-red">CANCELLED</span></td><td>07-03 08:40</td></tr>
+                <tr><td class="ao-mono">RCE-88228</td><td>출근전쟁</td><td>6명</td><td><span class="ao-tag ao-tag-green">FINISHED</span></td><td>07-03 08:22</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="ao-pagination"><span class="pg on">1</span><span class="pg">2</span><span class="pg">3</span><span>›</span></div>
+        </div>
+      </section>
+
+      <!-- ============================================ -->
+      <!-- SCREEN 3 — admin-legal                         -->
+      <!-- ============================================ -->
+      <section class="ao-screen screen" id="admin-legal">
+        <div class="ao-issuechips">
+          <span class="lbl">관련 이슈</span>
+          <a href="../issue/step1.html#BO1-5">BO1-5</a>
+          <a href="../issue/step1.html#BO1-6">BO1-6</a>
+          <a href="../issue/step1.html#BO1-7">BO1-7</a>
+        </div>
+        <div class="ao-breadcrumb">홈 <span class="sep">/</span> 정책관리 <span class="sep">/</span> <span class="cur">법적문서 관리</span></div>
+        <h2 class="ao-pagetitle">법적문서 관리</h2>
+
+        <div class="ao-panel">
+          <div class="ao-panel-title">문서 목록</div>
+          <div class="ao-table-wrap">
+            <table class="ao-table">
+              <thead><tr><th>문서타입</th><th>버전</th><th>상태</th><th>expectedActivateOn</th><th>수정일</th><th>액션</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>이용약관</td><td class="ao-mono">v1.2</td><td><span class="ao-tag ao-tag-green">ACTIVE</span></td>
+                  <td class="ao-mono">2026-06-01</td><td>2026-05-28</td>
+                  <td><button class="ao-btn ao-btn-default ao-btn-sm">보기</button></td>
+                </tr>
+                <tr>
+                  <td>개인정보처리방침</td><td class="ao-mono">v2.0</td><td><span class="ao-tag ao-tag-gold">DRAFT</span></td>
+                  <td class="ao-mono">2026-07-10</td><td>2026-07-02</td>
+                  <td class="ao-btnrow"><button class="ao-btn ao-btn-default ao-btn-sm">편집</button><button class="ao-btn ao-btn-primary ao-btn-sm">발행 예약</button></td>
+                </tr>
+                <tr>
+                  <td>개인정보처리방침</td><td class="ao-mono">v1.1</td><td><span class="ao-tag ao-tag-default">ARCHIVED</span></td>
+                  <td class="ao-mono">2026-01-01</td><td>2025-12-20</td>
+                  <td><button class="ao-btn ao-btn-default ao-btn-sm">보기</button></td>
+                </tr>
+                <tr>
+                  <td>위치기반서비스 이용약관</td><td class="ao-mono">v1.0</td><td><span class="ao-tag ao-tag-green">ACTIVE</span></td>
+                  <td class="ao-mono">2026-02-15</td><td>2026-02-10</td>
+                  <td><button class="ao-btn ao-btn-default ao-btn-sm">보기</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ao-panel">
+          <div class="ao-panel-title">초안 편집 <small>개인정보처리방침 · v2.0 · DRAFT</small></div>
+          <div class="ao-formgrid">
+            <div class="ao-field">
+              <div class="ao-field-label">문서타입</div>
+              <div class="ao-ctrl">개인정보처리방침<span class="caret">▾</span></div>
+            </div>
+            <div class="ao-field">
+              <div class="ao-field-label">버전</div>
+              <div class="ao-ctrl ao-mono">v2.0</div>
+            </div>
+            <div class="ao-field">
+              <div class="ao-field-label"><span class="req">*</span>발행 예정일 (expectedActivateOn)</div>
+              <div class="ao-ctrl">2026-07-10<span class="caret">📅</span></div>
+            </div>
+            <div class="ao-field wide">
+              <div class="ao-field-label">본문</div>
+              <div class="ao-ctrl area">제1조(목적) 본 방침은 추노 서비스 이용과 관련하여 회사가 수집하는 개인정보의 항목, 이용 목적, 보유 기간 등을 규정합니다…</div>
+            </div>
+          </div>
+          <div class="ao-btnrow">
+            <button class="ao-btn ao-btn-default">임시저장</button>
+            <button class="ao-btn ao-btn-primary">발행 예약</button>
+            <button class="ao-btn ao-btn-danger">즉시 활성화</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================ -->
+      <!-- SCREEN 4 — admin-users                         -->
+      <!-- ============================================ -->
+      <section class="ao-screen screen" id="admin-users">
+        <div class="ao-issuechips">
+          <span class="lbl">관련 이슈</span>
+          <a href="../issue/step2.html#BO2-2">BO2-2</a>
+          <a href="../issue/step2.html#BO2-5">BO2-5</a>
+        </div>
+        <div class="ao-breadcrumb">홈 <span class="sep">/</span> 사용자관리 <span class="sep">/</span> <span class="cur">사용자 목록</span></div>
+        <h2 class="ao-pagetitle">사용자 목록</h2>
+
+        <div class="ao-panel">
+          <div class="ao-filterbar">
+            <div class="ao-field"><div class="ao-field-label">닉네임</div><div class="ao-ctrl ph">닉네임 검색</div></div>
+            <div class="ao-field"><div class="ao-field-label">Provider</div><div class="ao-ctrl">전체<span class="caret">▾</span></div></div>
+            <div class="ao-field"><div class="ao-field-label">상태</div><div class="ao-ctrl">전체<span class="caret">▾</span></div></div>
+            <div class="ao-field"><div class="ao-field-label">가입일</div><div class="ao-ctrl">2025-01-01 ~ 2026-07-03<span class="caret">📅</span></div></div>
+            <button class="ao-btn ao-btn-primary">검색</button>
+          </div>
+
+          <div class="ao-table-wrap">
+            <table class="ao-table">
+              <thead><tr><th>닉네임</th><th>Provider</th><th>상태</th><th>가입일</th><th>액션</th></tr></thead>
+              <tbody>
+                <tr><td>달리는감자</td><td><span class="ao-tag ao-tag-blue">kakao</span></td><td><span class="ao-tag ao-tag-green">ACTIVE</span></td><td>2025-11-02</td><td><a class="ao-btn-link" href="#admin-user-detail">상세보기 →</a></td></tr>
+                <tr><td>추노왕</td><td><span class="ao-tag ao-tag-default">apple</span></td><td><span class="ao-tag ao-tag-gold">SUSPENDED</span></td><td>2025-09-14</td><td><a class="ao-btn-link" href="#admin-user-detail">상세보기 →</a></td></tr>
+                <tr><td>야밤질주</td><td><span class="ao-tag ao-tag-blue">kakao</span></td><td><span class="ao-tag ao-tag-red">BANNED</span></td><td>2025-08-01</td><td><a class="ao-btn-link" href="#admin-user-detail">상세보기 →</a></td></tr>
+                <tr><td>무한도전러너</td><td><span class="ao-tag ao-tag-cyan">google</span></td><td><span class="ao-tag ao-tag-green">ACTIVE</span></td><td>2026-01-20</td><td><a class="ao-btn-link" href="#admin-user-detail">상세보기 →</a></td></tr>
+                <tr><td>지각탈출99</td><td><span class="ao-tag ao-tag-blue">kakao</span></td><td><span class="ao-tag ao-tag-green">ACTIVE</span></td><td>2026-03-11</td><td><a class="ao-btn-link" href="#admin-user-detail">상세보기 →</a></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="ao-pagination"><span class="pg on">1</span><span class="pg">2</span><span class="pg">3</span><span>›</span></div>
+        </div>
+      </section>
+
+      <!-- ============================================ -->
+      <!-- SCREEN 5 — admin-user-detail                   -->
+      <!-- ============================================ -->
+      <section class="ao-screen screen" id="admin-user-detail">
+        <div class="ao-issuechips">
+          <span class="lbl">관련 이슈</span>
+          <a href="../issue/step2.html#BO2-3">BO2-3</a>
+          <a href="../issue/step2.html#BO2-5">BO2-5</a>
+        </div>
+        <div class="ao-breadcrumb">홈 <span class="sep">/</span> 사용자관리 <span class="sep">/</span> <a href="#admin-users">사용자 목록</a> <span class="sep">/</span> <span class="cur">추노왕</span></div>
+        <h2 class="ao-pagetitle">사용자 상세 — 추노왕</h2>
+
+        <div class="ao-cardrow">
+          <div class="ao-card">
+            <div class="ao-card-title">프로필</div>
+            <div class="ao-desc-row"><span class="k">닉네임</span><span class="v">추노왕</span></div>
+            <div class="ao-desc-row"><span class="k">userId</span><span class="v ao-mono">usr_8231</span></div>
+            <div class="ao-desc-row"><span class="k">상태</span><span class="v"><span class="ao-tag ao-tag-gold">SUSPENDED</span></span></div>
+            <div class="ao-desc-row"><span class="k">가입일</span><span class="v">2025-09-14</span></div>
+            <div class="ao-desc-row"><span class="k">마지막 로그인</span><span class="v">2026-06-30 22:10</span></div>
+          </div>
+          <div class="ao-card">
+            <div class="ao-card-title">Consents</div>
+            <div class="ao-desc-row"><span class="k">서비스 이용약관</span><span class="v">✓ 2025-09-14</span></div>
+            <div class="ao-desc-row"><span class="k">개인정보 처리방침</span><span class="v">✓ 2025-09-14</span></div>
+            <div class="ao-desc-row no"><span class="k">마케팅 수신 동의</span><span class="v">✗ 미동의</span></div>
+          </div>
+          <div class="ao-card">
+            <div class="ao-card-title">AuthIdentity</div>
+            <div class="ao-desc-row"><span class="k">provider</span><span class="v"><span class="ao-tag ao-tag-default">apple</span></span></div>
+            <div class="ao-desc-row"><span class="k">subject</span><span class="v ao-mono">ap_****3f21</span></div>
+            <div class="ao-desc-row"><span class="k">최초 연동일</span><span class="v">2025-09-14</span></div>
+            <div class="ao-desc-row"><span class="k">마지막 토큰 갱신</span><span class="v">2026-06-30</span></div>
+          </div>
+        </div>
+
+        <div class="ao-btnrow" style="margin-bottom:18px;">
+          <button class="ao-btn ao-btn-danger-solid">제재하기</button>
+        </div>
+
+        <div class="ao-panel">
+          <div class="ao-panel-title">제재 처리 <small>Modal 미리보기</small></div>
+          <div class="ao-modalpreview">
+            <div class="ao-modal">
+              <div class="ao-modal-head">사용자 제재 — 추노왕 <span class="x">✕</span></div>
+              <div class="ao-modal-body">
+                <div class="ao-formgrid" style="grid-template-columns:1fr; gap:14px;">
+                  <div class="ao-field">
+                    <div class="ao-field-label"><span class="req">*</span>유형</div>
+                    <div class="ao-ctrl">정지 (SUSPENDED)<span class="caret">▾</span></div>
+                  </div>
+                  <div class="ao-field">
+                    <div class="ao-field-label"><span class="req">*</span>기간</div>
+                    <div class="ao-ctrl">7일<span class="caret">▾</span></div>
+                  </div>
+                  <div class="ao-field">
+                    <div class="ao-field-label"><span class="req">*</span>사유</div>
+                    <div class="ao-ctrl area">부적절한 닉네임 반복 신고 누적 (신고 3건, RPT-3391 등)</div>
+                  </div>
+                </div>
+              </div>
+              <div class="ao-modal-foot">
+                <button class="ao-btn ao-btn-default">취소</button>
+                <button class="ao-btn ao-btn-danger-solid">제재 확정</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ao-panel">
+          <div class="ao-panel-title">제재 이력</div>
+          <ul class="ao-timeline">
+            <li>
+              <div class="t-date">2026-06-01 · 김운영 (OPERATOR)</div>
+              <div class="t-title">정지 7일 적용</div>
+              <div class="t-desc">사유: 욕설 채팅 신고 누적</div>
+            </li>
+            <li>
+              <div class="t-date">2025-12-10 · 박서포트 (SUPPORT)</div>
+              <div class="t-title">경고 처리 (제재 없음)</div>
+              <div class="t-desc">사유: 최초 신고, 계도 조치</div>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============================================ -->
+      <!-- SCREEN 6 — admin-moderation                    -->
+      <!-- ============================================ -->
+      <section class="ao-screen screen" id="admin-moderation">
+        <div class="ao-issuechips">
+          <span class="lbl">관련 이슈</span>
+          <a href="../issue/step3.html#BO3-2">BO3-2</a>
+          <a href="../issue/step3.html#BO3-4">BO3-4</a>
+        </div>
+        <div class="ao-breadcrumb">홈 <span class="sep">/</span> 모더레이션 <span class="sep">/</span> <span class="cur">신고 큐</span></div>
+        <h2 class="ao-pagetitle">신고 큐</h2>
+
+        <div class="ao-panel">
+          <div class="ao-toggle"><span class="t on">OPEN (2)</span><span class="t">RESOLVED (2)</span></div>
+          <div class="ao-table-wrap">
+            <table class="ao-table">
+              <thead><tr><th>신고ID</th><th>유형</th><th>대상</th><th>신고자</th><th>상태</th><th>접수일</th><th>액션</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="ao-mono">RPT-3391</td><td>부적절한 닉네임</td><td>user:추노왕</td><td>user:달리는감자</td>
+                  <td><span class="ao-tag ao-tag-gold">OPEN</span></td><td>2026-07-02 21:40</td>
+                  <td><a class="ao-btn-link" href="#admin-user-detail">처리하기 →</a></td>
+                </tr>
+                <tr>
+                  <td class="ao-mono">RPT-3390</td><td>어뷰징 의심 (경주)</td><td class="ao-mono">race:RCE-88229</td><td>user:야밤질주</td>
+                  <td><span class="ao-tag ao-tag-gold">OPEN</span></td><td>2026-07-02 08:55</td>
+                  <td><a class="ao-btn-link" href="#admin-race-ops">처리하기 →</a></td>
+                </tr>
+                <tr>
+                  <td class="ao-mono">RPT-3388</td><td>부적절한 프로필 이미지</td><td>user:야밤질주</td><td>user:무한도전러너</td>
+                  <td><span class="ao-tag ao-tag-green">RESOLVED</span></td><td>2026-06-29 14:02</td>
+                  <td><button class="ao-btn ao-btn-default ao-btn-sm">상세</button></td>
+                </tr>
+                <tr>
+                  <td class="ao-mono">RPT-3385</td><td>욕설/도배 채팅</td><td>room:야근탈출5인방</td><td>user:지각탈출99</td>
+                  <td><span class="ao-tag ao-tag-green">RESOLVED</span></td><td>2026-06-27 19:31</td>
+                  <td><button class="ao-btn ao-btn-default ao-btn-sm">상세</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================ -->
+      <!-- SCREEN 7 — admin-race-ops                      -->
+      <!-- ============================================ -->
+      <section class="ao-screen screen" id="admin-race-ops">
+        <div class="ao-issuechips">
+          <span class="lbl">관련 이슈</span>
+          <a href="../issue/step4.html#BO4-2">BO4-2</a>
+          <a href="../issue/step4.html#BO4-4">BO4-4</a>
+        </div>
+        <div class="ao-breadcrumb">홈 <span class="sep">/</span> 게임운영 <span class="sep">/</span> <span class="cur">라이브 경주 운영</span></div>
+        <h2 class="ao-pagetitle">라이브 경주 운영</h2>
+
+        <div class="ao-racegrid">
+          <div class="ao-racecard">
+            <div class="rid ao-mono">RCE-88235</div>
+            <div class="rname">출근전쟁</div>
+            <div class="rmeta"><span class="ao-tag ao-tag-blue">LIVE</span><span>참가자 6명</span><span>경과 04:12</span></div>
+            <div class="ao-btnrow"><button class="ao-btn ao-btn-danger ao-btn-sm">강제 종료(finalize)</button><button class="ao-btn ao-btn-default ao-btn-sm">취소</button></div>
+          </div>
+          <div class="ao-racecard">
+            <div class="rid ao-mono">RCE-88234</div>
+            <div class="rname">새벽러너</div>
+            <div class="rmeta"><span class="ao-tag ao-tag-blue">LIVE</span><span>참가자 8명</span><span>경과 02:47</span></div>
+            <div class="ao-btnrow"><button class="ao-btn ao-btn-danger ao-btn-sm">강제 종료(finalize)</button><button class="ao-btn ao-btn-default ao-btn-sm">취소</button></div>
+          </div>
+          <div class="ao-racecard">
+            <div class="rid ao-mono">RCE-88233</div>
+            <div class="rname">지각방지단 재도전</div>
+            <div class="rmeta"><span class="ao-tag ao-tag-blue">LIVE</span><span>참가자 3명</span><span>경과 00:58</span></div>
+            <div class="ao-btnrow"><button class="ao-btn ao-btn-danger ao-btn-sm">강제 종료(finalize)</button><button class="ao-btn ao-btn-default ao-btn-sm">취소</button></div>
+          </div>
+        </div>
+
+        <div class="ao-panel">
+          <div class="ao-panel-title">안티치트 리젝 로그</div>
+          <div class="ao-table-wrap">
+            <table class="ao-table">
+              <thead><tr><th>시각</th><th>userId</th><th>사유코드</th><th>상세</th><th>raceId</th></tr></thead>
+              <tbody>
+                <tr><td>2026-07-03 09:14</td><td class="ao-mono">usr_8231</td><td><span class="ao-tag ao-tag-red">SPEED_ANOMALY</span></td><td>구간 평균속도 임계치 초과 (x4.2)</td><td class="ao-mono">RCE-88231</td></tr>
+                <tr><td>2026-07-03 08:50</td><td class="ao-mono">usr_5512</td><td><span class="ao-tag ao-tag-red">GPS_JUMP</span></td><td>좌표 순간이동 감지 (120m/0.4s)</td><td class="ao-mono">RCE-88229</td></tr>
+                <tr><td>2026-07-02 22:03</td><td class="ao-mono">usr_9021</td><td><span class="ao-tag ao-tag-red">MOCK_LOCATION_SUSPECTED</span></td><td>모의위치 앱 시그니처 감지</td><td class="ao-mono">RCE-88220</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================ -->
+      <!-- SCREEN 8 — admin-notice                        -->
+      <!-- ============================================ -->
+      <section class="ao-screen screen" id="admin-notice">
+        <div class="ao-issuechips">
+          <span class="lbl">관련 이슈</span>
+          <a href="../issue/step5.html#BO5-3">BO5-3</a>
+          <a href="../issue/step5.html#BO5-5">BO5-5</a>
+        </div>
+        <div class="ao-breadcrumb">홈 <span class="sep">/</span> CS·마케팅 <span class="sep">/</span> <span class="cur">공지/이벤트 발송</span></div>
+        <h2 class="ao-pagetitle">공지/이벤트 푸시 발송</h2>
+
+        <div class="ao-panel">
+          <div class="ao-panel-title">새 발송 작성</div>
+          <div class="ao-formgrid">
+            <div class="ao-field wide">
+              <div class="ao-field-label"><span class="req">*</span>제목</div>
+              <div class="ao-ctrl">[이벤트] 7월 출근 레이스 챌린지 오픈</div>
+            </div>
+            <div class="ao-field wide">
+              <div class="ao-field-label"><span class="req">*</span>본문</div>
+              <div class="ao-ctrl area">7월 한 달간 출근시간대 경주에서 상위 10명에게 추가 포인트를 지급합니다. 지금 바로 참여해보세요!</div>
+            </div>
+            <div class="ao-field">
+              <div class="ao-field-label"><span class="req">*</span>대상</div>
+              <div class="ao-ctrl">세그먼트 지정<span class="caret">▾</span></div>
+            </div>
+            <div class="ao-field">
+              <div class="ao-field-label">세그먼트 조건</div>
+              <div class="ao-ctrl">최근 7일 미접속 + ACTIVE</div>
+            </div>
+            <div class="ao-field">
+              <div class="ao-field-label">발송 예약일시</div>
+              <div class="ao-ctrl">2026-07-04 09:00<span class="caret">📅</span></div>
+            </div>
+          </div>
+          <div class="ao-btnrow">
+            <button class="ao-btn ao-btn-default">미리보기</button>
+            <button class="ao-btn ao-btn-primary">발송 예약</button>
+          </div>
+        </div>
+
+        <div class="ao-panel">
+          <div class="ao-panel-title">발송 이력</div>
+          <div class="ao-table-wrap">
+            <table class="ao-table">
+              <thead><tr><th>제목</th><th>대상</th><th>발송건수</th><th>상태</th><th>발송일시</th></tr></thead>
+              <tbody>
+                <tr><td>여름맞이 야간레이스 이벤트</td><td>전체 사용자</td><td>8,412건</td><td><span class="ao-tag ao-tag-green">완료</span></td><td>2026-06-20 09:00</td></tr>
+                <tr><td>정기점검 안내 (7/5 02:00~04:00)</td><td>전체 사용자</td><td>8,530건</td><td><span class="ao-tag ao-tag-blue">예약</span></td><td>2026-07-05 01:50</td></tr>
+                <tr><td>휴면 전환 예정 안내</td><td>세그먼트 (미접속 30일+)</td><td>1,204건</td><td><span class="ao-tag ao-tag-green">완료</span></td><td>2026-06-15 10:00</td></tr>
+                <tr><td>이벤트 발송 실패건</td><td>세그먼트 (iOS 구버전)</td><td>312건</td><td><span class="ao-tag ao-tag-red">실패</span></td><td>2026-06-10 08:30</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================ -->
+      <!-- SCREEN 9 — admin-points                        -->
+      <!-- ============================================ -->
+      <section class="ao-screen screen" id="admin-points">
+        <div class="ao-issuechips">
+          <span class="lbl">관련 이슈</span>
+          <a href="../issue/step5.html#BO5-1">BO5-1</a>
+          <a href="../issue/step5.html#BO5-5">BO5-5</a>
+        </div>
+        <div class="ao-breadcrumb">홈 <span class="sep">/</span> CS·마케팅 <span class="sep">/</span> <span class="cur">포인트 조정</span></div>
+        <h2 class="ao-pagetitle">포인트 수동 조정</h2>
+
+        <div class="ao-panel">
+          <div class="ao-filterbar">
+            <div class="ao-field" style="min-width:260px;"><div class="ao-field-label">사용자 검색</div><div class="ao-ctrl">달리는감자 (usr_1042)</div></div>
+            <button class="ao-btn ao-btn-primary">검색</button>
+          </div>
+
+          <div class="ao-cardrow" style="grid-template-columns:220px 1fr;">
+            <div class="ao-stat">
+              <div class="ao-stat-title">현재 포인트 잔액</div>
+              <div class="ao-stat-value">2,480<small style="font-size:13px;font-weight:400;">P</small></div>
+              <div class="ao-stat-desc">달리는감자 · usr_1042</div>
+            </div>
+            <div class="ao-card">
+              <div class="ao-card-title">조정 등록</div>
+              <div class="ao-formgrid">
+                <div class="ao-field">
+                  <div class="ao-field-label"><span class="req">*</span>조정유형</div>
+                  <div class="ao-ctrl">적립<span class="caret">▾</span></div>
+                </div>
+                <div class="ao-field">
+                  <div class="ao-field-label"><span class="req">*</span>금액</div>
+                  <div class="ao-ctrl">500</div>
+                </div>
+                <div class="ao-field wide">
+                  <div class="ao-field-label"><span class="req">*</span>사유</div>
+                  <div class="ao-ctrl">이벤트 보상 - 7월 챌린지 1위</div>
+                </div>
+                <div class="ao-field">
+                  <div class="ao-field-label">refId <small style="color:var(--text-tert);">(선택)</small></div>
+                  <div class="ao-ctrl ao-mono">EVT-2026-07-01</div>
+                </div>
+              </div>
+              <div class="ao-btnrow"><button class="ao-btn ao-btn-primary">적용</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ao-panel">
+          <div class="ao-panel-title">트랜잭션 이력</div>
+          <div class="ao-table-wrap">
+            <table class="ao-table">
+              <thead><tr><th>시각</th><th>유형</th><th>금액</th><th>사유</th><th>refId</th><th>처리자</th></tr></thead>
+              <tbody>
+                <tr><td>2026-07-01 10:02</td><td><span class="ao-tag ao-tag-green">적립</span></td><td>+500P</td><td>7월 챌린지 1위 보상</td><td class="ao-mono">EVT-2026-07-01</td><td>김운영</td></tr>
+                <tr><td>2026-06-25 14:20</td><td><span class="ao-tag ao-tag-red">차감</span></td><td>-200P</td><td>부정 참여 적발 환수</td><td class="ao-mono">RPT-3379</td><td>박서포트</td></tr>
+                <tr><td>2026-06-10 09:00</td><td><span class="ao-tag ao-tag-green">적립</span></td><td>+1,000P</td><td>가입 축하 이벤트</td><td class="ao-mono">EVT-2026-06-10</td><td>system</td></tr>
+                <tr><td>2026-05-30 18:44</td><td><span class="ao-tag ao-tag-green">적립</span></td><td>+80P</td><td>경주 완주 보상</td><td class="ao-mono">RCE-87920</td><td>system</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+</body>
+</html>

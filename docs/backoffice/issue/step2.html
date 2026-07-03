@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BO Step 2 이슈 · 사용자 관리 · 제재 — 추노 백오피스</title>
+<link rel="stylesheet" href="../mvp/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary>사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../product/issue/index.html">이슈</a>
+      <a href="../../product/mvp/index.html">MVP</a>
+      <a href="../../product/wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary class="on">백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html" class="on">이슈</a>
+      <a href="../mvp/index.html">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+</div></nav>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">백오피스 이슈</a><span class="sep">/</span>BO Step 2<span class="sep">·</span><a href="../mvp/step2.html">BO MVP Step 2</a></div>
+  <h1><b>BO Step 2</b> · 사용자 관리 · 제재</h1>
+  <p class="lead">관리자가 사용자를 조회·검색하고, 위반 시 제재해 세션까지 즉시 무효화한다. (총 5 이슈, 전부 미착수)</p>
+  <div class="boardnote">
+    <a class="linkbtn" href="../mvp/step2.html">📋 <b>BO MVP Step 2</b></a>
+    <a class="linkbtn" href="index.html">← 백오피스 이슈</a>
+  </div>
+
+  <div class="issue design" id="BO2-1">
+    <div class="ihead"><span class="iid">BO2-1</span><span class="ititle">제재(Sanction) 도메인 설계</span><span class="badge design">DESIGN</span><span class="pill">S</span></div>
+    <div class="idesc">사용자 제재를 어떤 형태로 모델링할지 결정하고 도메인 문서에 반영한다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">User.status</span>(ACTIVE·SUSPENDED·BANNED) vs 별도 <span class="mono">UserSanction</span> 이력 엔티티 — <span class="stag scope">열린 질문</span> 결정</span></li>
+      <li><span class="box"></span><span>사유·기간·해제</span></li>
+      <li><span class="box"></span><span>soft-delete 관계</span></li>
+      <li><span class="box"></span><span>ERD 반영</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 제재 모델이 도메인 문서에 반영된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-1</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-user">📦 User</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO2-2">
+    <div class="ihead"><span class="iid">BO2-2</span><span class="ititle">관리자 사용자 조회/검색 API</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc"><span class="mono">/api/admins/users</span> — 목록 검색과 상세 조회.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">GET /api/admins/users</span>(페이지네이션·닉네임/provider/status/가입일 필터)</span></li>
+      <li><span class="box"></span><span><span class="mono">GET /:id</span>(consents·authIdentity·통계)</span></li>
+      <li><span class="box"></span><span>SUPPORT 이상 role</span></li>
+      <li><span class="box"></span><span>좌표 미노출 유지</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 관리자가 사용자 목록/상세를 검색할 수 있다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-3</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-user">📦 User</a><a href="../../domain/index.html#ent-authidentity">📦 AuthIdentity</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO2-3">
+    <div class="ihead"><span class="iid">BO2-3</span><span class="ititle">사용자 제재 API + 강제 세션폐기</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">제재 적용·해제와 동시에 해당 유저의 세션을 즉시 끊는다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">PUT /api/admins/users/:id/sanction</span>·<span class="mono">/unsanction</span>(PATCH 금지)</span></li>
+      <li><span class="box"></span><span>제재 시 refresh family 전체 무효화(<a href="../../product/issue/step1.html#S1-5">S1-5</a> 재사용)</span></li>
+      <li><span class="box"></span><span>OPERATOR 이상 role</span></li>
+      <li><span class="box"></span><span>감사 기록</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 제재 시 세션이 즉시 무효화되고, 이력·감사가 남는다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO2-1, BO2-2, BO1-4</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-user">📦 User</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO2-4">
+    <div class="ihead"><span class="iid">BO2-4</span><span class="ititle">제재 반영 크로스컷 (로그인/소켓/공개 GET 게이팅)</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc"><b>회귀 주의</b> — 사용자 트랙 S1-4/S1-5/S1-6·S2-4 소켓에 제재 게이팅을 추가한다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>social-login·refresh에서 SUSPENDED/BANNED 거부</span></li>
+      <li><span class="box"></span><span>소켓 핸드셰이크 거부</span></li>
+      <li><span class="box"></span><span>공개 사용자 GET active-only</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 제재 유저가 로그인·소켓·공개 노출에서 차단된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO2-1</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-user">📦 User</a><a href="../../product/issue/step2.html">🎫 사용자 이슈 Step2</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue app" id="BO2-5">
+    <div class="ihead"><span class="iid">BO2-5</span><span class="ititle">백오피스 사용자 목록·상세·제재 화면</span><span class="badge app">UI</span><span class="pill">M</span></div>
+    <div class="idesc">사용자 검색부터 제재 적용까지 관리자 UX.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">#admin-users</span>·<span class="mono">#admin-user-detail</span></span></li>
+      <li><span class="box"></span><span>제재 모달 · 이력 타임라인</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 사용자 검색부터 제재 적용까지의 화면 플로우가 존재한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO2-2</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#admin-users">🎨 admin-users</a><a href="../wireframes/index.html#admin-user-detail">🎨 admin-user-detail</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>추노 백오피스 MVP 로드맵</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary>사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../product/issue/index.html">이슈</a>
+      <a href="../../product/mvp/index.html">MVP</a>
+      <a href="../../product/wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary class="on">백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html">이슈</a>
+      <a href="../mvp/index.html" class="on">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+</div></nav>
+<div class="wrap">
+  <div class="crumb"><a href="../../README.md">docs</a><span class="sep">/</span>backoffice<span class="sep">/</span>mvp</div>
+  <h1>추노 <b>백오피스</b> MVP 로드맵</h1>
+  <p class="lead">사용자 트랙과 평행한 관리자단 로드맵. IAM/role-RBAC 기반 위에 사용자 관리·모더레이션·게임 운영·포인트/랭킹/공지를 쌓는다.</p>
+  <p style="margin:-8px 0 20px;"><a href="../issue/index.html" style="color:var(--coral); font-weight:600; font-size:13px;">🎫 상세 이슈 보드 (BO 스텝별 티켓) →</a></p>
+
+  <div class="callout">
+    <b>기술스택 노트</b> — back-office = <b>React + TypeScript + React Query + React Router DOM + Ant Design</b>(별도 웹 SPA). 모든 관리자 API는 <span class="mono">/api/admins/*</span> + <span class="mono">AdminGuard</span>, 인증 = 외부 SSO, 권한 = <b>role-only RBAC</b>(SUPER_ADMIN / OPERATOR / SUPPORT).
+  </div>
+
+  <h2>빌드 스텝 <span class="em">사용자 트랙 Step1~5와 평행 진행</span></h2>
+  <div class="steps">
+    <a class="stepcard" href="step1.html">
+      <div class="num">01</div>
+      <div class="body">
+        <div class="t">IAM 기반 + 법적문서 관리 재스코프</div>
+        <div class="s">AdminAccount·Role·AdminAuditLog 도메인, 관리자 SSO+role 게이팅, 감사로그, 법적문서 관리/활성화 API를 실 role-RBAC로 재스코프</div>
+        <div class="areas"><span class="badge design">DESIGN</span><span class="badge be">BACKEND</span><span class="badge app">UI</span></div>
+      </div>
+    </a>
+    <a class="stepcard" href="step2.html">
+      <div class="num">02</div>
+      <div class="body">
+        <div class="t">사용자 관리 · 제재</div>
+        <div class="s">사용자 조회/검색, 제재(Sanction) 도메인 결정, 제재 시 세션 강제폐기, 로그인/소켓/공개 GET 크로스컷 게이팅</div>
+        <div class="areas"><span class="badge design">DESIGN</span><span class="badge be">BACKEND</span><span class="badge app">UI</span></div>
+      </div>
+    </a>
+    <a class="stepcard" href="step3.html">
+      <div class="num">03</div>
+      <div class="body">
+        <div class="t">모더레이션 · 신고 · 파일</div>
+        <div class="s">신고 도메인 신설 여부 결정, 신고 큐/처리 API, 파일 모더레이션(조회·삭제), 모더레이션 큐 화면</div>
+        <div class="areas"><span class="badge design">DESIGN</span><span class="badge be">BACKEND</span><span class="badge app">UI</span></div>
+      </div>
+    </a>
+    <a class="stepcard" href="step4.html">
+      <div class="num">04</div>
+      <div class="body">
+        <div class="t">게임 · 경주 운영</div>
+        <div class="s">방/경주 강제취소·finalize, 안티치트 로그 조회, 결과·점수 정정(서버 권위 유지), 라이브 운영 대시보드</div>
+        <div class="areas"><span class="badge be">BACKEND</span><span class="badge app">UI</span></div>
+      </div>
+    </a>
+    <a class="stepcard" href="step5.html">
+      <div class="num">05</div>
+      <div class="body">
+        <div class="t">포인트 · 랭킹 · 티어 · 공지 · 지표</div>
+        <div class="s">포인트 수동 조정, 랭킹/티어 컷 운영, 공지·이벤트 푸시 발송, 운영 대시보드 지표 API</div>
+        <div class="areas"><span class="badge be">BACKEND</span><span class="badge app">UI</span></div>
+      </div>
+    </a>
+  </div>
+
+  <h2>아직 열린 결정</h2>
+  <div class="card" style="font-size:13.5px; color:var(--muted)">
+    제재를 User.status로 둘지 별도 UserSanction 이력 엔티티로 둘지 · 신고(Report) 도메인 신설 여부 · 공지 발송 도메인 신설 여부 — 전부 각 BO 스텝의 DESIGN 이슈에서 확정.
+  </div>
+
+  <div class="nav">
+    <span class="nav-spacer" style="flex:1"></span>
+    <a class="next" href="step1.html"><span class="lbl">다음</span>BO Step 1 · IAM 기반 →</a>
+  </div>
+</div>
+</body>
+</html>

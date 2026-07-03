@@ -10,16 +10,29 @@
 <body>
 <nav class="sitenav"><div class="inner">
   <span class="sn-brand">추노 <b>docs</b></span>
-  <a href="../README.md">개요</a>
-  <a href="../mvp/index.html">MVP 로드맵</a>
-  <span class="on">이슈 보드</span>
-  <a href="../domain/index.html">도메인(DDD)</a>
-  <a href="../wireframes/index.html">와이어프레임</a>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary class="on">사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html" class="on">이슈</a>
+      <a href="../mvp/index.html">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary>백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../backoffice/issue/index.html">이슈</a>
+      <a href="../../backoffice/mvp/index.html">MVP</a>
+      <a href="../../backoffice/wireframes/index.html">화면</a>
+    </div>
+  </details>
 </div></nav>
 <div class="wrap">
   <div class="crumb"><a href="index.html">이슈 보드</a><span class="sep">/</span>Step 1<span class="sep">·</span><a href="../mvp/step1.html">MVP Step 1</a></div>
   <h1><b>Step 1</b> · 기반 &amp; 인증</h1>
-  <p class="lead">백엔드 골격 + 소셜 로그인 → 온보딩 → 홈 진입까지 실계정으로 도는 첫 뼈대. (총 18 이슈)</p>
+  <p class="lead">백엔드 골격 + 소셜 로그인 → 온보딩 → 홈 진입까지 실계정으로 도는 첫 뼈대. (총 17 이슈)</p>
   <div class="boardnote">
     <a class="linkbtn" href="../mvp/step1.html">📋 <b>MVP Step 1</b></a>
     <a class="linkbtn" href="index.html">← 이슈 보드</a>
@@ -49,8 +62,8 @@
       <li><span class="box done"></span><span><span class="stag done">완료</span>build 통과</span></li>
     </ul>
     <div class="iaccept"><b>완료</b> — 공용 DDD 기본형 골격(AggregateRoot·DomainEvent·리포지토리/서비스 포트)이 <span class="mono">libs/ddd</span>에 컴파일되고, 후속 컨텍스트가 <span class="mono">@libs/ddd</span>로 import해 쓸 수 있다.</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S1-1</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#model">📦 도메인 모델</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-1</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#model">📦 도메인 모델</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S1-3">
@@ -59,16 +72,16 @@
     <ul class="isub">
       <li><span class="box done"></span><span><span class="stag done">완료</span>User(<span class="mono">nickname?</span> unique·<span class="mono">level?</span>(RunnerLevel)·<span class="mono">tier</span>(RunnerTier, 기본 BRONZE)·<span class="mono">profileImageFileId?</span>·<span class="mono">bio?</span>·<span class="mono">joinOn</span>(CalendarDate)) + <span class="mono">User.of()</span> 팩토리(authIdentity·consents 조립)</span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span>AuthIdentity — User와 <b>1:1</b>(<span class="mono">@OneToOne</span> + <span class="mono">@JoinColumn userId</span>) + provider enum(kakao/google/apple)</span></li>
-      <li><span class="box"></span><span><span class="stag defer">재검증</span>UserConsent(userId·type·<span class="mono">legalDocumentId</span>·documentVersion·agreedOn·revokeOn?) — <span class="mono">legalDocumentId</span>(<a href="../domain/index.html#ent-legaldocument">LegalDocument</a> 논리 FK, 물리 FK 아님) 추가, <span class="mono">documentVersion</span>(동의 시점 서버 스냅샷)은 유지 + <span class="mono">@ManyToOne User</span>(1:N) + <span class="mono">revoke()</span> <small>LegalDocument 참조 반영 재작업 필요</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>UserConsent(userId·type·<span class="mono">legalDocumentId</span>·documentVersion·agreedOn·revokeOn?) — <span class="mono">legalDocumentId</span>(<a href="../../domain/index.html#ent-legaldocument">LegalDocument</a> 논리 FK, 물리 FK 아님) 컬럼·생성자 대입 영속 확인, <span class="mono">documentVersion</span>(동의 시점 서버 스냅샷) 유지 + <span class="mono">@ManyToOne User</span>(1:N) + <span class="mono">revoke()</span> <small>실측: <span class="mono">user-consent.entity.ts</span> 생성자에 <span class="mono">this.legalDocumentId = args.legalDocumentId</span> 대입 확인 — 온보딩 저장 NOT NULL 위반 해소</small></span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span>UserRepository(포트, <span class="mono">DddRepository</span> 상속) + find/count — 앱 부팅 시 DI 정상, 스키마 자동 생성, <span class="mono">GET /api/health</span> 200 실측</span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">sub</span> 컬럼 반영 — provider의 외부 소셜 고유ID(Google/Apple <span class="mono">sub</span>, Kakao <span class="mono">id</span>), 토큰 검증 후 조회 키로 사용. 기존 <span class="mono">(userId, provider)</span> 복합 유니크는 <span class="mono">UNIQUE(provider, sub)</span>로 대체(같은 소셜 계정이 두 User에 붙는 것 방지) — User와는 계속 1:1(userId) <small><a href="step1.html#S1-4">S1-4</a>에서 반영·실측</small></span></li>
       <li><span class="box done"></span><span><span class="stag scope">결정</span>마이그레이션 스크립트(generate/run) 도입 작업 자체를 하지 않기로 결정 — 로컬/현재는 <span class="mono">synchronize:true</span>로 스키마 관리</span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span>UserConsentType에 <span class="mono">MARKETING</span>(선택 동의) 추가 <small><a href="step1.html#S1-6">S1-6</a> 재검증에서 확인</small></span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span>첫 소셜 로그인 = 온보딩 전 User 생성 — <span class="mono">(provider, sub)</span> 없으면 User+AuthIdentity 생성 시점엔 아직 닉네임/레벨 없음 → <span class="mono">nickname</span>·<span class="mono">level</span> nullable, <span class="mono">onboardedOn</span>(CalendarDate?, 온보딩 완료 시각) 추가. 온보딩(S1-10)에서 채움, AuthGate(S1-8)는 <span class="mono">onboardedOn</span> null 여부로 분기 <small><a href="step1.html#S1-4">S1-4</a>에서 반영·실측</small></span></li>
     </ul>
-    <div class="iaccept partial"><b>재검증 필요</b> — User·AuthIdentity(1:1)·UserRepository(포트), <span class="mono">synchronize</span>로 스키마 생성, 앱 부팅·스키마 생성은 기존에 실측 확인됐다. 마이그레이션 스크립트는 미도입 결정. <span class="mono">sub</span>/nullable nickname·level/<span class="mono">onboardedOn</span> 컬럼 적용은 <a href="step1.html#S1-4">S1-4</a>에서 완료. 남음 — UserConsent에 <span class="mono">legalDocumentId</span>(LegalDocument 논리 FK) 컬럼 추가 반영 후 재검증(마이그레이션 스크립트는 미도입 결정 유지).</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S1-1, S1-2</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html#model">도메인</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#ent-user">📦 User</a><a href="../domain/index.html#ent-authidentity">📦 AuthIdentity</a><a href="../domain/index.html#ent-userconsent">📦 UserConsent</a><a href="../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../wireframes/index.html#onboarding">🎨 온보딩</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="iaccept"><b>완료</b> — User·AuthIdentity(1:1)·UserRepository(포트), <span class="mono">synchronize</span>로 스키마 생성, 앱 부팅·스키마 생성은 기존에 실측 확인됐다. 마이그레이션 스크립트는 미도입 결정. <span class="mono">sub</span>/nullable nickname·level/<span class="mono">onboardedOn</span> 컬럼 적용은 <a href="step1.html#S1-4">S1-4</a>에서 완료. UserConsent의 <span class="mono">legalDocumentId</span>(LegalDocument 논리 FK) 컬럼·생성자 대입 영속도 확인됐다(마이그레이션 스크립트는 미도입 결정 유지).</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-1, S1-2</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../../domain/index.html#model">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-user">📦 User</a><a href="../../domain/index.html#ent-authidentity">📦 AuthIdentity</a><a href="../../domain/index.html#ent-userconsent">📦 UserConsent</a><a href="../../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../wireframes/index.html#onboarding">🎨 온보딩</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S1-4">
@@ -81,8 +94,8 @@
       <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">UNIQUE(provider, sub)</span> 반영, 날짜 규칙 준수, DDD 레이어 분리(컨트롤러는 아직 없음 — S1-5에서 노출) <small>code-reviewer 실측: build/lint OK, 테스트 12/12, 부팅+스키마 OK</small></span></li>
     </ul>
     <div class="iaccept"><b>완료</b> — dev 토큰과 실제 idToken 모두 검증되어 <span class="mono">(provider, sub)</span>로 올바른 User에 매핑되고, 첫 로그인은 온보딩 전 User가 생성된다. <small>실 소셜 키 E2E는 S1-12 키 발급 후로 명시. 후속 개선(완료를 막지 않음): 프로덕션 <span class="mono">isProduction()</span> fail-fast 다중 방어(AUTH_DEV_MODE) · <span class="mono">resolveOrCreateUser</span> 동시 첫 로그인 unique 충돌 시 upsert-on-conflict · Kakao <span class="mono">id</span> 누락 시 명시적 예외.</small></div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S1-3</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#login">🎨 로그인</a><a href="../domain/index.html#ent-authidentity">📦 AuthIdentity</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-3</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#login">🎨 로그인</a><a href="../../domain/index.html#ent-authidentity">📦 AuthIdentity</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S1-5">
@@ -95,8 +108,8 @@
       <li><span class="box done"></span><span><span class="stag done">완료</span>만료는 <span class="mono">expiresOn</span>(CalendarDate/KST) 규칙 준수, DDD 레이어 분리 <small>code-reviewer 실측: build/lint OK, 테스트 22/22, 부팅 E2E 전 흐름 실증</small></span></li>
     </ul>
     <div class="iaccept"><b>완료</b> — 로그인→토큰 발급, refresh로 회전, 이전 리프레시 재사용 시 401 — 부팅 E2E로 충족. <small>실 소셜 키 idToken E2E는 <a href="step1.html#S1-12">S1-12</a> 키 발급 후로 명시. 후속 개선(완료를 막지 않음): 프로덕션 <span class="mono">isProduction()</span> 시 <span class="mono">JWT_ACCESS_SECRET</span> 강제 + <span class="mono">AUTH_DEV_MODE=false</span> fail-fast(<a href="step1.html#S1-4">S1-4</a>의 프로덕션 방어와 함께 처리 권장) · 리프레시 동시 회전 레이스 → 낙관적 락/조건부 UPDATE · GoogleVerifier 잘못된 토큰 500→401 변환(S1-4).</small></div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S1-3, S1-4</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#login">🎨 로그인</a><a href="../domain/index.html#model">📦 도메인 모델</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-3, S1-4</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#login">🎨 로그인</a><a href="../../domain/index.html#model">📦 도메인 모델</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S1-6">
@@ -104,14 +117,14 @@
     <div class="idesc">내 정보 조회, 온보딩 저장(<span class="mono">PUT /users/onboard</span>), 닉네임 중복확인. 프로필 수정(<span class="mono">PUT /users/me</span>)은 별도 태스크로 분리.</div>
     <ul class="isub">
       <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">GET /users/me</span> — 200으로 내 정보 반환, 무토큰·손상토큰·존재하지 않는 유저 401 분기 실측, <span class="mono">onboardedOn</span>(CalendarDate) 문자열 직렬화·민감정보 미노출. 직전 500 버그(<span class="mono">Context.USER</span> 미스매치)는 해소됨 <small>code-reviewer 실측: build/lint OK, 부팅 후 엔드투엔드</small></span></li>
-      <li><span class="box"></span><span><span class="stag defer">재검증</span><span class="mono">PUT /users/onboard</span>(닉네임+레벨+<span class="mono">consents:[{type,legalDocumentId}]</span>) — 클라는 활성 문서 <span class="mono">legalDocumentId</span>만 전송, 서버가 해당 <a href="../domain/index.html#ent-legaldocument">LegalDocument</a>의 <span class="mono">version</span>을 UserConsent에 스냅샷 기록. 필수 동의 3종(TERMS·PRIVACY·LOCATION) <b>전부 포함</b> 검증을 <span class="mono">legalDocumentId</span> 기준으로 재작업 필요 <small>기존 <span class="mono">consents:[{type,documentVersion}]</span> 방식의 happy path·409/400 케이스는 legalDocumentId 도입 후 재검증. <a href="step1.html#S1-11">S1-11</a>의 동의 서버 기록 요구사항 자체는 유효하나 페이로드 재검증 필요(선행: <a href="step1.html#S1-15">S1-15</a>·<a href="step1.html#S1-16">S1-16</a>)</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">PUT /users/onboard</span>(닉네임+레벨+<span class="mono">consents:[{type,legalDocumentId}]</span>) — 클라는 활성 문서 <span class="mono">legalDocumentId</span>만 전송, 서버가 해당 <a href="../../domain/index.html#ent-legaldocument">LegalDocument</a>의 <span class="mono">version</span>을 UserConsent에 스냅샷 기록. 필수 동의 3종(TERMS·PRIVACY·LOCATION) <b>전부 포함</b> 검증이 <span class="mono">legalDocumentId</span> 기준으로 동작 확인 <small><span class="mono">UserConsent</span> 생성자 미영속 버그(<a href="step1.html#S1-3">S1-3</a>) 수정 확인 — 생성자에 <span class="mono">this.legalDocumentId = args.legalDocumentId</span> 대입, NOT NULL 위반 해소. 기존 <span class="mono">consents:[{type,documentVersion}]</span> 방식은 <span class="mono">legalDocumentId</span> 참조로 전환 완료. <a href="step1.html#S1-11">S1-11</a>의 동의 서버 기록 요구사항 충족(선행: <a href="step1.html#S1-15">S1-15</a>·<a href="step1.html#S1-16">S1-16</a>)</small></span></li>
       <li><span class="box"></span><span><span class="stag scope">스코프외</span>프로필 수정 <span class="mono">PUT /users/me</span> — 별도 태스크로 분리(추후)</span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">GET /users/check-nickname</span> — <span class="mono">@Query()</span>로 전환(쿼리 <span class="mono">?nickname=</span> 200 동작), <span class="mono">@Length(2,12)</span>(1자·13자·빈값 400 / 2·12자 통과), <span class="mono">count</span> 기반 고유성(존재→사용중, 미존재→가용) 실측. 직전 차단 버그(<span class="mono">@Body()</span>/GET, 길이검증 누락)는 해소됨 <small>code-reviewer 재검증: build/lint OK, 부팅 후 실호출. 후속 노트(완료를 막지 않음): 응답 <span class="mono">{usedCount}</span> 의미 모호(→<span class="mono">{available: boolean}</span> 권장) · 닉네임 트림/정규화 없음(앞뒤 공백 통과, DTO 트림 권장) · soft-delete 유저 닉네임이 "가용"으로 보고될 수 있음(count는 <span class="mono">deletedAt</span> 제외, DB UNIQUE는 포함)</small></span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span>JWT 가드(<span class="mono">UserGuard</span>)로 보호 — Bearer 액세스 JWT 검증(무토큰·잘못된 토큰 → 401 실측), 성공 시 User 객체(consents 포함)를 <span class="mono">Context.USER</span>에 심음; <span class="mono">JwtModule</span> 전역 등록(auth.module <span class="mono">global:true</span>)으로 UserModule 주입 정상 <small>code-reviewer 실측: build/lint OK, 부팅+엔드투엔드</small></span></li>
     </ul>
-    <div class="iaccept partial"><b>재검증 필요</b> — <span class="mono">GET /users/me</span>·<span class="mono">check-nickname</span>·JWT 가드는 이번 체인지셋과 무관해 완료 상태 유지. <span class="mono">PUT /users/onboard</span>는 consents 페이로드가 <span class="mono">documentVersion</span> 직접 전송 → <span class="mono">legalDocumentId</span> 참조로 바뀌어 재검증 필요(선행: <a href="step1.html#S1-15">S1-15</a>·<a href="step1.html#S1-16">S1-16</a>). <span class="mono">PUT /users/me</span>는 별도 태스크로 분리. <small>후속 노트(완료를 막지 않음): 재온보딩 시 도메인 409보다 닉네임중복 400이 먼저 나오는 순서 — 서비스에서 도메인 검증을 앞에 두면 해소 · 미사용 <span class="mono">ConflictException</span> import 정리 · <span class="mono">GeneralUserService</span> 빈 클래스(PUT /users/me 구현 시 채울 자리, 정리 권장) · UserGuard가 <span class="mono">UserRepository</span> 포트 대신 datasource 직접 조회(횡단 관심사라 완전 위반은 아니나 컨벤션과 다름) · UserGuard가 매 인증요청 <span class="mono">consents</span> 조인(필요한 라우트에서만 로드 고려).</small></div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S1-3, S1-5</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#onboarding">🎨 온보딩</a><a href="../domain/index.html#ent-user">📦 User</a><a href="../domain/index.html#ent-userconsent">📦 UserConsent</a><a href="../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="iaccept"><b>완료</b> — <span class="mono">GET /users/me</span>·<span class="mono">check-nickname</span>·JWT 가드는 완료 상태 유지. <span class="mono">PUT /users/onboard</span>는 consents 페이로드가 <span class="mono">documentVersion</span> 직접 전송 → <span class="mono">legalDocumentId</span> 참조로 전환됐고, <span class="mono">UserConsent</span> 생성자 미영속 버그(<a href="step1.html#S1-3">S1-3</a>)가 수정 확인돼(생성자 대입 확인, NOT NULL 위반 해소) 저장이 정상 동작한다. <span class="mono">PUT /users/me</span>는 별도 태스크로 분리. <small>후속 노트(완료를 막지 않음): 재온보딩 시 도메인 409보다 닉네임중복 400이 먼저 나오는 순서 — 서비스에서 도메인 검증을 앞에 두면 해소 · 미사용 <span class="mono">ConflictException</span> import 정리 · <span class="mono">GeneralUserService</span> 빈 클래스(PUT /users/me 구현 시 채울 자리, 정리 권장) · UserGuard가 <span class="mono">UserRepository</span> 포트 대신 datasource 직접 조회(횡단 관심사라 완전 위반은 아니나 컨벤션과 다름) · UserGuard가 매 인증요청 <span class="mono">consents</span> 조인(필요한 라우트에서만 로드 고려).</small></div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-3, S1-5</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#onboarding">🎨 온보딩</a><a href="../../domain/index.html#ent-user">📦 User</a><a href="../../domain/index.html#ent-userconsent">📦 UserConsent</a><a href="../../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S1-7">
@@ -140,7 +153,7 @@
     </ul>
     <div class="iaccept"><b>완료</b> — 재실행 시 세션 유지로 홈 직행, 미온보딩 계정은 온보딩으로. <small>남음(완료를 막지 않음): 온보딩 완료 판정 placeholder는 <a href="step1.html#S1-10">S1-10</a>에서 해소됨 — 서버 <span class="mono">users/me.onboardedOn</span> 기준으로 교체(로컬 플래그 대신 서버 판정, restore/login 시 확정) · 실 소셜 SDK 로그인(현재 mock 토큰)은 <a href="step1.html#S1-9">S1-9</a> · <span class="mono">logout()</span> 로컬 정리를 try/finally로 감싸 서버 무효화 예외와 분리 권장(낮음) · 부팅 시 만료 토큰 검증 없이 홈 잠깐 노출(인터셉터 안전망 존재, MVP 허용, 낮음).</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-7, S1-5</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#login">🎨 로그인</a><a href="../wireframes/index.html#loading">🎨 로딩</a><a href="../wireframes/index.html#home">🎨 홈</a><a href="../domain/index.html#ent-user">📦 User</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#login">🎨 로그인</a><a href="../wireframes/index.html#loading">🎨 로딩</a><a href="../wireframes/index.html#home">🎨 홈</a><a href="../../domain/index.html#ent-user">📦 User</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S1-9">
@@ -153,20 +166,20 @@
     </ul>
     <div class="iaccept"><b>완료</b> — 3종 각각 실제 로그인 동의창까지 뜨고 백엔드 세션이 발급된다.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-7, S1-12</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#login">🎨 로그인</a><a href="../domain/index.html#ent-authidentity">📦 AuthIdentity</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#login">🎨 로그인</a><a href="../../domain/index.html#ent-authidentity">📦 AuthIdentity</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S1-10">
     <div class="ihead"><span class="iid">S1-10</span><span class="ititle">온보딩 저장</span><span class="badge app">APP</span><span class="pill">S</span></div>
     <div class="idesc">닉네임·러닝레벨을 실제 저장하고 위치 동의를 받아 홈으로 진입.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="stag defer">재검증</span>닉네임 중복확인(<span class="mono">GET /users/check-nickname</span>) → 레벨 → 약관동의(<a href="step1.html#S1-11">S1-11</a>) → <span class="mono">PUT /users/onboard</span>(nickname·level·consents 한 번에 저장) — consents 페이로드가 <span class="mono">documentVersion</span> 대신 <a href="step1.html#S1-17">S1-17</a> 배치 조회(<span class="mono">GET /legal-documents/active</span>)로 받은 활성 문서 <span class="mono">legalDocumentId</span> 전송으로 변경, 레벨/consents 매핑·필수 3종(TERMS·PRIVACY·LOCATION) 게이팅 재검증 필요(<a href="step1.html#S1-17">S1-17</a>과 결합)</span></li>
-      <li><span class="box done"></span><span><span class="stag done">완료</span>성공 시 서버 <span class="mono">onboardedOn</span> 설정 → <b>MainShell(홈) 진입</b>. 실패(400/409/네트워크)는 스낵바 노출(크래시 없음) + 로딩 처리</span></li>
-      <li><span class="box done"></span><span><span class="stag done">완료</span><b>재실행 시 반복 안 함</b> — 온보딩 완료 판정을 서버 <span class="mono">users/me.onboardedOn</span> 기준으로 확정(restore/login), <span class="mono">getMe</span> 실패 시 캐시로 graceful 폴백 <small><a href="step1.html#S1-8">S1-8</a>의 로컬 플래그 placeholder TODO 해소</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>닉네임 중복확인(<span class="mono">GET /users/check-nickname</span>) → 레벨 → 약관동의(<a href="step1.html#S1-11">S1-11</a>) → <span class="mono">PUT /users/onboard</span>(nickname·level·consents 한 번에 저장) — consents 페이로드가 <span class="mono">documentVersion</span> → <a href="step1.html#S1-17">S1-17</a> 목록조회(<span class="mono">GET /legal-documents</span>, <span class="mono">?types=</span>)로 받은 활성 문서 <span class="mono">legalDocumentId</span> 전송으로 전환 완료. onboard payload <span class="mono">{nickname,level,legalDocumentIds:number[]}</span>가 백엔드 DTO와 정확 일치, 필수 3종(TERMS·PRIVACY·LOCATION) 게이팅은 fetch한 문서 <span class="mono">isRequired</span> 기준으로 동작. <a href="step1.html#S1-17">S1-17</a>과 결합 검증됨</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>성공 시 서버 <span class="mono">onboardedOn</span> 설정 → <b>MainShell(홈) 진입</b>. 실패(400/409/네트워크)는 스낵바 노출(크래시 없음) + 로딩 처리 <small>post-<a href="step1.html#S1-17">S1-17</a> 재확인: 성공→<span class="mono">completeOnboarding</span>→홈, 실패→스낵바+로딩 해제</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><b>재실행 시 반복 안 함</b> — 온보딩 완료 판정을 서버 <span class="mono">users/me.onboardedOn</span> 기준으로 확정(restore/login), <span class="mono">getMe</span> 실패 시 캐시로 graceful 폴백 <small><a href="step1.html#S1-8">S1-8</a>의 로컬 플래그 placeholder TODO 해소, <span class="mono">auth_controller._resolveOnboarded</span> — <a href="step1.html#S1-17">S1-17</a> 미변경</small></span></li>
     </ul>
-    <div class="iaccept partial"><b>재검증 필요</b> — 온보딩 저장·재실행 시 서버 <span class="mono">onboardedOn</span> 기준 반복방지 로직 자체는 유효하나, consents 전송 방식이 <span class="mono">documentVersion</span> → <span class="mono">legalDocumentId</span>로 바뀌어(<a href="step1.html#S1-17">S1-17</a>과 결합) 재검증 필요. <small>code-reviewer 실측(레거시 기준): flutter analyze 무이슈, 테스트 54/54. 후속 노트(완료를 막지 않음, 낮음): 오프라인+캐시부재로 온보딩 화면이 뜬 상태에서 이미 온보딩된 유저가 재제출 → <span class="mono">409</span> → 스낵바만 뜨고 홈 진입 불가(좁은 조건). 권장: <span class="mono">onboard</span>가 409면 성공과 동일 취급(<span class="mono">completeOnboarding</span>) 또는 <span class="mono">getMe</span> 재시도로 회복.</small></div>
+    <div class="iaccept"><b>완료</b> — 닉네임 중복확인→레벨→약관동의→<span class="mono">PUT /users/onboard</span>가 <a href="step1.html#S1-17">S1-17</a> list 조회로 받은 활성 문서 <span class="mono">legalDocumentId</span>(<span class="mono">legalDocumentIds</span> 배열)를 전송해 저장되고, 성공 시 서버 <span class="mono">onboardedOn</span> 설정→홈 진입, 실패는 스낵바로 처리하며, 재실행 시 서버 <span class="mono">onboardedOn</span> 기준으로 반복하지 않는다. flutter analyze 무이슈 + 61 테스트 통과 — 완료. <small>후속(완료 무관, 낮음): 오프라인+캐시부재로 이미 온보딩된 유저 재제출 시 <span class="mono">409</span>→스낵바만 뜨고 홈 진입 불가하는 좁은 조건 — <span class="mono">409</span>를 성공 취급 또는 <span class="mono">getMe</span> 재시도로 회복 권장.</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-8, S1-6</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#onboarding">🎨 온보딩</a><a href="../domain/index.html#ent-user">📦 User</a><a href="../domain/index.html#ent-userconsent">📦 UserConsent</a><a href="../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#onboarding">🎨 온보딩</a><a href="../../domain/index.html#ent-user">📦 User</a><a href="../../domain/index.html#ent-userconsent">📦 UserConsent</a><a href="../../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue design" id="S1-11">
@@ -176,13 +189,12 @@
       <li><span class="box done"></span><span><span class="stag done">완료</span>온보딩 <b>약관 동의 단계</b> 삽입(5단계: 닉네임→러닝레벨→약관동의→위치권한→준비완료) — 전체동의 마스터 + 4항목(필수3/선택1), <b>필수 3개 충족 시에만</b> "동의하고 계속" 활성(UI+로직 이중 게이팅)</span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span>약관·개인정보·위치 문서 <b>뷰어 화면이 앱에서 열림</b> — "보기 ›" → <span class="mono">TermsDocScreen</span>, 동의 시 체크 유지 복귀 (앱 내 화면/링크 요건 충족)</span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span>위치정보 이용동의(필수) 온보딩 동의 단계에 반영 — 위치기반서비스 이용동의(법적) ≠ OS 위치권한, 구분 명시 <small>구현: <span class="mono">onboarding_screen.dart</span>·<span class="mono">terms_doc_screen.dart</span>, 회귀테스트 <span class="mono">test/layout_test.dart</span>, mock 기반(로컬 setState). code-reviewer 실측: flutter analyze 무이슈 + 33/33 테스트 통과</small></span></li>
-      <li><span class="box"></span><span><span class="stag todo">남음</span>실제 <b>이용약관·개인정보처리방침 문안</b> — 현재 placeholder("추후 법무 검토", 시행일 <span class="mono">2026-00-00</span>). 하드코딩 제거 자체는 <a href="step1.html#S1-15">S1-15</a> seed + <a href="step1.html#S1-17">S1-17</a> API 연동으로 해소되지만, 실 법무 <b>콘텐츠(문안) 준비</b>는 여전히 남음</span></li>
-      <li><span class="box done"></span><span><span class="stag done">완료</span><b>개인정보처리방침</b>(상시 고지 문서)을 "수집·이용 동의"와 별도 문서로 추가 — <span class="mono">PRIVACY_NOTICE</span> 별도 <span class="mono">LegalDocumentType</span>으로 도메인에 반영(설계) <small><a href="step1.html#S1-14">S1-14</a>에서 확정, 실제 엔티티·API 구현은 <a href="step1.html#S1-15">S1-15</a>·<a href="step1.html#S1-16">S1-16</a></small></span></li>
+      <li><span class="box"></span><span><span class="stag todo">남음</span>실제 <b>이용약관·개인정보처리방침 문안</b> — 현재 placeholder("추후 법무 검토", 시행일 <span class="mono">2026-00-00</span>). 하드코딩 제거 자체는 <a href="step1.html#S1-15">S1-15</a> seed + <a href="step1.html#S1-17">S1-17</a> API 연동 <b>완료로 해소 확인</b>됐지만, 실 법무 <b>콘텐츠(문안) 준비</b>는 여전히 남음</span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span>동의의 서버 기록(<span class="mono">UserConsent</span>: type·<span class="mono">legalDocumentId</span>(논리 FK)·<span class="mono">documentVersion</span>(동의 시점 스냅샷)·agreedOn·철회) — 온보딩 시 <a href="step1.html#S1-6"><span class="mono">PUT /users/onboard</span></a>에서 nickname·level 설정과 함께 원자적으로 기록 <small>필드 구조는 <a href="step1.html#S1-3">S1-3</a> 반영, <span class="mono">legalDocumentId</span> 도입에 따른 엔드포인트 재검증은 <a href="step1.html#S1-6">S1-6</a> 참고</small></span></li>
     </ul>
-    <div class="iaccept partial"><b>부분 완료</b> — 온보딩 동의 단계·약관 화면(앱 내 열림)은 구현(mock)됐고, 동의 서버 기록(type·legalDocumentId·documentVersion 스냅샷)은 <a href="step1.html#S1-6">S1-6</a>에서 구현됐으나 <span class="mono">legalDocumentId</span> 반영으로 재검증 중이다. 개인정보처리방침 별도 문서화는 <a href="step1.html#S1-14">S1-14</a> 도메인 설계로 반영됐다. 남음 = 실 법무 문안(콘텐츠) 준비뿐 — 하드코딩 자체는 <a href="step1.html#S1-15">S1-15</a>·<a href="step1.html#S1-17">S1-17</a>로 해소.</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a><a href="../domain/index.html#model">도메인</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#onboarding">🎨 온보딩</a><a href="../wireframes/index.html#doc-viewer">🎨 약관전문</a><a href="../domain/index.html#ent-userconsent">📦 UserConsent</a><a href="../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="iaccept partial"><b>부분 완료</b> — 온보딩 동의 단계·약관 화면(앱 내 열림)은 구현(mock)됐고, 동의 서버 기록(type·legalDocumentId·documentVersion 스냅샷)은 <a href="step1.html#S1-6">S1-6</a>에서 구현됐으나 <span class="mono">legalDocumentId</span> 반영으로 재검증 중이다. 남음 = 실 법무 문안(콘텐츠) 준비뿐 — 하드코딩 자체는 <a href="step1.html#S1-15">S1-15</a>·<a href="step1.html#S1-17">S1-17</a> 연동 완료로 해소 확인.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a><a href="../../domain/index.html#model">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#onboarding">🎨 온보딩</a><a href="../wireframes/index.html#doc-viewer">🎨 약관전문</a><a href="../../domain/index.html#ent-userconsent">📦 UserConsent</a><a href="../../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue ops" id="S1-12">
@@ -209,7 +221,7 @@
     </ul>
     <div class="iaccept"><b>완료</b> — 온보딩한 유저의 실제 닉네임·레벨·티어가 프로필에 표시된다. <small>후속 노트(완료를 막지 않음, 낮음): 포인트·랭킹은 목업 유지 · 티어 이모지/색 디자인 확정 추후.</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-6, S1-10</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#profile">🎨 프로필</a><a href="../domain/index.html#ent-user">📦 User</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#profile">🎨 프로필</a><a href="../../domain/index.html#ent-user">📦 User</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue design" id="S1-14">
@@ -217,79 +229,69 @@
     <div class="idesc">약관·개인정보처리방침 등 법적 문서를 버전으로 관리하는 새 바운디드 컨텍스트를 도메인 문서에 설계한다.</div>
     <ul class="isub">
       <li><span class="box"></span><span>신규 <b>"Legal &amp; Compliance"</b> 컨텍스트(컨텍스트 개요 7→8) + <span class="mono">LegalDocument</span> 엔티티 카드·<span class="mono">#ent-legaldocument</span> 앵커</span></li>
-      <li><span class="box"></span><span><span class="mono">LegalDocumentType</span>(TERMS·PRIVACY·<b>PRIVACY_NOTICE</b>·LOCATION·MARKETING, PRIVACY_NOTICE 별도 포함) · <span class="mono">LegalDocumentStatus</span>(DRAFT·ACTIVE·ARCHIVED) 값객체</span></li>
+      <li><span class="box"></span><span><span class="mono">LegalDocumentType</span>(TERMS·PRIVACY·LOCATION·MARKETING) · <span class="mono">LegalDocumentStatus</span>(DRAFT·ACTIVE·ARCHIVED) 값객체</span></li>
       <li><span class="box"></span><span>불변식: <span class="mono">UNIQUE(type, version)</span> + type별 ACTIVE 1개(개정 = 새 버전 append 후 이전 ARCHIVED)</span></li>
       <li><span class="box"></span><span><span class="mono">UserConsent.legalDocumentId → LegalDocument</span>(논리 FK, 물리 FK 아님) 관계 + ERD 노드/엣지(점선 참조) 반영</span></li>
       <li><span class="box"></span><span><span class="mono">content</span> = DB <span class="mono">text</span> 컬럼, <span class="mono">expectedActivateOn</span> = CalendarDate(KST, 예약 활성 시각)</span></li>
       <li><span class="box"></span><span>활성화 전이 설계 — <b>외부 호출 활성화 API</b>(내부 스케줄러 아님)가 <span class="mono">expectedActivateOn</span> 도달 문서를 DRAFT→ACTIVE, 직전 ACTIVE→ARCHIVED로 전이(type별 ACTIVE 1개 유지)</span></li>
     </ul>
     <div class="iaccept"><b>완료</b> — 도메인 문서(<span class="mono">docs/domain/index.html</span>)에서 LegalDocument 엔티티·불변식(<span class="mono">expectedActivateOn</span> 기반 외부호출 활성화)·<span class="mono">UserConsent.legalDocumentId</span> 참조 관계를 조회할 수 있고, <span class="mono">#ent-legaldocument</span> 딥링크가 정상 동작한다.</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> — <small>(S1-3 참고)</small></span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html#model">도메인</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../domain/index.html#ent-userconsent">📦 UserConsent</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="imeta"><span class="dep"><b>선행:</b> — <small>(S1-3 참고)</small></span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../../domain/index.html#model">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../../domain/index.html#ent-userconsent">📦 UserConsent</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S1-15">
     <div class="ihead"><span class="iid">S1-15</span><span class="ititle">LegalDocument 엔티티 + 리포지토리 + seed</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
-    <div class="idesc">설계된 LegalDocument를 DDD 레이어 엔티티로 구현하고, 초기 법적 문서 5종을 seed로 채운다.</div>
+    <div class="idesc">설계된 LegalDocument를 DDD 레이어 엔티티로 구현하고, 초기 법적 문서 4종을 seed로 채운다.</div>
     <ul class="isub">
       <li><span class="box done"></span><span><span class="stag done">완료</span>DDD 레이어 <span class="mono">LegalDocument</span> TypeORM 엔티티 — <span class="mono">content</span>(text) · <span class="mono">expectedActivateOn</span>(CalendarDate, <span class="mono">@Column</span>) · <span class="mono">createdAt</span>/<span class="mono">updatedAt</span>(UTC, <span class="mono">DddBaseAggregate</span> 상속 <span class="mono">@CreateDateColumn</span>/<span class="mono">@UpdateDateColumn</span> + <span class="mono">timezone:'Z'</span>) <small>실측: <span class="mono">legal-document.entity.ts</span> 필드 확인</small></span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">UNIQUE(type, version)</span> DB 제약 — <span class="mono">@Unique('legal_document_type_version_unique',['type','version'])</span>로 중복 저장 거부 확인</span></li>
-      <li><span class="box done"></span><span><span class="stag done">완료</span>초기 seed 데이터 5종(<span class="mono">terms-of-service</span>·<span class="mono">privacy-policy</span>·<span class="mono">privacy-notice</span>·<span class="mono">location-service</span>·<span class="mono">marketing</span>) v1.0 ACTIVE, <span class="mono">expectedActivateOn=2026-01-01</span>을 DB에 직접 주입 완료(5행 SELECT 실측) — <b>초기값 직접 주입이 의도된 seed 방식</b>이며, 부팅 시 자동 seed 코드는 <b>스코프외</b> <small>type별 활성 문서 조회 가능, <a href="step1.html#S1-16">S1-16</a>/<a href="step1.html#S1-17">S1-17</a> 언블록</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>초기 seed 데이터 4종(<span class="mono">terms-of-service</span>·<span class="mono">privacy-policy</span>·<span class="mono">location-service</span>·<span class="mono">marketing</span>) v1.0 ACTIVE, <span class="mono">expectedActivateOn=2026-01-01</span>을 DB에 직접 주입 완료(4행 SELECT 실측) — <b>초기값 직접 주입이 의도된 seed 방식</b>이며, 부팅 시 자동 seed 코드는 <b>스코프외</b> <small>type별 활성 문서 조회 가능, <a href="step1.html#S1-16">S1-16</a>/<a href="step1.html#S1-17">S1-17</a> 언블록</small></span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">synchronize</span>로 스키마 반영(마이그레이션 스크립트 미도입 결정 유지) — <span class="mono">entities.ts</span>에 <span class="mono">LegalDocument</span> 등록, <span class="mono">synchronize:true</span>로 <span class="mono">legal_document</span> 테이블 실제 생성 확인(DESCRIBE 실측: id·type enum·version·title·content(text)·expectedActivateOn·status enum+감사컬럼)</span></li>
-      <li><span class="box done"></span><span><span class="stag done">완료</span>도메인 메서드 <span class="mono">activate()</span>(DRAFT→ACTIVE, DRAFT 아니면 400 가드) + <span class="mono">archive()</span>(ACTIVE→ARCHIVED, ACTIVE 아니면 400 가드) 완비. 두 전이를 한 트랜잭션으로 묶는 원자적 오케스트레이션(직전 ACTIVE 로드→<span class="mono">archive</span>→draft <span class="mono">activate</span>)은 <a href="step1.html#S1-18">S1-18</a> 활성화 API가 담당 <small>build·lint 통과 실측(EXIT 0)</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>도메인 메서드 <span class="mono">activate()</span>(DRAFT→ACTIVE, DRAFT 아니면 400 가드) + <span class="mono">archive()</span>(ACTIVE→ARCHIVED, ACTIVE 아니면 400 가드) 완비. 두 전이를 한 트랜잭션으로 묶는 원자적 오케스트레이션(직전 ACTIVE 로드→<span class="mono">archive</span>→draft <span class="mono">activate</span>)은 <a href="../../backoffice/issue/step1.html#BO1-6">BO1-6(백오피스)</a> 활성화 API가 담당 <small>build·lint 통과 실측(EXIT 0)</small></span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">LegalDocumentRepository</span> named 포트 3종 — 별도 메서드 대신 generic <span class="mono">find</span>에 조건 파라미터로 대응(리포지토리 컨벤션 일치): <span class="mono">findActiveByType</span> → <span class="mono">find({types:[type],statuses:[ACTIVE]})</span> · <span class="mono">findByTypeAndVersion</span> → <span class="mono">find({types:[type],version})</span> · <span class="mono">findDueForActivation(now)</span> → <span class="mono">find({statuses:[DRAFT],maxExpectedActivateOn:now})</span>(<span class="mono">checkRangeValue</span> → <span class="mono">LessThan</span>/<span class="mono">MoreThanOrEqual</span>/<span class="mono">And</span> 범위 지원 추가로 due 조회 표현) <small>build 통과 실측(nest build EXIT 0)</small></span></li>
       <li><span class="box scope"></span><span><span class="stag scope">결정</span><span class="mono">of()</span> 팩토리가 미래일만 허용(<span class="mono">expectedActivateOn &lt;= today</span>면 예외) + 생성자 <span class="mono">status</span> DRAFT 고정인 것은 <b>자동 seed 미도입 결정과 무관</b> — 초기값은 DB 직접 주입(위 항목)으로 채우므로 팩토리 경로와 충돌하지 않음</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 앱 부팅 시 스키마(<span class="mono">synchronize</span>)가 반영되고, seed 데이터 5종(<span class="mono">terms-of-service</span>·<span class="mono">privacy-policy</span>·<span class="mono">privacy-notice</span>·<span class="mono">location-service</span>·<span class="mono">marketing</span>) v1.0 ACTIVE가 DB에 직접 주입돼 type별 활성 문서를 조회할 수 있으며, <span class="mono">(type, version)</span> 중복은 <span class="mono">UNIQUE</span>로 거부된다. 리포지토리는 generic <span class="mono">find</span>(min/max 범위 포함)로 활성·버전·due 조회를 표현하고, 도메인 메서드 <span class="mono">activate()</span>/<span class="mono">archive()</span>로 상태 전이를 강제한다. 직전 ACTIVE→ARCHIVED의 원자적 오케스트레이션은 <a href="step1.html#S1-18">S1-18</a>이 두 메서드를 호출해 완성한다.</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S1-1, S1-2, S1-14</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="iaccept"><b>완료</b> — 앱 부팅 시 스키마(<span class="mono">synchronize</span>)가 반영되고, seed 데이터 4종(<span class="mono">terms-of-service</span>·<span class="mono">privacy-policy</span>·<span class="mono">location-service</span>·<span class="mono">marketing</span>) v1.0 ACTIVE가 DB에 직접 주입돼 type별 활성 문서를 조회할 수 있으며, <span class="mono">(type, version)</span> 중복은 <span class="mono">UNIQUE</span>로 거부된다. 리포지토리는 generic <span class="mono">find</span>(min/max 범위 포함)로 활성·버전·due 조회를 표현하고, 도메인 메서드 <span class="mono">activate()</span>/<span class="mono">archive()</span>로 상태 전이를 강제한다. 직전 ACTIVE→ARCHIVED의 원자적 오케스트레이션은 <a href="../../backoffice/issue/step1.html#BO1-6">BO1-6(백오피스)</a>이 두 메서드를 호출해 완성한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-1, S1-2, S1-14</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S1-16">
     <div class="ihead"><span class="iid">S1-16</span><span class="ititle">법적 문서 조회 + 발행 API</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">활성 법적 문서를 앱에서 조회하고, 새 버전을 초안 등록·발행할 수 있는 API.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="mono">GET /legal-documents/active</span> — <b>활성 문서 배치 조회</b>. 타입별 ACTIVE 1건씩(최대 5종) <b>배열</b> 반환, <b>content(전문) 포함</b>. <span class="mono">?types=terms-of-service,privacy-policy,location-service</span>(slug) 필터 지원(미전달 시 5종 전체 ACTIVE). 정렬은 <span class="mono">LegalDocumentType</span> enum 순 고정, ACTIVE 없는 type은 생략, 미지원 type 토큰은 400. <b>온보딩(<a href="step1.html#S1-17">S1-17</a>)이 필수 3종+선택 1종 활성 <span class="mono">legalDocumentId</span>를 1회 왕복으로 수집하는 주력 조회.</b> 뷰어(<span class="mono">#doc-viewer</span>)는 단건 <span class="mono">?type=</span> 사용</span></li>
-      <li><span class="box"></span><span><span class="mono">GET /legal-documents?type=</span> — 활성 버전 반환(content·version·<span class="mono">expectedActivateOn</span>·title)</span></li>
-      <li><span class="box"></span><span><span class="mono">GET /legal-documents/:id</span> — 특정 문서(id) 단건 조회. <span class="mono">UserConsent.legalDocumentId</span>가 참조하는 문서를 정규 키(PK)로 조회(동의 이력·감사용). POST가 반환하는 id·PUT <span class="mono">:id</span>와 키 일관</span></li>
-      <li><span class="box"></span><span><span class="mono">POST /legal-documents</span> — 초안(DRAFT) 등록(<span class="mono">expectedActivateOn</span> 포함)</span></li>
-      <li><span class="box"></span><span><span class="mono">PUT /legal-documents/:id</span> — 초안 확정/<span class="mono">expectedActivateOn</span> 설정(발행 예약, <b>즉시 ACTIVE 전이 아님</b> — 실제 DRAFT→ACTIVE 전이는 <a href="step1.html#S1-18">S1-18</a> 활성화 API가 담당, <b>PATCH 금지</b>)</span></li>
-      <li><span class="box"></span><span>authz — 조회는 공개(온보딩 열람), 등록/설정은 관리자 role(백오피스 미구현 → <b>후속/최소 인증</b>으로 표기)</span></li>
-      <li><span class="box"></span><span>응답 <span class="mono">{data}</span> 공통 포맷</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">GET /legal-documents</span> (list) — 활성 문서 목록. <span class="mono">?types=</span>(slug·복수) 필터 + 페이지네이션. 응답 <span class="mono">{ data: { items, total } }</span>(list 컨벤션). items = 목록 DTO(id·type·version·title·isRequired·status). 온보딩이 활성 문서·<span class="mono">legalDocumentId</span> 수집에 사용 <small>실측: <span class="mono">general-legal-document.controller.ts</span> <span class="mono">@Get() list(@Query())</span>, <span class="mono">types</span> 필터 + <span class="mono">statuses:[ACTIVE]</span> + 페이지네이션 구현 확인</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">GET /legal-documents/:id</span> (retrieve) — 단건 상세(content·<span class="mono">expectedActivateOn</span>·title·version). 응답 <span class="mono">{ data: {...} }</span>. 뷰어(<span class="mono">#doc-viewer</span>) 전문 로드에 사용 <small>실측: <span class="mono">@Get(':id')</span> → 상세 DTO 반환 구현 확인</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>authz — 인증 사용자(<span class="mono">UserGuard</span>) <small>온보딩 사용자도 로그인 상태라 열람 가능 — 기존 "공개" 요건은 앱 화면 기준 인증 조회로 조정</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>응답 컨벤션 — list <span class="mono">{data:{items,total}}</span> / 단건 <span class="mono">{data:{...}}</span></span></li>
+      <li><span class="box scope"></span><span><span class="stag scope">재스코프</span><span class="mono">POST /legal-documents</span> · <span class="mono">PUT /legal-documents/:id</span> — 사용자 컨트롤러에 없음 → <span class="mono">/api/admins/legal-documents</span>로 재스코프(<a href="../../backoffice/issue/step1.html#BO1-5">BO1-5</a>)</span></li>
+      <li><span class="box scope"></span><span><span class="stag scope">폐기</span>기존 <span class="mono">GET /legal-documents/active</span> 배치·<span class="mono">?type=</span> 단건·enum 정렬·ACTIVE 없는 type 생략·미지원 type 400 스펙은 list의 <span class="mono">?types=</span> 파라미터로 흡수돼 폐기</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — <span class="mono">GET</span> active가 seed 활성 문서(<span class="mono">expectedActivateOn</span> 포함)를 반환하고 잘못된 type은 400, <span class="mono">POST</span>→<span class="mono">PUT</span>으로 DRAFT 등록·<span class="mono">expectedActivateOn</span> 설정까지 완료된다(실제 ACTIVE 전이·이전 버전 ARCHIVED는 <a href="step1.html#S1-18">S1-18</a> 활성화 API 호출로 확정). 배치 <span class="mono">GET /legal-documents/active</span>가 필수 3종(TERMS·PRIVACY·LOCATION)+선택(MARKETING)의 활성 문서를 1회 왕복으로 <span class="mono">{data:[...]}</span> 배열(content 포함, enum 순 정렬)로 반환하고, <span class="mono">?types=</span> slug 필터·미지원 토큰 400이 동작한다.</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S1-15</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../wireframes/index.html#onboarding">🎨 온보딩</a><a href="../wireframes/index.html#doc-viewer">🎨 약관전문</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="iaccept"><b>완료</b> — 사용자용 조회를 <b>list + retrieve</b> 두 엔드포인트로 통일. <span class="mono">GET /legal-documents</span>가 활성 목록을 <span class="mono">{data:{items,total}}</span>(list 컨벤션)으로 <span class="mono">?types=</span> 필터와 함께, <span class="mono">GET /legal-documents/:id</span>가 단건 상세(content·<span class="mono">expectedActivateOn</span>)를 <span class="mono">{data}</span>로 반환한다. 온보딩은 list로 활성 문서·<span class="mono">legalDocumentId</span> 수집, 뷰어는 retrieve로 전문 로드. 발행 POST/PUT은 BO1-5 재스코프. 인증 사용자 조회, build 통과 — 완료. <small>(후속·완료 무관: retrieve가 ACTIVE만 조회해 ARCHIVED id는 404 — 앱 화면 기준 OK, 감사용 전체조회는 필요 시 후속.)</small></div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S1-15</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../wireframes/index.html#onboarding">🎨 온보딩</a><a href="../wireframes/index.html#doc-viewer">🎨 약관전문</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S1-17">
     <div class="ihead"><span class="iid">S1-17</span><span class="ititle">문서 하드코딩 제거 → 활성 문서 API 연동</span><span class="badge app">APP</span><span class="pill">M</span></div>
     <div class="idesc"><span class="mono">TermsDocScreen</span>의 하드코딩 문안을 제거하고 활성 법적 문서 API로 교체한다.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>온보딩 진입 시 <span class="mono">GET /legal-documents/active</span>(배치, <span class="mono">?types=terms-of-service,privacy-policy,location-service,marketing</span>)로 필수 3종+선택 1종의 활성 <span class="mono">legalDocumentId</span>·title·version·<span class="mono">expectedActivateOn</span>을 <b>1회 왕복</b>으로 수집</span></li>
-      <li><span class="box"></span><span><span class="mono">#doc-viewer</span>(<span class="mono">TermsDocScreen</span>) "보기 ›"는 단건 <span class="mono">GET /legal-documents?type=</span>로 해당 문서 <b>전문(content) 로드</b> — 화면 표시는 version/<span class="mono">expectedActivateOn</span> 유지</span></li>
-      <li><span class="box"></span><span>하드코딩 <span class="mono">docsData</span> · <span class="mono">v1.0</span>/<span class="mono">시행일 2026-00-00</span> placeholder 제거</span></li>
-      <li><span class="box"></span><span>동의 제출 시 배치 조회(<span class="mono">GET /legal-documents/active</span>)로 받은 활성 문서의 <span class="mono">legalDocumentId</span>를 기록(<b>version이 아닌 id 전송</b>, 서버가 version 스냅샷) <small><a href="step1.html#S1-10">S1-10</a> onboard 페이로드와 결합</small></span></li>
-      <li><span class="box"></span><span>로딩·에러(fetch 실패) 처리 + 회귀테스트</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>온보딩 진입 시 <span class="mono">GET /legal-documents</span>(list, <span class="mono">?types=terms-of-service,privacy-policy,location-service,marketing</span>)로 필수 3종+선택 1종의 활성 <span class="mono">legalDocumentId</span>·title·version을 <b>1회 왕복</b>으로 수집 <small>실측: <span class="mono">initState→list</span> 1회, <span class="mono">listCalls==1</span> 회귀테스트로 고정</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">#doc-viewer</span>(<span class="mono">TermsDocScreen</span>) "보기 ›"는 단건 <span class="mono">GET /legal-documents/:id</span>(retrieve)로 해당 문서 <b>전문(content) 로드</b> — title·version·<span class="mono">expectedActivateOn</span>·content 표시</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>하드코딩 <span class="mono">docsData</span> · <span class="mono">v1.0</span>/<span class="mono">시행일 2026-00-00</span> placeholder 제거 <small>실측: grep 잔존 0</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>동의 제출 시 list 조회(<span class="mono">GET /legal-documents</span>, <span class="mono">?types=</span>)로 받은 활성 문서의 <span class="mono">legalDocumentId</span>를 기록(<b>version이 아닌 id 전송</b>, 서버가 version 스냅샷) <small>실측: onboard payload <span class="mono">{nickname,level,legalDocumentIds:number[]}</span>, 레거시 <span class="mono">consents</span>/<span class="mono">documentVersion</span> 제거(<a href="step1.html#S1-10">S1-10</a> onboard 페이로드와 결합)</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>로딩·에러(fetch 실패) 처리 + 회귀테스트 <small>실측: 온보딩 fetch·뷰어 retrieve 로딩/에러/재시도, 테스트가 신 계약(<span class="mono">legalDocumentIds</span>·list/retrieve) 검증(이전 위양성 해소)</small></span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 온보딩이 배치 <span class="mono">GET /legal-documents/active</span>로 필수 3종+선택 1종의 활성 <span class="mono">legalDocumentId</span>를 1회 왕복 수집하고, 뷰어(<span class="mono">#doc-viewer</span>)는 단건 <span class="mono">GET /legal-documents?type=</span>로 서버 문서(title·version·<span class="mono">expectedActivateOn</span>·content)를 표시하며, 동의 시 배치에서 받은 활성 문서의 <span class="mono">legalDocumentId</span>가 UserConsent에 기록되고(서버가 <span class="mono">documentVersion</span>을 스냅샷), 하드코딩 문안이 남아있지 않다.</div>
+    <div class="iaccept"><b>완료</b> — 온보딩이 <span class="mono">GET /legal-documents</span>(list, <span class="mono">?types=</span>)로 필수 3종+선택 1종의 활성 <span class="mono">legalDocumentId</span>를 1회 왕복 수집하고, 뷰어(<span class="mono">#doc-viewer</span>)는 단건 <span class="mono">GET /legal-documents/:id</span>(retrieve)로 서버 문서(title·version·<span class="mono">expectedActivateOn</span>·content)를 표시하며, 동의 시 list에서 받은 활성 문서의 <span class="mono">legalDocumentId</span>가 UserConsent에 기록되고(서버가 <span class="mono">documentVersion</span>을 스냅샷), 하드코딩 문안이 남아있지 않다. <b>검증 통과</b>(code-reviewer 실측: <span class="mono">flutter analyze</span> 무이슈 + <span class="mono">flutter test</span> 61 통과, 온보딩 payload가 백엔드 DTO와 정확 일치해 완주 가능). <small>후속 노트(완료를 막지 않음): 실서버 E2E는 외부자원이라 mock으로 대체 검증.</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-16, S1-11, S1-10</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#doc-viewer">🎨 약관전문</a><a href="../wireframes/index.html#onboarding">🎨 온보딩</a><a href="../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../domain/index.html#ent-userconsent">📦 UserConsent</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#doc-viewer">🎨 약관전문</a><a href="../wireframes/index.html#onboarding">🎨 온보딩</a><a href="../../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../../domain/index.html#ent-userconsent">📦 UserConsent</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S1-18">
-    <div class="ihead"><span class="iid">S1-18</span><span class="ititle">법적 문서 예약 활성화 트리거 API</span><span class="badge be">BACKEND</span><span class="pill">S</span></div>
-    <div class="idesc"><span class="mono">expectedActivateOn</span>이 지난 법적 문서를 <b>외부에서 호출하는 API</b>가 활성화한다. 내부 스케줄러·BullMQ는 사용하지 않는다.</div>
-    <ul class="isub">
-      <li><span class="box"></span><span>엔드포인트(예: <span class="mono">POST /legal-documents/activate-due</span> 또는 <span class="mono">/legal-documents/:id/activate</span>) — 호출 시 <span class="mono">expectedActivateOn</span>이 지난 DRAFT 문서를 조회(<span class="mono">findDueForActivation(now)</span>, <a href="step1.html#S1-15">S1-15</a>)해 <span class="mono">activate()</span> 실행</span></li>
-      <li><span class="box"></span><span><span class="mono">activate()</span> — 대상 DRAFT → ACTIVE, 직전 ACTIVE(같은 type) → ARCHIVED를 원자적으로 전이해 type별 ACTIVE 1개 불변식 유지</span></li>
-      <li><span class="box"></span><span><b>멱등</b> — 이미 ACTIVE거나 활성화 대상이 없으면 재호출해도 상태 변화 없이 200(no-op)</span></li>
-      <li><span class="box"></span><span>호출자 인증 — 시스템/관리자 토큰(백오피스 미구현 → 후속/최소 인증으로 표기, <a href="step1.html#S1-16">S1-16</a> 발행 API와 동일한 authz 수준)</span></li>
-      <li><span class="box"></span><span><b>내부 스케줄러(@Interval)·BullMQ 미사용</b> — 활성화는 오직 이 외부 호출 API로만 트리거</span></li>
-    </ul>
-    <div class="iaccept"><b>완료</b> — <span class="mono">expectedActivateOn</span>이 지난 DRAFT 문서가 이 API 호출 시 ACTIVE로 전이되고 직전 ACTIVE 버전이 ARCHIVED로 바뀌며, 재호출해도 멱등하게 동일 결과를 유지한다.</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S1-15, S1-16</span><span class="ilinks">관련<a href="../mvp/step1.html">MVP</a><a href="../domain/index.html">도메인</a></span></div>
-    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../domain/index.html#ent-legaldocument">📦 LegalDocument</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
+    <div class="ihead"><span class="iid">S1-18</span><span class="ititle">법적 문서 예약 활성화 트리거 API</span><span class="stag scope">이전됨</span></div>
+    <div class="idesc"><b>→ 백오피스 <a href="../../backoffice/issue/step1.html#BO1-6">BO1-6</a>로 이전</b>(관리자 법적문서 활성화 API, <span class="mono">/api/admins/legal-documents/activate-due</span>, AdminGuard+role). 활성화 로직 재료(<span class="mono">activate()</span>/<span class="mono">archive()</span>·<span class="mono">findDueForActivation</span>)는 <a href="step1.html#S1-15">S1-15</a>에 존재.</div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../backoffice/issue/step1.html#BO1-6">🗺️ BO1-6</a><a href="../mvp/step1.html">🗺️ MVP</a></div>
   </div>
 
   <div class="nav">

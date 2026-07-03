@@ -37,13 +37,24 @@
 
   /* site-wide section nav (docs/ 전체 공통 상단 바) */
   nav.sitenav{position:sticky; top:0; z-index:60; background:#08090cf5; backdrop-filter:blur(8px); border-bottom:1px solid #16181d; height:46px;}
-  nav.sitenav .inner{max-width:1360px; margin:0 auto; height:100%; display:flex; align-items:center; gap:2px; padding:0 40px; overflow-x:auto;}
+  nav.sitenav .inner{max-width:1360px; margin:0 auto; height:100%; display:flex; align-items:center; gap:2px; padding:0 40px; overflow:visible;}
   nav.sitenav .sn-brand{font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:.3px; margin-right:14px; white-space:nowrap;}
   nav.sitenav .sn-brand b{color:var(--ar); font-weight:700;}
   nav.sitenav a, nav.sitenav span.on{font-size:12.5px; padding:6px 12px; border-radius:8px; white-space:nowrap;}
   nav.sitenav a{color:#aeb4bc; transition:.12s;}
   nav.sitenav a:hover{background:#111318; color:var(--text);}
   nav.sitenav span.on{background:color-mix(in srgb,var(--ar) 16%,transparent); color:var(--ar); font-weight:700; cursor:default;}
+
+  nav.sitenav details.navmenu{position:relative; display:inline-block;}
+  nav.sitenav details.navmenu summary{list-style:none; cursor:pointer; font-size:12.5px; padding:6px 12px; border-radius:8px; color:#aeb4bc; white-space:nowrap; transition:.12s;}
+  nav.sitenav details.navmenu summary::-webkit-details-marker{display:none;}
+  nav.sitenav details.navmenu summary:hover,
+  nav.sitenav details.navmenu[open] summary{background:#111318; color:var(--text);}
+  nav.sitenav details.navmenu summary.on{background:color-mix(in srgb,var(--ar) 16%,transparent); color:var(--ar); font-weight:700;}
+  nav.sitenav .navmenu-pop{position:absolute; top:calc(100% + 4px); left:0; z-index:120; display:flex; flex-direction:column; min-width:130px; padding:4px; gap:2px; background:var(--panel2); border:1px solid var(--line); border-radius:10px; box-shadow:0 10px 28px rgba(0,0,0,.55);}
+  nav.sitenav .navmenu-pop a{display:block; font-size:12.5px; padding:6px 12px; border-radius:6px; color:#aeb4bc; white-space:nowrap; transition:.12s;}
+  nav.sitenav .navmenu-pop a:hover{background:#111318; color:var(--text);}
+  nav.sitenav .navmenu-pop a.on{background:color-mix(in srgb,var(--ar) 16%,transparent); color:var(--ar); font-weight:700;}
 
   main{max-width:1360px; margin:0 auto; padding:26px 40px 90px;}
   section{margin-bottom:46px; scroll-margin-top:64px;}
@@ -126,10 +137,23 @@
 <nav class="sitenav"><div class="inner">
   <span class="sn-brand">추노 <b>docs</b></span>
   <a href="../README.md">개요</a>
-  <a href="../mvp/index.html">MVP 로드맵</a>
-  <a href="../issue/index.html">이슈 보드</a>
-  <span class="on">도메인(DDD)</span>
-  <a href="../wireframes/index.html">와이어프레임</a>
+  <span class="on">도메인</span>
+  <details class="navmenu">
+    <summary>사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../product/issue/index.html">이슈</a>
+      <a href="../product/mvp/index.html">MVP</a>
+      <a href="../product/wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary>백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../backoffice/issue/index.html">이슈</a>
+      <a href="../backoffice/mvp/index.html">MVP</a>
+      <a href="../backoffice/wireframes/index.html">화면</a>
+    </div>
+  </details>
 </div></nav>
 
 <header>
@@ -158,7 +182,7 @@
 
 <!-- ========== 컨텍스트 개요 ========== -->
 <section id="overview">
-  <h2>바운디드 컨텍스트 (8)</h2>
+  <h2>바운디드 컨텍스트 (9)</h2>
   <div class="desc">각 컨텍스트 = core-api의 모듈 경계 후보. 컨텍스트 간에는 도메인 이벤트로 느슨하게 연결(EDA).</div>
   <div class="ctx-grid">
     <div class="ctx" style="border-top-color:var(--ar)">
@@ -221,6 +245,14 @@
       <ul>
         <li><b style="background:var(--ent)"></b>LegalDocument</li>
         <li><b style="background:var(--vo)"></b>LegalDocumentType · Status</li>
+      </ul>
+    </div>
+    <div class="ctx" style="border-top-color:var(--rm)">
+      <div class="en">Admin &amp; IAM</div><h3>백오피스 · 운영자 인증</h3>
+      <ul>
+        <li><b style="background:var(--ar)"></b>AdminAccount</li>
+        <li><b style="background:var(--ent)"></b>Role</li>
+        <li><b style="background:var(--ent)"></b>AdminAuditLog</li>
       </ul>
     </div>
   </div>
@@ -525,7 +557,7 @@
         <div class="desc">이용약관·개인정보처리방침 등 법적 문서의 버전 관리. type별로 버전을 append하고, 그중 활성(ACTIVE) 버전은 항상 1개만 유지한다.</div>
         <div class="fields">
           <div class="f"><span class="fn">id</span><span class="ft">LegalDocumentId</span></div>
-          <div class="f"><span class="fn">type</span><span class="ft">LegalDocumentType</span><span class="fnote">TERMS·PRIVACY·PRIVACY_NOTICE·LOCATION·MARKETING</span></div>
+          <div class="f"><span class="fn">type</span><span class="ft">LegalDocumentType</span><span class="fnote">TERMS·PRIVACY·LOCATION·MARKETING</span></div>
           <div class="f"><span class="fn">version</span><span class="ft">string</span><span class="fnote">예 "v1.0"</span></div>
           <div class="f"><span class="fn">title</span><span class="ft">string</span></div>
           <div class="f"><span class="fn">content</span><span class="ft">text</span><span class="fnote">DB text 컬럼 · 다국어 locale은 후속</span></div>
@@ -540,9 +572,59 @@
         <div class="hd"><span class="nm">값 객체</span><span class="badge vo">Value Object</span></div>
         <div class="desc">문서 종류와 상태를 표현하는 불변 타입.</div>
         <div class="fields">
-          <div class="f"><span class="fn">LegalDocumentType</span><span class="fnote">TERMS·PRIVACY·PRIVACY_NOTICE·LOCATION·MARKETING</span></div>
+          <div class="f"><span class="fn">LegalDocumentType</span><span class="fnote">TERMS·PRIVACY·LOCATION·MARKETING</span></div>
           <div class="f"><span class="fn">LegalDocumentStatus</span><span class="fnote">DRAFT·ACTIVE·ARCHIVED</span></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin & IAM -->
+  <div class="ctx-block">
+    <h3>🛡️ 백오피스 · 운영자 인증 <span class="en">Admin &amp; IAM</span></h3>
+    <div class="desc" style="margin:-6px 0 12px; font-size:12px;">백오피스(<span style="font-family:var(--mono)">/api/admins</span>) 전용 컨텍스트. 앱 사용자 도메인(Identity &amp; Access 등)과는 <b style="color:#c3c9d2">물리 FK 없이 논리참조/이벤트로만 결합</b> — <span class="mono" style="font-family:var(--mono)">UserConsent → LegalDocument</span>와 동일한 패턴. 설계 근거: <a href="../backoffice/issue/step1.html#BO1-1">BO1-1</a></div>
+    <div class="cards">
+      <div class="card ar" id="ent-adminaccount">
+        <div class="hd"><span class="nm">AdminAccount</span><span class="badge ar">Aggregate</span></div>
+        <div class="desc">백오피스 로그인 계정. 외부 IdP(SSO)로 인증하며, 앱 사용자 소셜 로그인(AuthIdentity)과는 완전히 별개의 신원 체계다.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">id</span><span class="ft">AdminAccountId</span></div>
+          <div class="f"><span class="fn">provider</span><span class="ft">string</span><span class="fnote">외부 IdP(SSO)</span></div>
+          <div class="f"><span class="fn">subject</span><span class="ft">string</span><span class="fnote">외부 IdP 고유 신원 · UNIQUE(provider,subject)</span></div>
+          <div class="f"><span class="fn">name</span><span class="ft">string</span></div>
+          <div class="f"><span class="fn">status</span><span class="ft">AdminAccountStatus</span><span class="fnote">ACTIVE·SUSPENDED</span></div>
+          <div class="f"><span class="fn">lastLoginAt</span><span class="ft">Date</span><span class="fnote">UTC</span></div>
+          <div class="f"><span class="fn">roleIds</span><span class="ft">RoleId[]</span></div>
+        </div>
+        <div class="rel"><b>관계:</b> N ── N <b>Role</b> · 1 ── N <b>AdminAuditLog</b>(행위 주체) · ┄▷ <b>User</b>(제재 대상, 논리참조 — 물리 FK 없음)</div>
+        <div class="inv"><b>passwordHash 없음</b> — 자체 비밀번호 인증이 아닌 SSO(외부 IdP) 인증 전용(<a href="../backoffice/issue/step1.html#BO1-3">BO1-3</a>) · <b>UNIQUE(provider, subject)</b> — 같은 외부 신원이 두 AdminAccount에 붙는 것 방지 · 엔티티 설계: <a href="../backoffice/issue/step1.html#BO1-2">BO1-2</a></div>
+      </div>
+      <div class="card ent" id="ent-role">
+        <div class="hd"><span class="nm">Role</span><span class="badge ent">Entity</span></div>
+        <div class="desc">역할 단위 RBAC 정의. 세분화된 Permission 엔티티 없이 역할 자체로 접근을 게이팅한다(role-only RBAC).</div>
+        <div class="fields">
+          <div class="f"><span class="fn">id</span><span class="ft">RoleId</span></div>
+          <div class="f"><span class="fn">name</span><span class="ft">RoleName</span><span class="fnote">SUPER_ADMIN·OPERATOR·SUPPORT</span></div>
+          <div class="f"><span class="fn">description</span><span class="ft">string</span></div>
+        </div>
+        <div class="rel"><b>관계:</b> N ── N <b>AdminAccount</b></div>
+        <div class="inv">별도 Permission 엔티티 없음 — <span style="font-family:var(--mono)">@RequireRoles</span> 데코레이터로 역할 단위 게이팅(role-only RBAC, <a href="../backoffice/issue/step1.html#BO1-3">BO1-3</a>) · 엔티티 설계: <a href="../backoffice/issue/step1.html#BO1-2">BO1-2</a></div>
+      </div>
+      <div class="card ent" id="ent-adminauditlog">
+        <div class="hd"><span class="nm">AdminAuditLog</span><span class="badge ent">Entity</span></div>
+        <div class="desc">관리자 조작 이력의 append-only 감사 기록. 누가 무엇을 언제 어떻게 바꿨는지 스냅샷으로 남긴다.</div>
+        <div class="fields">
+          <div class="f"><span class="fn">id</span><span class="ft">AdminAuditLogId</span></div>
+          <div class="f"><span class="fn">adminId</span><span class="ft">AdminAccountId</span></div>
+          <div class="f"><span class="fn">action</span><span class="ft">string</span></div>
+          <div class="f"><span class="fn">targetType</span><span class="ft">string</span></div>
+          <div class="f"><span class="fn">targetId</span><span class="ft">string</span><span class="fnote">논리참조 · 물리 FK 아님</span></div>
+          <div class="f"><span class="fn">before / after</span><span class="ft">json</span><span class="fnote">변경 전후 스냅샷</span></div>
+          <div class="f"><span class="fn">ip</span><span class="ft">string</span></div>
+          <div class="f"><span class="fn">createdAt</span><span class="ft">Date</span><span class="fnote">UTC</span></div>
+        </div>
+        <div class="rel"><b>관계:</b> N ── 1 <b>AdminAccount</b> · <b>targetId</b> ┄▷ 임의 대상(User·LegalDocument·… 논리참조, 물리 FK 아님)</div>
+        <div class="inv"><b>append-only</b> — 수정/삭제 없음(불변 기록) · 다른 컨텍스트와는 <span style="font-family:var(--mono)">targetId</span> 논리참조로만 연결(물리 FK 없음) · 설계: <a href="../backoffice/issue/step1.html#BO1-4">BO1-4</a></div>
       </div>
     </div>
   </div>
@@ -553,7 +635,7 @@
   <h2>관계도 (ERD)</h2>
   <div class="desc">애그리거트/엔티티 간 관계와 카디널리티. <span style="color:var(--ar)">코랄=AR</span> · <span style="color:var(--ent)">파랑=Entity</span> · <span style="color:var(--rm)">보라=ReadModel</span> · <span style="color:#7a6836">점선=참조/이벤트</span>.</div>
   <div class="erd-wrap">
-    <svg class="erd" viewBox="0 -78 1180 888" xmlns="http://www.w3.org/2000/svg">
+    <svg class="erd" viewBox="0 -78 1260 980" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <marker id="arw" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#4a525d"/></marker>
         <marker id="arwE" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#7a6836"/></marker>
@@ -586,6 +668,14 @@
       <path class="edge evt" d="M440,388 Q780,240 975,103" marker-end="url(#arwE)"/>
       <path class="edge evt" d="M555,545 Q905,345 1003,103" marker-end="url(#arwE)"/>
 
+      <!-- Admin & IAM row (bottom) -->
+      <line class="edge" x1="210" y1="843" x2="290" y2="843" marker-end="url(#arw)"/>
+      <line class="edge" x1="440" y1="843" x2="520" y2="843" marker-end="url(#arw)"/>
+      <!-- AdminAccount ┄▷ User (제재 대상, 논리참조 · 물리 FK 없음) -->
+      <path class="edge ref" d="M365,820 L365,810 L20,810 L20,83 L58,83" marker-end="url(#arw)"/>
+      <!-- AdminAuditLog ┄▷ 임의 대상(User/LegalDocument/…, 논리참조 · 물리 FK 없음) -->
+      <path class="edge ref" d="M135,866 L135,880 L1220,880 L1220,198 L1172,198" marker-end="url(#arw)"/>
+
       <!-- nodes -->
       <g><rect class="nbox" x="60" y="-58" width="150" height="46" rx="9"/><rect x="60" y="-58" width="4" height="46" rx="2" fill="#FF6B4A"/><text class="nname" x="76" y="-37">File</text><text class="ntype" x="76" y="-21">AGGREGATE</text></g>
       <g><rect class="nbox" x="60" y="60" width="150" height="46" rx="9"/><rect x="60" y="60" width="4" height="46" rx="2" fill="#FF6B4A"/><text class="nname" x="76" y="81">User</text><text class="ntype" x="76" y="97">AGGREGATE</text></g>
@@ -603,6 +693,11 @@
       <g><rect class="nbox" x="955" y="705" width="150" height="46" rx="9"/><rect x="955" y="705" width="4" height="46" rx="2" fill="#5B9BFF"/><text class="nname" x="971" y="726">Entitlement</text><text class="ntype" x="971" y="742">ENTITY</text></g>
       <g><rect class="nbox" x="915" y="55" width="150" height="46" rx="9"/><rect x="915" y="55" width="4" height="46" rx="2" fill="#B98BFF"/><text class="nname" x="931" y="76">Notification</text><text class="ntype" x="931" y="92">READ MODEL</text></g>
       <g><rect class="nbox" x="1020" y="175" width="150" height="46" rx="9"/><rect x="1020" y="175" width="4" height="46" rx="2" fill="#5B9BFF"/><text class="nname" x="1036" y="196">LegalDocument</text><text class="ntype" x="1036" y="212">ENTITY</text></g>
+
+      <!-- Admin & IAM -->
+      <g><rect class="nbox" x="60" y="820" width="150" height="46" rx="9"/><rect x="60" y="820" width="4" height="46" rx="2" fill="#5B9BFF"/><text class="nname" x="76" y="841">AdminAuditLog</text><text class="ntype" x="76" y="857">ENTITY</text></g>
+      <g><rect class="nbox" x="290" y="820" width="150" height="46" rx="9"/><rect x="290" y="820" width="4" height="46" rx="2" fill="#FF6B4A"/><text class="nname" x="306" y="841">AdminAccount</text><text class="ntype" x="306" y="857">AGGREGATE</text></g>
+      <g><rect class="nbox" x="520" y="820" width="150" height="46" rx="9"/><rect x="520" y="820" width="4" height="46" rx="2" fill="#5B9BFF"/><text class="nname" x="536" y="841">Role</text><text class="ntype" x="536" y="857">ENTITY</text></g>
 
       <!-- edge labels (top) -->
       <text class="elabel" x="248" y="60">1 · 1</text>
@@ -623,6 +718,10 @@
       <text class="elabel" x="172" y="34">N·1 owner</text>
       <text class="elabel" x="792" y="150">이벤트 구독 → 푸시</text>
       <text class="elabel" x="660" y="250">legalDocumentId (논리참조)</text>
+      <text class="elabel" x="222" y="838">N · 1</text>
+      <text class="elabel" x="452" y="838">N · N</text>
+      <text class="elabel" x="26" y="450">┄▷ 제재대상(논리, FK없음)</text>
+      <text class="elabel" x="1050" y="540">┄▷ 대상(논리, FK없음)</text>
     </svg>
   </div>
 </section>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BO Step 1 · IAM 기반 + 법적문서 관리 재스코프 — 추노 백오피스 MVP</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary>사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../product/issue/index.html">이슈</a>
+      <a href="../../product/mvp/index.html">MVP</a>
+      <a href="../../product/wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary class="on">백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html">이슈</a>
+      <a href="../mvp/index.html" class="on">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+</div></nav>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">백오피스 MVP 로드맵</a><span class="sep">/</span>BO Step 1</div>
+  <h1><b>BO Step 1</b> · IAM 기반 + 법적문서 관리 재스코프</h1>
+  <p class="lead">관리자 계정·역할·감사로그 도메인을 세우고, 사용자 트랙의 "관리자 authz" 빈틈을 실 role-RBAC로 메운다.</p>
+
+  <div class="callout"><b>목표</b> — 관리자가 외부 SSO로 로그인해 role에 맞는 관리자 API만 호출할 수 있고, 법적문서 초안 등록·예약 활성화가 관리자 전용 API로 재스코프된다.</div>
+
+  <p style="margin:-6px 0 18px;"><a href="../issue/step1.html" style="color:var(--coral); font-weight:600; font-size:13px;">🎫 이 스텝의 상세 이슈 (7) →</a></p>
+
+  <div class="dep"><b>선행:</b> 없음 (시작점)</div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge design">DESIGN</span> Admin &amp; IAM 도메인</div>
+    <div class="task"><div class="box"></div><div class="k">신규 "Admin &amp; IAM" 컨텍스트 + <span class="mono">AdminAccount</span>·<span class="mono">Role</span>·<span class="mono">AdminAuditLog</span> 엔티티 카드 — <a href="../issue/step1.html#BO1-1">BO1-1</a></div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>role-only RBAC 불변식</b> — Permission 엔티티 없음, Role(SUPER_ADMIN·OPERATOR·SUPPORT)이 역할 단위 게이팅 경계 — <a href="../issue/step1.html#BO1-1">BO1-1</a></div></div>
+    <div class="task"><div class="box"></div><div class="k">감사로그 append-only + 논리참조 규칙, ERD 반영 — <a href="../issue/step1.html#BO1-1">BO1-1</a></div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge be">BACKEND</span> 관리자 신원 · 인증 · 감사</div>
+    <div class="task"><div class="box"></div><div class="k"><b>AdminAccount·Role 엔티티 + 리포지토리 + seed</b> — 외부 IdP 신원(provider+subject, passwordHash 없음), <span class="mono">UNIQUE(provider, subject)</span>, super admin seed 직접 주입 — <a href="../issue/step1.html#BO1-2">BO1-2</a></div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>관리자 SSO 인증 + AdminGuard + role 게이팅</b> — <span class="mono">/api/admins/auth/login·refresh·logout</span>, 별도 JWT 시크릿, <span class="mono">@RequireRoles(...)</span> — <a href="../issue/step1.html#BO1-3">BO1-3</a></div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>AdminAuditLog 기록 인프라</b> — 감사 인터셉터 + <span class="mono">GET /api/admins/audit-logs</span> — <a href="../issue/step1.html#BO1-4">BO1-4</a></div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge be">BACKEND</span> 법적문서 관리 재스코프</div>
+    <div class="task"><div class="box"></div><div class="k"><b>관리자 법적문서 관리 API</b>(S1-16 재스코프) — <span class="mono">GET/POST/PUT /api/admins/legal-documents</span>, PATCH 금지, OPERATOR 이상 — <a href="../issue/step1.html#BO1-5">BO1-5</a></div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>관리자 법적문서 활성화 API</b>(S1-18에서 이전) — <span class="mono">POST /api/admins/legal-documents/activate-due</span>, 멱등, 내부 스케줄러 미사용 — <a href="../issue/step1.html#BO1-6">BO1-6</a></div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge app">UI</span> 백오피스 프론트</div>
+    <div class="task"><div class="box"></div><div class="k"><b>프론트 스택 확정</b> — React + TypeScript + React Query + React Router DOM + Ant Design(별도 웹 SPA)</div></div>
+    <div class="task"><div class="box"></div><div class="k">관리자 로그인·법적문서 관리 화면(<span class="mono">#admin-login</span>·<span class="mono">#admin-legal</span>) — <a href="../issue/step1.html#BO1-7">BO1-7</a> <small>needsWireframe: true, 어드민 와이어프레임은 후속</small></div></div>
+  </div>
+
+  <div class="done-when"><b>완료 기준</b> — 관리자가 외부 SSO 토큰으로 로그인해 admin JWT를 받고, role에 따라 <span class="mono">/api/admins/*</span> 접근이 게이팅되며, 법적문서 초안 등록·예약 활성화가 관리자 전용 API로 동작한다.</div>
+
+  <div class="nav">
+    <a href="index.html"><span class="lbl">이전</span>← 로드맵 개요</a>
+    <a class="next" href="step2.html"><span class="lbl">다음</span>BO Step 2 · 사용자 관리 · 제재 →</a>
+  </div>
+</div>
+</body>
+</html>

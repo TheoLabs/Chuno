@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>추노 — 백오피스 이슈 보드</title>
+<link rel="stylesheet" href="../mvp/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary>사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../product/issue/index.html">이슈</a>
+      <a href="../../product/mvp/index.html">MVP</a>
+      <a href="../../product/wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary class="on">백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html" class="on">이슈</a>
+      <a href="../mvp/index.html">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+</div></nav>
+<div class="wrap">
+  <div class="crumb"><a href="../../README.md">docs</a><span class="sep">/</span>backoffice<span class="sep">/</span>issue</div>
+  <h1>추노 <b>백오피스</b> 이슈 보드</h1>
+  <p class="lead">백오피스 · 관리자단 — 사용자 트랙과 평행한 관리자 트랙. IAM/role-RBAC 기반 위에 사용자 관리·모더레이션·게임 운영·포인트/랭킹/공지를 쌓는다. 각 이슈는 관련 백오피스 MVP·도메인·(사용자 트랙) 화면과 연결돼 있다.</p>
+
+  <div class="boardnote">
+    <a class="linkbtn" href="../mvp/index.html">📋 <b>백오피스 MVP 로드맵</b> 보기</a>
+    <a class="linkbtn" href="../../domain/index.html">🧩 도메인 설계</a>
+    <a class="linkbtn" href="../../product/issue/index.html">🎫 사용자 이슈 보드</a>
+  </div>
+
+  <!-- BO STEP 1 -->
+  <div class="stepsec">
+    <div class="sh"><span class="snum">BO STEP 1</span><span class="stitle">IAM 기반 + 법적문서 관리 재스코프</span><span class="sgo"><a href="step1.html">상세 →</a> · <a href="../mvp/step1.html">BO MVP</a></span></div>
+    <div class="rows">
+      <a class="row" href="step1.html#BO1-1"><span class="iid">BO1-1</span><span class="rt">Admin &amp; IAM 바운디드 컨텍스트 도메인 설계</span><span class="badge design">DESIGN</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#BO1-2"><span class="iid">BO1-2</span><span class="rt">AdminAccount·Role 엔티티 + 리포지토리 + seed</span><span class="badge be">BACKEND</span><span class="pill">M</span></a>
+      <a class="row" href="step1.html#BO1-3"><span class="iid">BO1-3</span><span class="rt">관리자 SSO 인증 + AdminGuard + role 게이팅</span><span class="badge be">BACKEND</span><span class="pill">M</span></a>
+      <a class="row" href="step1.html#BO1-4"><span class="iid">BO1-4</span><span class="rt">AdminAuditLog 기록 인프라</span><span class="badge be">BACKEND</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#BO1-5"><span class="iid">BO1-5</span><span class="rt">관리자 법적문서 관리 API (S1-16 재스코프)</span><span class="badge be">BACKEND</span><span class="pill">M</span></a>
+      <a class="row" href="step1.html#BO1-6"><span class="iid">BO1-6</span><span class="rt">관리자 법적문서 활성화 API (S1-18에서 이전)</span><span class="badge be">BACKEND</span><span class="pill">S</span></a>
+      <a class="row" href="step1.html#BO1-7"><span class="iid">BO1-7</span><span class="rt">백오피스 프론트 셸 + 관리자 로그인·법적문서 관리 화면</span><span class="badge app">UI</span><span class="pill">M</span></a>
+    </div>
+  </div>
+
+  <!-- BO STEP 2 -->
+  <div class="stepsec">
+    <div class="sh"><span class="snum">BO STEP 2</span><span class="stitle">사용자 관리 · 제재</span><span class="sgo"><a href="step2.html">상세 →</a> · <a href="../mvp/step2.html">BO MVP</a></span></div>
+    <div class="rows">
+      <a class="row" href="step2.html#BO2-1"><span class="iid">BO2-1</span><span class="rt">제재(Sanction) 도메인 설계</span><span class="badge design">DESIGN</span><span class="pill">S</span></a>
+      <a class="row" href="step2.html#BO2-2"><span class="iid">BO2-2</span><span class="rt">관리자 사용자 조회/검색 API</span><span class="badge be">BACKEND</span><span class="pill">M</span></a>
+      <a class="row" href="step2.html#BO2-3"><span class="iid">BO2-3</span><span class="rt">사용자 제재 API + 강제 세션폐기</span><span class="badge be">BACKEND</span><span class="pill">M</span></a>
+      <a class="row" href="step2.html#BO2-4"><span class="iid">BO2-4</span><span class="rt">제재 반영 크로스컷 (로그인/소켓/공개 GET 게이팅)</span><span class="badge be">BACKEND</span><span class="pill">M</span></a>
+      <a class="row" href="step2.html#BO2-5"><span class="iid">BO2-5</span><span class="rt">백오피스 사용자 목록·상세·제재 화면</span><span class="badge app">UI</span><span class="pill">M</span></a>
+    </div>
+  </div>
+
+  <!-- BO STEP 3 -->
+  <div class="stepsec">
+    <div class="sh"><span class="snum">BO STEP 3</span><span class="stitle">모더레이션 · 신고 · 파일</span><span class="sgo"><a href="step3.html">상세 →</a> · <a href="../mvp/step3.html">BO MVP</a></span></div>
+    <div class="rows">
+      <a class="row" href="step3.html#BO3-1"><span class="iid">BO3-1</span><span class="rt">신고 · 모더레이션 도메인 신설 여부 결정/설계</span><span class="badge design">DESIGN</span><span class="pill">S</span></a>
+      <a class="row" href="step3.html#BO3-2"><span class="iid">BO3-2</span><span class="rt">신고 접수 + 관리자 신고 큐/처리 API</span><span class="badge be">BACKEND</span><span class="pill">M</span></a>
+      <a class="row" href="step3.html#BO3-3"><span class="iid">BO3-3</span><span class="rt">파일 / 미디어 모더레이션 API</span><span class="badge be">BACKEND</span><span class="pill">S</span></a>
+      <a class="row" href="step3.html#BO3-4"><span class="iid">BO3-4</span><span class="rt">모더레이션 큐 화면</span><span class="badge app">UI</span><span class="pill">S</span></a>
+    </div>
+  </div>
+
+  <!-- BO STEP 4 -->
+  <div class="stepsec">
+    <div class="sh"><span class="snum">BO STEP 4</span><span class="stitle">게임 · 경주 운영</span><span class="sgo"><a href="step4.html">상세 →</a> · <a href="../mvp/step4.html">BO MVP</a></span></div>
+    <div class="rows">
+      <a class="row" href="step4.html#BO4-1"><span class="iid">BO4-1</span><span class="rt">방 운영 API (목록·강제취소/삭제)</span><span class="badge be">BACKEND</span><span class="pill">M</span></a>
+      <a class="row" href="step4.html#BO4-2"><span class="iid">BO4-2</span><span class="rt">경주 운영 API (LIVE 모니터링·강제 finalize·안티치트 로그)</span><span class="badge be">BACKEND</span><span class="pill">M</span></a>
+      <a class="row" href="step4.html#BO4-3"><span class="iid">BO4-3</span><span class="rt">결과 · 점수 정정 API</span><span class="badge be">BACKEND</span><span class="pill">M</span></a>
+      <a class="row" href="step4.html#BO4-4"><span class="iid">BO4-4</span><span class="rt">라이브 경주 운영 대시보드</span><span class="badge app">UI</span><span class="pill">M</span></a>
+    </div>
+  </div>
+
+  <!-- BO STEP 5 -->
+  <div class="stepsec">
+    <div class="sh"><span class="snum">BO STEP 5</span><span class="stitle">포인트 · 랭킹 · 티어 · 공지 · 지표</span><span class="sgo"><a href="step5.html">상세 →</a> · <a href="../mvp/step5.html">BO MVP</a></span></div>
+    <div class="rows">
+      <a class="row" href="step5.html#BO5-1"><span class="iid">BO5-1</span><span class="rt">포인트 수동 조정 API</span><span class="badge be">BACKEND</span><span class="pill">M</span></a>
+      <a class="row" href="step5.html#BO5-2"><span class="iid">BO5-2</span><span class="rt">랭킹 · 티어 운영 (티어 컷·재빌드·부정 제외·시즌 리셋)</span><span class="badge be">BACKEND</span><span class="pill">M</span></a>
+      <a class="row" href="step5.html#BO5-3"><span class="iid">BO5-3</span><span class="rt">공지/이벤트 푸시 발송 API</span><span class="badge be">BACKEND</span><span class="pill">M</span></a>
+      <a class="row" href="step5.html#BO5-4"><span class="iid">BO5-4</span><span class="rt">운영 대시보드 지표 API</span><span class="badge be">BACKEND</span><span class="pill">S</span></a>
+      <a class="row" href="step5.html#BO5-5"><span class="iid">BO5-5</span><span class="rt">백오피스 대시보드·공지·포인트 화면</span><span class="badge app">UI</span><span class="pill">M</span></a>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

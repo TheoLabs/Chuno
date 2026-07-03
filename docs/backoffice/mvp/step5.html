@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BO Step 5 · 포인트 · 랭킹 · 티어 · 공지 · 지표 — 추노 백오피스 MVP</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary>사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../product/issue/index.html">이슈</a>
+      <a href="../../product/mvp/index.html">MVP</a>
+      <a href="../../product/wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary class="on">백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html">이슈</a>
+      <a href="../mvp/index.html" class="on">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+</div></nav>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">백오피스 MVP 로드맵</a><span class="sep">/</span>BO Step 5</div>
+  <h1><b>BO Step 5</b> · 포인트 · 랭킹 · 티어 · 공지 · 지표</h1>
+  <p class="lead">보상/보정 포인트, 랭킹·티어 운영, 공지 발송, 운영 대시보드 지표. 포인트 조정은 미구현 Points 컨텍스트에 의존.</p>
+
+  <div class="callout"><b>목표</b> — 관리자가 포인트를 보정하고, 티어 컷·랭킹을 재빌드하고, 전체/세그먼트 공지를 발송하고, 핵심 운영 지표를 대시보드로 본다.</div>
+
+  <p style="margin:-6px 0 18px;"><a href="../issue/step5.html" style="color:var(--coral); font-weight:600; font-size:13px;">🎫 이 스텝의 상세 이슈 (5) →</a></p>
+
+  <div class="dep"><b>선행:</b> BO Step 1</div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge be">BACKEND</span> 포인트 · 랭킹 · 공지 · 지표</div>
+    <div class="task"><div class="box"></div><div class="k"><b>포인트 수동 조정 API</b> — <span class="mono">POST /api/admins/users/:id/points</span>(사유·refId), 잔액≥0 불변식, PointTransaction으로만 <small>Points&amp;Rewards 컨텍스트 구현 후속 의존</small> — <a href="../issue/step5.html#BO5-1">BO5-1</a></div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>랭킹 · 티어 운영</b> — 티어 컷 조회/변경, 랭킹 리빌드 트리거, 부정 유저 제외 — <a href="../issue/step5.html#BO5-2">BO5-2</a></div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>공지/이벤트 푸시 발송 API</b> — <span class="mono">POST /api/admins/notifications/broadcast</span>(전체/세그먼트), 발송 이력, S5-1 발송기 재사용 <small>공지 도메인 신설 여부 열린 질문</small> — <a href="../issue/step5.html#BO5-3">BO5-3</a></div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>운영 대시보드 지표 API</b> — <span class="mono">GET /api/admins/metrics</span>(기간별 집계), 읽기 전용 <small>S5-7(분석)과 인접, 중복 방지 보강 관계</small> — <a href="../issue/step5.html#BO5-4">BO5-4</a></div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge app">UI</span> 백오피스 프론트</div>
+    <div class="task"><div class="box"></div><div class="k">대시보드·공지·포인트 화면(<span class="mono">#admin-dashboard</span>·<span class="mono">#admin-notice</span>·<span class="mono">#admin-points</span>) — <a href="../issue/step5.html#BO5-5">BO5-5</a> <small>needsWireframe: true</small></div></div>
+  </div>
+
+  <div class="done-when"><b>완료 기준</b> — 관리자가 포인트를 조정하고, 랭킹/티어를 재빌드하고, 공지를 발송하고, 대시보드에서 핵심 지표를 조회할 수 있다.</div>
+
+  <div class="nav">
+    <a href="step4.html"><span class="lbl">이전</span>← BO Step 4</a>
+    <a class="next" href="index.html"><span class="lbl">완료</span>로드맵 개요로 →</a>
+  </div>
+</div>
+</body>
+</html>

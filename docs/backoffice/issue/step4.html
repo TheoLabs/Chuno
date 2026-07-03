@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BO Step 4 이슈 · 게임 · 경주 운영 — 추노 백오피스</title>
+<link rel="stylesheet" href="../mvp/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary>사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../product/issue/index.html">이슈</a>
+      <a href="../../product/mvp/index.html">MVP</a>
+      <a href="../../product/wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary class="on">백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html" class="on">이슈</a>
+      <a href="../mvp/index.html">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+</div></nav>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">백오피스 이슈</a><span class="sep">/</span>BO Step 4<span class="sep">·</span><a href="../mvp/step4.html">BO MVP Step 4</a></div>
+  <h1><b>BO Step 4</b> · 게임 · 경주 운영</h1>
+  <p class="lead">멈춘 방·경주를 강제 정리하고, 부정 결과를 무효화·재계산한다. 서버 권위 점수 원칙은 유지. (총 4 이슈, 전부 미착수)</p>
+  <div class="boardnote">
+    <a class="linkbtn" href="../mvp/step4.html">📋 <b>BO MVP Step 4</b></a>
+    <a class="linkbtn" href="index.html">← 백오피스 이슈</a>
+  </div>
+
+  <div class="issue" id="BO4-1">
+    <div class="ihead"><span class="iid">BO4-1</span><span class="ititle">방 운영 API</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc"><span class="mono">/api/admins/rooms</span> — 목록 조회와 강제취소/삭제.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">GET</span>(상태·호스트 필터)</span></li>
+      <li><span class="box"></span><span><span class="mono">PUT /:id/cancel</span>·<span class="mono">DELETE</span></span></li>
+      <li><span class="box"></span><span>OPERATOR 이상 role</span></li>
+      <li><span class="box"></span><span>감사 기록</span></li>
+      <li><span class="box"></span><span><span class="mono">RoomCancelled</span> 이벤트 재사용</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 방 강제취소/삭제가 참가자에 반영된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-3, <a href="../../product/issue/step2.html">사용자 이슈 Step2</a></span><span class="ilinks">관련<a href="../mvp/step4.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-room">📦 Room</a><a href="../../product/mvp/step2.html">🗺️ 사용자 MVP Step2</a><a href="../mvp/step4.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO4-2">
+    <div class="ihead"><span class="iid">BO4-2</span><span class="ititle">경주 운영 API</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">LIVE 경주 모니터링·강제 finalize/취소·안티치트 로그 조회.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">GET /api/admins/races</span>(LIVE)</span></li>
+      <li><span class="box"></span><span><span class="mono">PUT /:id/finalize</span>(멱등, <a href="../../product/issue/step3.html#S3-6">S3-6</a> 재사용)</span></li>
+      <li><span class="box"></span><span>안티치트 리젝 로그(<a href="../../product/issue/step3.html#S3-5">S3-5</a>)</span></li>
+      <li><span class="box"></span><span>OPERATOR 이상 role</span></li>
+      <li><span class="box"></span><span>감사 기록</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 멈춘 경주를 강제 종료할 수 있고, 안티치트 리젝 이력을 조회할 수 있다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-3, <a href="../../product/issue/step3.html">사용자 이슈 Step3</a></span><span class="ilinks">관련<a href="../mvp/step4.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-race">📦 Race</a><a href="../../domain/index.html#ent-raceparticipant">📦 RaceParticipant</a><a href="../../product/mvp/step3.html">🗺️ 사용자 MVP Step3</a><a href="../mvp/step4.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO4-3">
+    <div class="ihead"><span class="iid">BO4-3</span><span class="ititle">결과 · 점수 정정 API</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">RaceResult 무효화/재계산. <b>서버 권위 점수 유지</b> — 관리자도 임의 점수 입력 아님, 무효화·재계산 트리거만.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">PUT /api/admins/results/:id/invalidate</span></span></li>
+      <li><span class="box"></span><span>재계산 트리거(ScoringModule)</span></li>
+      <li><span class="box"></span><span>RunnerStats·랭킹 반영</span></li>
+      <li><span class="box"></span><span>OPERATOR 이상 role</span></li>
+      <li><span class="box"></span><span>감사 기록</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 부정 결과가 무효화되고 통계·랭킹에 반영된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-3, <a href="../../product/issue/step4.html">사용자 이슈 Step4</a></span><span class="ilinks">관련<a href="../mvp/step4.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-raceresult">📦 RaceResult</a><a href="../../product/mvp/step4.html">🗺️ 사용자 MVP Step4</a><a href="../mvp/step4.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue app" id="BO4-4">
+    <div class="ihead"><span class="iid">BO4-4</span><span class="ititle">라이브 경주 운영 대시보드</span><span class="badge app">UI</span><span class="pill">M</span></div>
+    <div class="idesc">LIVE 경주 모니터링·강제 조치를 위한 관리자 화면.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">#admin-race-ops</span> 대시보드</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 라이브 경주 운영 대시보드 화면이 존재한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO4-2</span><span class="ilinks">관련<a href="../mvp/step4.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-race">📦 Race</a><a href="../wireframes/index.html#admin-race-ops">🎨 admin-race-ops</a><a href="../mvp/step4.html">🗺️ MVP</a></div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -9,11 +9,24 @@
 <body>
 <nav class="sitenav"><div class="inner">
   <span class="sn-brand">추노 <b>docs</b></span>
-  <a href="../README.md">개요</a>
-  <span class="on">MVP 로드맵</span>
-  <a href="../issue/index.html">이슈 보드</a>
-  <a href="../domain/index.html">도메인(DDD)</a>
-  <a href="../wireframes/index.html">와이어프레임</a>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary class="on">사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html">이슈</a>
+      <a href="../mvp/index.html" class="on">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary>백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../backoffice/issue/index.html">이슈</a>
+      <a href="../../backoffice/mvp/index.html">MVP</a>
+      <a href="../../backoffice/wireframes/index.html">화면</a>
+    </div>
+  </details>
 </div></nav>
 <div class="wrap">
   <div class="crumb"><a href="index.html">MVP 로드맵</a><span class="sep">/</span>Step 1</div>
@@ -22,7 +35,7 @@
 
   <div class="callout"><b>목표</b> — 카카오/구글/애플로 로그인해서 닉네임·레벨을 저장하고 홈에 들어간다. (아직 방·경주는 mock이어도 됨)</div>
 
-  <p style="margin:-6px 0 18px;"><a href="../issue/step1.html" style="color:var(--coral); font-weight:600; font-size:13px;">🎫 이 스텝의 상세 이슈 (18) →</a></p>
+  <p style="margin:-6px 0 18px;"><a href="../issue/step1.html" style="color:var(--coral); font-weight:600; font-size:13px;">🎫 이 스텝의 상세 이슈 (17) →</a></p>
 
   <div class="dep"><b>선행:</b> 없음 (시작점)</div>
 
@@ -42,9 +55,9 @@
     <div class="task"><div class="box"></div><div class="k"><span class="stag defer">재검증</span>온보딩 <span class="mono">PUT /users/onboard</span> — <span class="mono">consents:[{type,legalDocumentId}]</span>로 변경(클라는 id만 전송, 서버가 해당 활성 LegalDocument의 version을 UserConsent에 스냅샷), 필수 동의 3종(TERMS·PRIVACY·LOCATION) 검증도 <span class="mono">legalDocumentId</span> 기준으로 재작업 필요 <small>기존 <span class="mono">consents:[{type,documentVersion}]</span> 방식의 happy path·409/400 케이스는 legalDocumentId 도입 후 재검증. <a href="../issue/step1.html#S1-11">S1-11</a> 동의 서버 기록 요구사항 자체는 유효</small> — <a href="../issue/step1.html#S1-6">S1-6</a></div></div>
     <div class="task"><div class="box"></div><div class="k"><span class="stag scope">스코프외</span>프로필 수정 <span class="mono">PUT /users/me</span>는 별도 태스크로 분리(추후) — <a href="../issue/step1.html#S1-6">S1-6</a></div></div>
     <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>AUTH_DEV_MODE</b> — <span class="mono">"dev:&lt;sub&gt;:&lt;email&gt;"</span> 토큰으로 키 없이 로컬 테스트, 플래그 on일 때만 동작(기본 off) <small>후속: 프로덕션 <span class="mono">isProduction()</span> fail-fast 다중 방어 — <a href="../issue/step1.html#S1-4">S1-4</a></small></div></div>
-    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>LegalDocument 엔티티 + 리포지토리 + seed</b> — TypeORM 엔티티(content text·<span class="mono">expectedActivateOn</span> CalendarDate)·<span class="mono">entities.ts</span> 등록·<span class="mono">synchronize</span> 스키마 생성·<span class="mono">UNIQUE(type,version)</span>·초기 seed 데이터(TERMS·PRIVACY·PRIVACY_NOTICE·LOCATION·MARKETING 5종 v1.0 ACTIVE, DB 직접 주입)·리포지토리(generic <span class="mono">find</span>에 조건/범위 파라미터로 활성·버전·due 조회 표현)·도메인 메서드 <span class="mono">activate()</span>(DRAFT→ACTIVE)/<span class="mono">archive()</span>(ACTIVE→ARCHIVED) 전부 실측 완료. 둘을 묶는 원자적 오케스트레이션은 <a href="../issue/step1.html#S1-18">S1-18</a>이 담당 <small>— <a href="../issue/step1.html#S1-15">S1-15</a></small></div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>법적 문서 조회 + 발행 API</b> — <span class="mono">GET /legal-documents</span>(활성 조회, <span class="mono">expectedActivateOn</span> 포함, 공개) · <span class="mono">GET /legal-documents/active</span>(활성 배치·content 포함·<span class="mono">?types=</span> slug 필터, 온보딩 1회 왕복 주력 조회) · <span class="mono">POST</span>(초안) · <span class="mono">PUT /legal-documents/:id</span>(초안 확정/<span class="mono">expectedActivateOn</span> 설정 — <b>즉시 ACTIVE 전이 아님</b>, 관리자 authz — 백오피스 미구현이라 후속/최소 인증). 실제 DRAFT→ACTIVE 전이는 <a href="../issue/step1.html#S1-18">S1-18</a> 활성화 API가 담당 <small>— <a href="../issue/step1.html#S1-16">S1-16</a></small></div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>법적 문서 예약 활성화 트리거 API</b> — 외부 호출 API(<span class="mono">POST /legal-documents/activate-due</span> 등)가 <span class="mono">expectedActivateOn</span> 지난 DRAFT를 ACTIVE로, 직전 ACTIVE는 ARCHIVED로 전이(type별 ACTIVE 1개 유지), 멱등. <b>내부 스케줄러·BullMQ 미사용</b> <small>— <a href="../issue/step1.html#S1-18">S1-18</a></small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>LegalDocument 엔티티 + 리포지토리 + seed</b> — TypeORM 엔티티(content text·<span class="mono">expectedActivateOn</span> CalendarDate)·<span class="mono">entities.ts</span> 등록·<span class="mono">synchronize</span> 스키마 생성·<span class="mono">UNIQUE(type,version)</span>·초기 seed 데이터(TERMS·PRIVACY·LOCATION·MARKETING 4종 v1.0 ACTIVE, DB 직접 주입)·리포지토리(generic <span class="mono">find</span>에 조건/범위 파라미터로 활성·버전·due 조회 표현)·도메인 메서드 <span class="mono">activate()</span>(DRAFT→ACTIVE)/<span class="mono">archive()</span>(ACTIVE→ARCHIVED) 전부 실측 완료. 둘을 묶는 원자적 오케스트레이션은 <a href="../../backoffice/issue/step1.html#BO1-6">BO1-6(백오피스)</a>가 담당 <small>— <a href="../issue/step1.html#S1-15">S1-15</a></small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>법적 문서 조회 API — list + retrieve</b>로 통일: <span class="mono">GET /legal-documents</span>(list, <span class="mono">?types=</span> 필터 + 페이지네이션)가 활성 목록을 <span class="mono">{data:{items,total}}</span>(list 컨벤션)로, <span class="mono">GET /legal-documents/:id</span>(retrieve)가 단건 상세(content·<span class="mono">expectedActivateOn</span>)를 <span class="mono">{data}</span>로 반환. 온보딩은 list로 활성 문서·<span class="mono">legalDocumentId</span> 수집, 뷰어는 retrieve로 전문 로드. 인증 사용자(<span class="mono">UserGuard</span>) 조회. <span class="mono">POST</span>/<span class="mono">PUT /legal-documents/:id</span>는 사용자 컨트롤러에 없어 백오피스로 재스코프(정상). 실제 DRAFT→ACTIVE 전이는 <a href="../../backoffice/issue/step1.html#BO1-6">BO1-6(백오피스)</a> 활성화 API가 담당 <small>build 통과 실측 — <a href="../issue/step1.html#S1-16">S1-16</a></small></div></div>
+    <div class="task"><div class="box scope"></div><div class="k"><span class="stag scope">이전됨</span><b>법적 문서 예약 활성화 트리거 API</b> — 백오피스 <a href="../../backoffice/issue/step1.html#BO1-6">BO1-6</a>로 이전(관리자 호출 + role-RBAC, 내부 스케줄러·BullMQ 미사용 유지) <small>원 태스크 — <a href="../issue/step1.html#S1-18">S1-18</a></small></div></div>
   </div>
 
   <div class="group card">
@@ -53,16 +66,16 @@
     <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>api_client</b> — 401 시 refresh 회전 + single-flight + 재시도 후 요청 재개(TokenStore·Env·AppException·ApiResponse 포함) <small>실 E2E 왕복은 백엔드 S1-5 확정 후 잔여 확인</small></div></div>
     <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>session/AuthGate</b> — 부팅 시 로그인/온보딩미완/홈 3분기, 재실행 시 세션 유지 홈 직행, 로그아웃 시 토큰 삭제+스택 초기화 <small>S1-8, code-reviewer 실측: flutter analyze 무이슈 + 38/38 테스트 통과. 온보딩완료 판정 로컬 플래그 placeholder는 <a href="../issue/step1.html#S1-10">S1-10</a>에서 서버 <span class="mono">onboardedOn</span> 기준으로 교체</small></div></div>
     <div class="task"><div class="box"></div><div class="k"><b>소셜 로그인 SDK</b> — google_sign_in / sign_in_with_apple / kakao (iOS 네이티브 클라이언트 주의)</div></div>
-    <div class="task"><div class="box"></div><div class="k"><span class="stag defer">재검증</span>로그인 화면 실동작, <b>온보딩 저장</b>(닉네임 중복확인·레벨·약관동의 → <span class="mono">PUT /users/onboard</span>에 동의도 함께 전송) — 성공 시 <span class="mono">onboardedOn</span> 설정·홈 진입, 재실행 시 서버 판정으로 반복 안 함(로직 자체는 유효). consents 전송이 <span class="mono">documentVersion</span> → <a href="../issue/step1.html#S1-17">S1-17</a>에서 fetch한 <span class="mono">legalDocumentId</span>로 바뀌어 재검증 필요 <small>S1-10, code-reviewer 실측(레거시 기준): flutter analyze 무이슈 + 54/54 테스트 통과</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span>로그인 화면 실동작, <b>온보딩 저장</b>(닉네임 중복확인·레벨·약관동의 → <span class="mono">PUT /users/onboard</span>에 동의도 함께 전송) — 성공 시 <span class="mono">onboardedOn</span> 설정·홈 진입, 재실행 시 서버 판정으로 반복 안 함. consents 전송이 <span class="mono">documentVersion</span> → <a href="../issue/step1.html#S1-17">S1-17</a>에서 fetch한 활성 문서 <span class="mono">legalDocumentId</span> 전송으로 전환 완료 — 백엔드 DTO와 정확 일치 확인 <small>S1-10, code-reviewer 실측: flutter analyze 무이슈 + 61/61 테스트 통과</small></div></div>
     <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>프로필 실데이터 표시</b> — <span class="mono">meProvider</span>(<span class="mono">GET /users/me</span>)로 아바타·닉네임·레벨·티어 표시, 하드코딩 제거 + 로딩 스켈레톤·에러 재시도 <small>S1-13, code-reviewer 실측: flutter analyze 무이슈, 테스트 +27. 포인트·전체 랭킹은 목업 유지(Points 컨텍스트 미구현)</small></div></div>
     <div class="task"><div class="box"></div><div class="k">권한 요청 플로우(위치) 연결 — 실제 권한 요청은 Step 3에서 사용</div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>문서 하드코딩 제거 → 활성 문서 API 연동</b> — <span class="mono">TermsDocScreen</span>이 <span class="mono">GET /legal-documents</span> 활성 문서(title·version·<span class="mono">expectedActivateOn</span>·content)를 렌더, placeholder 문안 제거, 동의 시 fetch한 활성 문서의 <span class="mono">legalDocumentId</span> 기록(version이 아닌 id 전송) <small>— <a href="../issue/step1.html#S1-17">S1-17</a></small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>문서 하드코딩 제거 → 활성 문서 API 연동</b> — <span class="mono">TermsDocScreen</span>이 <span class="mono">GET /legal-documents</span> 활성 문서(title·version·<span class="mono">expectedActivateOn</span>·content)를 렌더, placeholder 문안 제거, 동의 시 fetch한 활성 문서의 <span class="mono">legalDocumentId</span> 기록(version이 아닌 id 전송) <small>code-reviewer 실측: flutter analyze 무이슈 + 61 테스트 통과 — <a href="../issue/step1.html#S1-17">S1-17</a></small></div></div>
   </div>
 
   <div class="group card">
     <div class="gh"><span class="badge design">DESIGN</span> 법적/동의</div>
     <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>온보딩 약관 동의 단계</b> + 약관/개인정보/위치 문서 뷰어 화면(앱 내 열림) <small>mock 구현(로컬 setState), code-reviewer 실측: flutter analyze 무이슈 + 33/33 테스트 통과</small></div></div>
-    <div class="task"><div class="box"></div><div class="k"><span class="stag todo">남음</span><b>이용약관·개인정보처리방침 실제 문안</b> — 현재 placeholder(시행일 2026-00-00), 법무 검토 필요 <small>하드코딩 제거 자체는 <a href="../issue/step1.html#S1-15">S1-15</a>·<a href="../issue/step1.html#S1-17">S1-17</a>로 해소, 개인정보처리방침 별도 문서화는 <span class="mono">PRIVACY_NOTICE</span> type으로 <a href="../issue/step1.html#S1-14">S1-14</a> 도메인 설계에 반영됨</small></div></div>
+    <div class="task"><div class="box"></div><div class="k"><span class="stag todo">남음</span><b>이용약관·개인정보처리방침 실제 문안</b> — 현재 placeholder(시행일 2026-00-00), 법무 검토 필요 <small>하드코딩 제거 자체는 <a href="../issue/step1.html#S1-15">S1-15</a>·<a href="../issue/step1.html#S1-17">S1-17</a> 연동 완료로 해소 확인</small></div></div>
     <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>위치정보 이용동의</b>(위치정보법 필수) 온보딩 동의 단계 반영(mock) <small>동의 서버 기록(<span class="mono">UserConsent</span>: type·<span class="mono">legalDocumentId</span>·documentVersion·agreedOn)은 온보딩 <span class="mono">PUT /users/onboard</span>에서 구현됐고, <span class="mono">legalDocumentId</span> 반영은 <a href="../issue/step1.html#S1-6">S1-6</a> 재검증 중</small></div></div>
     <div class="task"><div class="box"></div><div class="k">소셜 개발자 콘솔 앱 등록(카카오·구글 GCP·Apple) — 키/클라이언트 ID 발급 <small>리드타임 있음, 미리</small></div></div>
     <div class="task"><div class="box"></div><div class="k"><b>법적 문서 버전관리 도메인 설계</b> — 신규 "Legal &amp; Compliance" 컨텍스트(7→8) + <span class="mono">LegalDocument</span> 엔티티(<span class="mono">expectedActivateOn</span>)·불변식(<span class="mono">UNIQUE(type,version)</span>+type별 ACTIVE 1개, 활성화는 외부 호출 API 전담)·<span class="mono">UserConsent.legalDocumentId</span>(논리 FK) 참조 관계를 도메인 문서에 반영 <small>— <a href="../issue/step1.html#S1-14">S1-14</a></small></div></div>

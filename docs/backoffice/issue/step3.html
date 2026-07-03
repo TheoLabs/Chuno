@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BO Step 3 이슈 · 모더레이션 · 신고 · 파일 — 추노 백오피스</title>
+<link rel="stylesheet" href="../mvp/style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary>사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../product/issue/index.html">이슈</a>
+      <a href="../../product/mvp/index.html">MVP</a>
+      <a href="../../product/wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary class="on">백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html" class="on">이슈</a>
+      <a href="../mvp/index.html">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+</div></nav>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">백오피스 이슈</a><span class="sep">/</span>BO Step 3<span class="sep">·</span><a href="../mvp/step3.html">BO MVP Step 3</a></div>
+  <h1><b>BO Step 3</b> · 모더레이션 · 신고 · 파일</h1>
+  <p class="lead">신고 접수·처리 큐와 부적절 파일 정리. 신고 도메인 신설 여부는 열린 질문. (총 4 이슈, 전부 미착수)</p>
+  <div class="boardnote">
+    <a class="linkbtn" href="../mvp/step3.html">📋 <b>BO MVP Step 3</b></a>
+    <a class="linkbtn" href="index.html">← 백오피스 이슈</a>
+  </div>
+
+  <div class="issue design" id="BO3-1">
+    <div class="ihead"><span class="iid">BO3-1</span><span class="ititle">신고 · 모더레이션 도메인 신설 여부 결정/설계</span><span class="badge design">DESIGN</span><span class="pill">S</span></div>
+    <div class="idesc">Report 엔티티를 신설할지, MVP 이후로 보류할지부터 결정한다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">Report</span> 엔티티 신설 여부 — <span class="stag scope">열린 질문</span></span></li>
+      <li><span class="box"></span><span>대상 타입·사유·상태(OPEN·RESOLVED)</span></li>
+      <li><span class="box"></span><span>사용자단 신고 접수 진입점 필요 여부</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 신고 도메인 설계안 또는 "MVP 이후 보류" 결론이 문서화된다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-1</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#model">📦 도메인 모델</a><a href="../mvp/step3.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO3-2">
+    <div class="ihead"><span class="iid">BO3-2</span><span class="ititle">신고 접수 + 관리자 신고 큐/처리 API</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
+    <div class="idesc">사용자 신고를 접수받아 관리자 큐에서 처리하고, 필요 시 제재로 연계한다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span>(필요시) 사용자 <span class="mono">POST /reports</span></span></li>
+      <li><span class="box"></span><span><span class="mono">GET /api/admins/reports</span> 큐</span></li>
+      <li><span class="box"></span><span><span class="mono">PUT /api/admins/reports/:id/resolve</span></span></li>
+      <li><span class="box"></span><span>처리 시 제재(<a href="step2.html#BO2-3">BO2-3</a>) 연계</span></li>
+      <li><span class="box"></span><span>감사 기록</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 신고 접수 → 관리자 처리 → (선택) 제재 연계가 동작한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO3-1, BO1-3, BO2-3</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#model">📦 도메인 모델</a><a href="../mvp/step3.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue" id="BO3-3">
+    <div class="ihead"><span class="iid">BO3-3</span><span class="ititle">파일 / 미디어 모더레이션 API</span><span class="badge be">BACKEND</span><span class="pill">S</span></div>
+    <div class="idesc">부적절한 업로드 파일을 관리자가 조회·삭제한다.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">GET /api/admins/files</span></span></li>
+      <li><span class="box"></span><span><span class="mono">DELETE /api/admins/files/:id</span>(참조정리)</span></li>
+      <li><span class="box"></span><span>OPERATOR 이상 role</span></li>
+      <li><span class="box"></span><span>감사 기록</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 부적절 파일을 조회·삭제할 수 있다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO1-3 <small>(File 업로드 구현 후속)</small></span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-file">📦 File</a><a href="../mvp/step3.html">🗺️ MVP</a></div>
+  </div>
+
+  <div class="issue app" id="BO3-4">
+    <div class="ihead"><span class="iid">BO3-4</span><span class="ititle">모더레이션 큐 화면</span><span class="badge app">UI</span><span class="pill">S</span></div>
+    <div class="idesc">신고/파일 모더레이션 큐를 처리하는 관리자 화면.</div>
+    <ul class="isub">
+      <li><span class="box"></span><span><span class="mono">#admin-moderation</span> 큐 화면</span></li>
+    </ul>
+    <div class="iaccept"><b>완료</b> — 모더레이션 큐 처리 플로우 화면이 존재한다.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> BO3-2</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#admin-moderation">🎨 admin-moderation</a><a href="../mvp/step3.html">🗺️ MVP</a></div>
+  </div>
+
+</div>
+</body>
+</html>

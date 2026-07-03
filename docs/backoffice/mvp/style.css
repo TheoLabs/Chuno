@@ -110,3 +110,14 @@ h2 .em{font-family:var(--mono); font-size:11px; color:var(--muted); font-weight:
 .sitenav a{color:#aeb4bc; transition:.12s;}
 .sitenav a:hover{background:var(--panel2); color:var(--text);}
 .sitenav span.on{background:color-mix(in srgb,var(--coral) 16%,transparent); color:var(--coral); font-weight:700; cursor:default;}
+
+.sitenav details.navmenu{position:relative; display:inline-block;}
+.sitenav details.navmenu summary{list-style:none; cursor:pointer; font-size:12.5px; padding:6px 12px; border-radius:8px; color:#aeb4bc; white-space:nowrap; transition:.12s;}
+.sitenav details.navmenu summary::-webkit-details-marker{display:none;}
+.sitenav details.navmenu summary:hover,
+.sitenav details.navmenu[open] summary{background:var(--panel2); color:var(--text);}
+.sitenav details.navmenu summary.on{background:color-mix(in srgb,var(--coral) 16%,transparent); color:var(--coral); font-weight:700;}
+.sitenav .navmenu-pop{position:absolute; top:calc(100% + 4px); left:0; z-index:120; display:flex; flex-direction:column; min-width:130px; padding:4px; gap:2px; background:var(--panel2); border:1px solid var(--line); border-radius:10px; box-shadow:0 10px 28px rgba(0,0,0,.55);}
+.sitenav .navmenu-pop a{display:block; font-size:12.5px; padding:6px 12px; border-radius:6px; color:#aeb4bc; white-space:nowrap; transition:.12s;}
+.sitenav .navmenu-pop a:hover{background:#111318; color:var(--text);}
+.sitenav .navmenu-pop a.on{background:color-mix(in srgb,var(--coral) 16%,transparent); color:var(--coral); font-weight:700;}

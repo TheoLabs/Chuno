@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BO Step 2 · 사용자 관리 · 제재 — 추노 백오피스 MVP</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<nav class="sitenav"><div class="inner">
+  <span class="sn-brand">추노 <b>docs</b></span>
+  <a href="../../README.md">개요</a>
+  <a href="../../domain/index.html">도메인</a>
+  <details class="navmenu">
+    <summary>사용자 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../../product/issue/index.html">이슈</a>
+      <a href="../../product/mvp/index.html">MVP</a>
+      <a href="../../product/wireframes/index.html">화면</a>
+    </div>
+  </details>
+  <details class="navmenu">
+    <summary class="on">백오피스 ▾</summary>
+    <div class="navmenu-pop">
+      <a href="../issue/index.html">이슈</a>
+      <a href="../mvp/index.html" class="on">MVP</a>
+      <a href="../wireframes/index.html">화면</a>
+    </div>
+  </details>
+</div></nav>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">백오피스 MVP 로드맵</a><span class="sep">/</span>BO Step 2</div>
+  <h1><b>BO Step 2</b> · 사용자 관리 · 제재</h1>
+  <p class="lead">관리자가 사용자를 조회·검색하고, 위반 시 제재해 세션까지 즉시 무효화한다.</p>
+
+  <div class="callout"><b>목표</b> — 관리자가 사용자를 검색해 제재를 적용하면 해당 유저의 로그인·소켓·공개 노출이 즉시 차단된다.</div>
+
+  <p style="margin:-6px 0 18px;"><a href="../issue/step2.html" style="color:var(--coral); font-weight:600; font-size:13px;">🎫 이 스텝의 상세 이슈 (5) →</a></p>
+
+  <div class="dep"><b>선행:</b> BO Step 1</div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge design">DESIGN</span> 제재 도메인</div>
+    <div class="task"><div class="box"></div><div class="k"><b>제재(Sanction) 도메인 설계</b> — User.status vs 별도 UserSanction 이력 엔티티 결정, 사유·기간·해제 — <a href="../issue/step2.html#BO2-1">BO2-1</a> <small>열린 질문</small></div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge be">BACKEND</span> 사용자 조회 · 제재</div>
+    <div class="task"><div class="box"></div><div class="k"><b>관리자 사용자 조회/검색 API</b> — <span class="mono">GET /api/admins/users</span>(필터·페이지네이션) · <span class="mono">GET /:id</span>(consents·authIdentity·통계), SUPPORT 이상 — <a href="../issue/step2.html#BO2-2">BO2-2</a></div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>사용자 제재 API + 강제 세션폐기</b> — <span class="mono">PUT /:id/sanction·/unsanction</span>, refresh family 전체 무효화, OPERATOR 이상 — <a href="../issue/step2.html#BO2-3">BO2-3</a></div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>제재 반영 크로스컷</b> — social-login/refresh 거부, 소켓 핸드셰이크 거부, 공개 GET active-only <small>회귀 주의: S1-4/S1-5/S1-6·S2-4</small> — <a href="../issue/step2.html#BO2-4">BO2-4</a></div></div>
+  </div>
+
+  <div class="group card">
+    <div class="gh"><span class="badge app">UI</span> 백오피스 프론트</div>
+    <div class="task"><div class="box"></div><div class="k">사용자 목록·상세·제재 화면(<span class="mono">#admin-users</span>·<span class="mono">#admin-user-detail</span>) — <a href="../issue/step2.html#BO2-5">BO2-5</a> <small>needsWireframe: true</small></div></div>
+  </div>
+
+  <div class="done-when"><b>완료 기준</b> — 관리자가 사용자를 검색해 제재를 적용하면 즉시 세션이 폐기되고, 로그인·소켓·공개 노출 어디서도 제재 유저가 통과되지 않는다.</div>
+
+  <div class="nav">
+    <a href="step1.html"><span class="lbl">이전</span>← BO Step 1</a>
+    <a class="next" href="step3.html"><span class="lbl">다음</span>BO Step 3 · 모더레이션 →</a>
+  </div>
+</div>
+</body>
+</html>
