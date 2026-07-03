@@ -3,8 +3,9 @@ import { CalendarDate } from '@libs/types';
 import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { AuthIdentity, AuthProvider } from './auth-identity.entity';
 import { today } from '@libs/date';
-import { UserConsent, UserConsentCtor, UserConsentType } from './user-consent.entity';
+import { UserConsent, UserConsentCtor } from './user-consent.entity';
 import { BadRequestException, ConflictException } from '@nestjs/common';
+import { LegalDocument, LegalDocumentStatus } from '@modules/legal-document/domain/legal-document.entity';
 
 export enum RunnerLevel {
   BEGINNER = 'beginner',
@@ -103,19 +104,29 @@ export class User extends DddAggregate {
     this.consents.push(consent);
   }
 
-  onboard({ nickname, level, consents }: { nickname: string; level: RunnerLevel; consents: UserConsentCtor[] }) {
+  onboard({
+    nickname,
+    level,
+    legalDocuments,
+  }: {
+    nickname: string;
+    level: RunnerLevel;
+    legalDocuments: LegalDocument[];
+  }) {
+    if (!legalDocuments.every((legalDocument) => legalDocument.status === LegalDocumentStatus.ACTIVE)) {
+      throw new BadRequestException('모든 약관은 유효해야 합니다.', {
+        description: '모든 약관은 유효해야 합니다.',
+      });
+    }
+
     if (this.onboardedOn) {
       throw new ConflictException('이미 온보딩된 유저입니다.', { description: '이미 설정이 완료되었습니다.' });
     }
 
-    const requiredConsents = [
-      UserConsentType.SERVICE_TERM,
-      UserConsentType.PRIVACY_POLICY,
-      UserConsentType.LOCATION_SERVICE,
-    ];
+    const requiredLegalDocumentTypes = LegalDocument.getRequiredLegalDocumentTypes();
 
-    const provided = new Set(consents.map((c) => c.type));
-    const missing = requiredConsents.filter((t) => !provided.has(t));
+    const provided = new Set(legalDocuments.map((c) => c.type));
+    const missing = requiredLegalDocumentTypes.filter((t) => !provided.has(t));
     if (missing.length > 0) {
       throw new BadRequestException(`필수 동의 누락: ${missing.join(', ')}`, {
         description: '필수 동의 항목이 체크해야합니다.',
@@ -126,6 +137,12 @@ export class User extends DddAggregate {
     this.level = level;
     this.onboardedOn = today('YYYY-MM-DD HH:mm:ss');
 
-    consents.forEach((consent) => this.addConsent(consent));
+    legalDocuments.forEach((legalDocument) =>
+      this.addConsent({
+        legalDocumentId: legalDocument.id,
+        type: legalDocument.type,
+        documentVersion: legalDocument.version,
+      })
+    );
   }
 }

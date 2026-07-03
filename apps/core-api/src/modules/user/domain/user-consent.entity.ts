@@ -3,16 +3,11 @@ import { CalendarDate } from '@libs/types';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from './user.entity';
 import { today } from '@libs/date';
-
-export enum UserConsentType {
-  LOCATION_SERVICE = 'location',
-  SERVICE_TERM = 'terms',
-  PRIVACY_POLICY = 'privacy',
-  MARKETING = 'marketing',
-}
+import { LegalDocumentType } from '@modules/legal-document/domain/legal-document.entity';
 
 export type UserConsentCtor = {
-  type: UserConsentType;
+  legalDocumentId: number;
+  type: LegalDocumentType;
   documentVersion: string;
 };
 
@@ -24,8 +19,11 @@ export class UserConsent extends DddBaseAggregate {
   @Column()
   userId: number;
 
-  @Column({ type: 'enum', enum: UserConsentType })
-  type: UserConsentType;
+  @Column()
+  legalDocumentId: number;
+
+  @Column()
+  type: LegalDocumentType;
 
   @Column()
   documentVersion: string;
@@ -44,6 +42,7 @@ export class UserConsent extends DddBaseAggregate {
     super();
 
     if (args) {
+      this.legalDocumentId = args.legalDocumentId;
       this.type = args.type;
       this.documentVersion = args.documentVersion;
       this.agreedOn = today('YYYY-MM-DD HH:mm:ss');

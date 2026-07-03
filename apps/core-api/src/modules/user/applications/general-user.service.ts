@@ -3,11 +3,14 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { UserRepository } from '../infrastructure/user.repository';
 import { Transactional } from '@libs/decorators';
 import { RunnerLevel, User } from '../domain/user.entity';
-import { UserConsentType } from '../domain/user-consent.entity';
+import { LegalDocumentRepository } from '@modules/legal-document/infrastructure/legal-document.repository';
 
 @Injectable()
 export class GeneralUserService extends DddService {
-  constructor(private readonly userRepository: UserRepository) {
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly legalDocumentRepository: LegalDocumentRepository
+  ) {
     super();
   }
 
@@ -22,12 +25,12 @@ export class GeneralUserService extends DddService {
     user,
     nickname,
     level,
-    consents,
+    legalDocumentIds,
   }: {
     user: User;
     nickname: string;
     level: RunnerLevel;
-    consents: { type: UserConsentType; documentVersion: string }[];
+    legalDocumentIds: number[];
   }) {
     // NOTE: 이미 가드를 지나쳐온 User와 동일하므로 존재 유무 검증은 필요없음.
     const [userWithConsents] = await this.userRepository.find({ id: user.id }, { relations: { consents: true } });
@@ -38,7 +41,9 @@ export class GeneralUserService extends DddService {
       throw new BadRequestException('중복된 닉네임입니다.', { description: '중복된 닉네임입니다.' });
     }
 
-    userWithConsents.onboard({ nickname, level, consents });
+    const legalDocuments = await this.legalDocumentRepository.find({ ids: legalDocumentIds });
+
+    userWithConsents.onboard({ nickname, level, legalDocuments });
 
     await this.userRepository.save([userWithConsents]);
   }
