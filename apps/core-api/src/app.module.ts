@@ -27,6 +27,6 @@ import { ExceptionFilter } from '@libs/filters';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(ContextMiddleware, UUIDMiddleware).forRoutes('*');
+    consumer.apply(ContextMiddleware, UUIDMiddleware).forRoutes('{*path}');
   }
 }
