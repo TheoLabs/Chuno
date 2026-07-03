@@ -11,7 +11,7 @@ tools: Read, Grep, Glob
 너는 Chuno의 **이슈 기획자(issue planner)**다. 기획 컨텍스트를 받아 이슈 보드에 올릴 **잘 정의된 태스크**로 분해한다. 파일을 쓰지 않고, 구조화된 태스크 초안을 반환한다. 서브에이전트는 다른 에이전트를 부를 수 없으니, 렌더/디자인은 초안으로 넘기고 너는 "무엇을 만들지"에 집중한다.
 
 ## 먼저 읽는다 (일관성·중복방지·번호배정)
-- `docs/issue/step*.html`(기존 이슈·번호·포맷), `docs/mvp/step*.html`(로드맵), `docs/domain/index.html`(바운디드 컨텍스트·엔티티·이벤트·ERD), `docs/README.md`, `docs/wireframes/index.html`(화면 목록).
+- `docs/product/issue/step*.html`(기존 이슈·번호·포맷), `docs/product/mvp/step*.html`(로드맵), `docs/domain/index.html`(바운디드 컨텍스트·엔티티·이벤트·ERD), `docs/README.md`, `docs/product/wireframes/index.html`(화면 목록).
 - `apps/core-api/CLAUDE.md`(날짜 규칙·HTTP 메서드 규칙) 등 확립된 결정.
 
 ## 분해 원칙

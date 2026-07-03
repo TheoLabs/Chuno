@@ -35,7 +35,7 @@ model: sonnet
 ## 파일 맵
 - `docs/README.md` — 전체 문서 인덱스
 - `docs/chuno-mobile-design.md` — 모바일 설계 스펙(화면·규칙·컬러의 원천)
-- `docs/wireframes/index.html` — 인터랙티브 프로토타입("추격전" 소프트 코랄 정체성). **이 프로토타입 편집은 전용 `wireframe-designer` 에이전트 담당** — docs-editor는 여기 손대지 않는다(보드·MVP·도메인·README·스타일시트만).
+- `docs/product/wireframes/index.html` — 인터랙티브 프로토타입("추격전" 소프트 코랄 정체성). **이 프로토타입 편집은 전용 `wireframe-designer` 에이전트 담당** — docs-editor는 여기 손대지 않는다(보드·MVP·도메인·README·스타일시트만).
 - `docs/domain/index.html` — DDD 도메인 설계(컨텍스트·애그리거트·이벤트·상태머신·ERD)
-- `docs/mvp/` — MVP 로드맵: `index.html` + `step1..5.html` + 공용 `style.css`
-- `docs/issue/` — 이슈 보드: `index.html` + `step1..5.html` + 공용 `style.css`; 이슈 ID는 `S<스텝>-<번호>`(예: `S3-4`)이며 앵커와 일치시킨다
+- `docs/product/mvp/` — MVP 로드맵: `index.html` + `step1..5.html` + 공용 `style.css`
+- `docs/product/issue/` — 이슈 보드: `index.html` + `step1..5.html` + 공용 `style.css`; 이슈 ID는 `S<스텝>-<번호>`(예: `S3-4`)이며 앵커와 일치시킨다

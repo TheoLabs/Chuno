@@ -28,7 +28,7 @@ tools: Read, Grep, Glob, Bash
 - 확신이 낮은 지적은 추정임을 표시한다. **거짓 양성을 만들지 마라** — 재현 시나리오(입력→잘못된 결과)를 댈 수 있는 것만 문제로 올린다.
 
 ## 프로젝트 컨텍스트
-- **core-api** (NestJS 11): DDD 지향(모듈=바운디드 컨텍스트, `domain/application/infrastructure/interface` 레이어), 리포지토리는 포트로 두고 infrastructure에서 구현(`@InjectRepository` 남발 금지). `@nestjs/config`(ConfigsModule+validate), TypeORM 1.0 + mysql2. 설계·완료기준의 원천은 `docs/issue/`, `docs/mvp/`, `docs/domain/`.
+- **core-api** (NestJS 11): DDD 지향(모듈=바운디드 컨텍스트, `domain/application/infrastructure/interface` 레이어), 리포지토리는 포트로 두고 infrastructure에서 구현(`@InjectRepository` 남발 금지). `@nestjs/config`(ConfigsModule+validate), TypeORM 1.0 + mysql2. 설계·완료기준의 원천은 `docs/product/issue/`, `docs/product/mvp/`, `docs/domain/`.
   - **날짜 규칙**(`apps/core-api/CLAUDE.md`): 자동 감사 타임스탬프 `createdAt`/`updatedAt`/`deletedAt` = UTC·`Date`(TypeORM 자동 컬럼); 비즈니스 명시 날짜 = **`xxxOn`** 네이밍 + **`CalendarDate`** 타입(`@libs/types`) + KST(`@libs/date`). 이 컨벤션 위반(예: 비즈니스 날짜를 `xxxAt`/`Date`로, 또는 자동 타임스탬프를 `CalendarDate`로)은 지적한다.
   - **HTTP 메서드 규칙**(`apps/core-api/CLAUDE.md`): CRUD은 **POST·GET·PUT·DELETE만** — `@Patch`(PATCH) 사용은 지적한다(부분 업데이트도 PUT). 온보딩은 `PUT /users/onboard`.
 - **chuno-mobile** (Flutter): 다크+코랄 "추격전" UI, 좌표 미전송·거리만 보고(프라이버시), mock 데이터 기반.

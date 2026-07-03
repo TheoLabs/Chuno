@@ -18,8 +18,8 @@ allowed-tools: Read, Grep, Glob, Task
 - **승인 전에는 보드/문서/와이어프레임을 절대 건드리지 않는다.** 조정 요청은 반영해 다시 제시한다.
 
 ## 3) 반영 (승인 후에만)
-- **docs-editor**(subagent_type: `docs-editor`)에 위임: 확정 태스크를 `docs/issue/step*.html`(이슈 카드) + `docs/mvp/step*.html`(로드맵 행) + `docs/issue/index.html`(보드 행)에 기존 스타일로 렌더. **관련 도메인/와이어프레임으로의 크로스링크**와 이슈 카운트를 갱신. 새 스키마/도메인 개념이 생기면 `docs/domain/index.html`(카드·매핑·ERD)도.
-- **디자인 필요(needsWireframe) 태스크**: **wireframe-designer**(subagent_type: `wireframe-designer`)에 위임해 `docs/wireframes/index.html`에 화면·플로우를 추가하고, 이슈↔와이어프레임 화면 크로스링크를 맞춘다.
+- **docs-editor**(subagent_type: `docs-editor`)에 위임: 확정 태스크를 `docs/product/issue/step*.html`(이슈 카드) + `docs/product/mvp/step*.html`(로드맵 행) + `docs/product/issue/index.html`(보드 행)에 기존 스타일로 렌더. **관련 도메인/와이어프레임으로의 크로스링크**와 이슈 카운트를 갱신. 새 스키마/도메인 개념이 생기면 `docs/domain/index.html`(카드·매핑·ERD)도.
+- **디자인 필요(needsWireframe) 태스크**: **wireframe-designer**(subagent_type: `wireframe-designer`)에 위임해 `docs/product/wireframes/index.html`에 화면·플로우를 추가하고, 이슈↔와이어프레임 화면 크로스링크를 맞춘다.
 - docs-editor(보드/mvp/도메인)와 wireframe-designer(와이어프레임)는 **다른 파일**이라 병렬 가능하나, 겹칠 소지가 있으면 순차로 실행해 충돌을 피한다.
 
 ## 4) 요약

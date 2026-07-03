@@ -12,8 +12,8 @@ allowed-tools: Read, Grep, Glob, Bash, Task
 docs 수정은 반드시 `docs-editor` 서브에이전트에 위임한다 — **docs 파일을 직접 편집하지 마라.**
 
 ## 1) 태스크 스펙 파악
-- `docs/issue/step*.html`에서 `$ARGUMENTS` 이슈 블록(예 `#S1-1`)을 찾아 **체크리스트 항목과 "완료 —" 기준**을 읽는다.
-- 대응하는 `docs/mvp/step*.html`의 해당 항목도 확인한다.
+- `docs/product/issue/step*.html`에서 `$ARGUMENTS` 이슈 블록(예 `#S1-1`)을 찾아 **체크리스트 항목과 "완료 —" 기준**을 읽는다.
+- 대응하는 `docs/product/mvp/step*.html`의 해당 항목도 확인한다.
 - 태스크 성격에 따라 대상 코드/문서를 정한다: BACKEND→`apps/core-api`, APP→`apps/chuno-mobile`, DESIGN/OPS→관련 문서·설정.
 
 ## 2) 코드 리뷰·검증 (code-reviewer 에이전트에 위임)
@@ -39,9 +39,9 @@ docs 수정은 반드시 `docs-editor` 서브에이전트에 위임한다 — **
 
 ## 5) docs 최신화 (검증된 상태 반영 — 부분 완료 포함)
 - `docs-editor` 서브에이전트(subagent_type: `docs-editor`)에 위임하여, 4)의 상태 분류를 반영해 최신화한다:
-  - `docs/issue/step*.html`의 해당 이슈 — 항목별 **완료/남음/이월/스코프외** 상태 태그를 정확히 반영하고, 완료 기준(`.iaccept`) 문구도 현재 상태에 맞춘다.
-  - `docs/mvp/step*.html`의 해당 항목.
-  - `docs/issue/index.html`(이슈 보드) — 해당 이슈 행의 **완료 태그 유무를 전체 판정에 맞춰 판단·수정**한다(통과→완료 태그 부여, 부분/미완→완료 태그 제거 또는 부분 표기). 보드가 실제 상태와 어긋나지 않게.
+  - `docs/product/issue/step*.html`의 해당 이슈 — 항목별 **완료/남음/이월/스코프외** 상태 태그를 정확히 반영하고, 완료 기준(`.iaccept`) 문구도 현재 상태에 맞춘다.
+  - `docs/product/mvp/step*.html`의 해당 항목.
+  - `docs/product/issue/index.html`(이슈 보드) — 해당 이슈 행의 **완료 태그 유무를 전체 판정에 맞춰 판단·수정**한다(통과→완료 태그 부여, 부분/미완→완료 태그 제거 또는 부분 표기). 보드가 실제 상태와 어긋나지 않게.
   - 스키마/도메인이 바뀌었다면 `docs/domain/index.html`(엔티티 카드·매핑 표·ERD)도.
 - docs-editor에는 **각 항목의 상태와 근거(확인된 실제 구현 사실)**, 이월 대상, 스코프 제외 사유를 구체적으로 전달하고, 기존 **다크+코랄 스타일·자체완결·상호링크** 규칙 유지를 지시한다.
 - 완료 후 무엇을 어떤 상태로 갱신했는지 요약한다.

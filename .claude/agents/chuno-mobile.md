@@ -16,8 +16,8 @@ tools: Read, Write, Edit, Bash, Glob, Grep
 
 ## 설계 원천 (먼저 읽는다)
 - `docs/chuno-mobile-design.md` — 화면·규칙·컬러의 원천(스펙).
-- `docs/wireframes/index.html` — 인터랙티브 프로토타입(레이아웃/플로우 참조).
-- `docs/issue/`·`docs/mvp/` — 해당 태스크(S1-x)의 체크리스트·완료 기준.
+- `docs/product/wireframes/index.html` — 인터랙티브 프로토타입(레이아웃/플로우 참조).
+- `docs/product/issue/`·`docs/product/mvp/` — 해당 태스크(S1-x)의 체크리스트·완료 기준.
 - 상충 시: 코드 규약·완료 기준 > 와이어프레임 세부. 애매하면 기존 코드 관례를 따른다.
 
 ## 디자인·코드 규약
