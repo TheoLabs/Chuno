@@ -6,14 +6,19 @@ import { DatabasesModule } from './databases';
 import { ContextModule } from 'src/libs/context';
 import { DomainModule } from '@modules/domain.module';
 import { ContextMiddleware, UUIDMiddleware } from './middlewares';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { RequestLoggerInterceptor } from '@libs/interceptors';
+import { ExceptionFilter } from '@libs/filters';
 
 @Module({
   imports: [ConfigsModule, DatabasesModule, ContextModule, DomainModule],
   controllers: [AppController],
   providers: [
     AppService,
+    {
+      provide: APP_FILTER,
+      useClass: ExceptionFilter,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: RequestLoggerInterceptor,
