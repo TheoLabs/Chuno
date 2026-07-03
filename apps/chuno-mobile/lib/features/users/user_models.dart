@@ -43,20 +43,6 @@ enum RunnerTier {
   }
 }
 
-/// 약관 동의 항목. 서버 `PUT /users/onboard` 의 consents[] 요소.
-///
-/// [type] ∈ terms|privacy|location|marketing (필수: terms/privacy/location).
-class Consent {
-  final String type;
-  final String documentVersion;
-  const Consent({required this.type, required this.documentVersion});
-
-  Map<String, dynamic> toJson() => {
-        'type': type,
-        'documentVersion': documentVersion,
-      };
-}
-
 /// `GET /users/me` 응답의 사용자 프로필. [onboardedOn] 이 null 이면 온보딩 미완.
 class MeModel {
   final String id;

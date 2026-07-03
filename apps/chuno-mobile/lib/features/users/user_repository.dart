@@ -14,11 +14,13 @@ abstract class UserRepository {
   Future<bool> checkNickname(String nickname);
 
   /// 온보딩 저장. `PUT /users/onboard`. 성공 시 서버가 onboardedOn 을 설정한다.
+  /// [legalDocumentIds] 는 동의한 활성 문서의 id(필수 3종 + 체크된 marketing).
+  /// 서버가 id→문서→type 을 해석해 필수 3종 게이팅·version 스냅샷을 처리한다.
   /// 닉네임 중복/필수 동의 누락 400, 이미 온보딩된 유저 409 등은 [AppException].
   Future<void> onboard({
     required String nickname,
     required String level,
-    required List<Consent> consents,
+    required List<int> legalDocumentIds,
   });
 
   /// 내 프로필 조회. `GET /users/me`. onboardedOn 포함(온보딩 판정용).
@@ -59,7 +61,7 @@ class HttpUserRepository implements UserRepository {
   Future<void> onboard({
     required String nickname,
     required String level,
-    required List<Consent> consents,
+    required List<int> legalDocumentIds,
   }) async {
     try {
       await _dio.put<dynamic>(
@@ -67,7 +69,7 @@ class HttpUserRepository implements UserRepository {
         data: {
           'nickname': nickname,
           'level': level,
-          'consents': [for (final c in consents) c.toJson()],
+          'legalDocumentIds': legalDocumentIds,
         },
       );
     } on DioException catch (e) {

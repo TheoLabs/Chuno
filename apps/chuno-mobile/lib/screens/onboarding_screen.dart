@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/error/app_exception.dart';
 import '../features/auth/auth_providers.dart';
+import '../features/legal/legal_models.dart';
+import '../features/legal/legal_providers.dart';
 import '../features/users/user_models.dart';
 import '../features/users/user_providers.dart';
 import '../theme/app_theme.dart';
@@ -19,21 +21,13 @@ class _Step {
   const _Step(this.icon, this.title, this.desc, this.field, this.cta, {this.consent = false});
 }
 
-/// 약관 동의 항목 정의.
-class _ConsentItem {
-  final String key;
-  final bool required;
-  final String label;
-  final String? doc; // 전문 뷰어 문서 키 (없으면 "보기" 미노출)
-  const _ConsentItem(this.key, this.required, this.label, this.doc);
-}
-
-const List<_ConsentItem> _consentItems = [
-  _ConsentItem('terms', true, '이용약관 동의', 'terms'),
-  _ConsentItem('privacy', true, '개인정보 수집·이용 동의', 'privacy'),
-  _ConsentItem('location', true, '위치기반서비스 이용동의', 'location'),
-  _ConsentItem('marketing', false, '마케팅 정보 수신 동의', null),
-];
+/// type slug → 동의 항목 표시 문구(UI 카피). 문서 전문/version 은 서버 값을 쓴다.
+const Map<String, String> _consentLabels = {
+  'terms-of-service': '이용약관 동의',
+  'privacy-policy': '개인정보 수집·이용 동의',
+  'location-service': '위치기반서비스 이용동의',
+  'marketing': '마케팅 정보 수신 동의',
+};
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -47,9 +41,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int i = 0;
   int _level = 1;
   final _nick = TextEditingController(text: '러너_추노');
-  final Map<String, bool> _consent = {
-    for (final it in _consentItems) it.key: false,
-  };
+
+  /// 활성 법적 문서(list 조회 결과, 표시 순서로 정렬). null=미로딩.
+  List<LegalDocument>? _docs;
+  /// type slug → 동의 체크 여부.
+  final Map<String, bool> _consent = {};
+  /// 문서 목록 로딩 중.
+  bool _docsLoading = false;
+  /// 문서 목록 로딩 오류 메시지. null 이면 정상.
+  String? _docsError;
 
   /// 닉네임 중복확인 진행 중.
   bool _checkingNick = false;
@@ -61,20 +61,67 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   bool get _busy => _checkingNick || _submitting;
 
   @override
+  void initState() {
+    super.initState();
+    _loadDocs();
+  }
+
+  @override
   void dispose() {
     _nick.dispose();
     super.dispose();
   }
 
-  bool get _allRequired => _consentItems.where((it) => it.required).every((it) => _consent[it.key] == true);
-  bool get _allChecked => _consentItems.every((it) => _consent[it.key] == true);
+  /// 온보딩 진입 시 1회 왕복으로 활성 문서(필수 3종 + 선택 marketing)를 수집.
+  Future<void> _loadDocs() async {
+    setState(() {
+      _docsLoading = true;
+      _docsError = null;
+    });
+    try {
+      final docs = await ref
+          .read(legalDocumentRepositoryProvider)
+          .list(types: onboardingLegalTypes);
+      if (!mounted) return;
+      // 표시 순서(약관→개인정보→위치→마케팅)로 정렬.
+      final ordered = [...docs]..sort((a, b) =>
+          onboardingLegalTypes.indexOf(a.type).compareTo(onboardingLegalTypes.indexOf(b.type)));
+      setState(() {
+        _docsLoading = false;
+        if (ordered.isEmpty) {
+          _docsError = '약관을 불러오지 못했어요.';
+          _docs = null;
+        } else {
+          _docs = ordered;
+          for (final d in ordered) {
+            _consent.putIfAbsent(d.type, () => false);
+          }
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _docsLoading = false;
+        _docsError = _errorMessage(e);
+      });
+    }
+  }
+
+  Iterable<LegalDocument> get _requiredDocs =>
+      (_docs ?? const []).where((d) => d.isRequired);
+
+  bool get _allRequired =>
+      _docs != null && _docs!.isNotEmpty && _requiredDocs.every((d) => _consent[d.type] == true);
+
+  bool get _allChecked =>
+      _docs != null && _docs!.isNotEmpty && _docs!.every((d) => _consent[d.type] == true);
 
   void _toggle(String key) {
     setState(() {
       if (key == 'all') {
         final v = !_allChecked;
-        for (final it in _consentItems) {
-          _consent[it.key] = v;
+        for (final d in _docs ?? const <LegalDocument>[]) {
+          _consent[d.type] = v;
         }
       } else {
         _consent[key] = !(_consent[key] ?? false);
@@ -82,12 +129,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     });
   }
 
-  Future<void> _openDoc(String docKey) async {
+  Future<void> _openDoc(LegalDocument doc) async {
     final agreed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => TermsDocScreen(docKey: docKey)),
+      MaterialPageRoute(builder: (_) => TermsDocScreen(document: doc)),
     );
     if (agreed == true) {
-      setState(() => _consent[docKey] = true);
+      setState(() => _consent[doc.type] = true);
     }
   }
 
@@ -192,40 +239,74 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         const SizedBox(height: 8),
         const Center(child: Muted('서비스 이용을 위해 아래 약관에 동의해주세요.', size: 13, height: 1.6)),
         const SizedBox(height: 18),
-        // 전체 동의
-        Panel(
-          onTap: () => _toggle('all'),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              _checkBox(_allChecked, large: true),
-              const SizedBox(width: 12),
-              const Text.rich(TextSpan(
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text),
-                children: [
-                  TextSpan(text: '전체 동의 '),
-                  TextSpan(text: '(선택 포함)', style: TextStyle(fontWeight: FontWeight.w400, color: AppColors.muted)),
-                ],
-              )),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        Container(height: 1, color: AppColors.line),
-        const SizedBox(height: 2),
-        for (var k = 0; k < _consentItems.length; k++) _consentRow(_consentItems[k], first: k == 0),
-        const SizedBox(height: 10),
-        const Muted(
-          '※ 위치기반서비스 이용동의(법적 동의)와 다음 단계의 기기 위치 권한 허용(OS 설정)은 서로 다른 절차예요.',
-          size: 10.5,
-          height: 1.6,
-        ),
+        if (_docsLoading)
+          _loadingBox()
+        else if (_docsError != null || _docs == null)
+          _errorBox()
+        else
+          ..._consentList(),
       ],
     );
   }
 
-  Widget _consentRow(_ConsentItem it, {required bool first}) {
-    final on = _consent[it.key] ?? false;
+  Widget _loadingBox() => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: Center(
+          child: SizedBox(
+            width: 26,
+            height: 26,
+            child: CircularProgressIndicator(strokeWidth: 2.4, color: AppColors.coral),
+          ),
+        ),
+      );
+
+  Widget _errorBox() => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 8),
+          Center(child: Muted(_docsError ?? '약관을 불러오지 못했어요.', size: 13, height: 1.6)),
+          const SizedBox(height: 14),
+          AppButton('다시 시도', variant: BtnVariant.ghost, onTap: _loadDocs),
+        ],
+      );
+
+  List<Widget> _consentList() {
+    final docs = _docs!;
+    return [
+      // 전체 동의
+      Panel(
+        onTap: () => _toggle('all'),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            _checkBox(_allChecked, large: true),
+            const SizedBox(width: 12),
+            const Text.rich(TextSpan(
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text),
+              children: [
+                TextSpan(text: '전체 동의 '),
+                TextSpan(text: '(선택 포함)', style: TextStyle(fontWeight: FontWeight.w400, color: AppColors.muted)),
+              ],
+            )),
+          ],
+        ),
+      ),
+      const SizedBox(height: 14),
+      Container(height: 1, color: AppColors.line),
+      const SizedBox(height: 2),
+      for (var k = 0; k < docs.length; k++) _consentRow(docs[k], first: k == 0),
+      const SizedBox(height: 10),
+      const Muted(
+        '※ 위치기반서비스 이용동의(법적 동의)와 다음 단계의 기기 위치 권한 허용(OS 설정)은 서로 다른 절차예요.',
+        size: 10.5,
+        height: 1.6,
+      ),
+    ];
+  }
+
+  Widget _consentRow(LegalDocument doc, {required bool first}) {
+    final on = _consent[doc.type] ?? false;
+    final label = _consentLabels[doc.type] ?? doc.title;
     return Container(
       decoration: BoxDecoration(
         border: first ? null : const Border(top: BorderSide(color: AppColors.line)),
@@ -235,23 +316,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         child: Row(
           children: [
             GestureDetector(
-              onTap: () => _toggle(it.key),
+              onTap: () => _toggle(doc.type),
               behavior: HitTestBehavior.opaque,
               child: _checkBox(on),
             ),
             const SizedBox(width: 11),
             Expanded(
               child: GestureDetector(
-                onTap: () => _toggle(it.key),
+                onTap: () => _toggle(doc.type),
                 behavior: HitTestBehavior.opaque,
                 child: Row(
                   children: [
-                    it.required
+                    doc.isRequired
                         ? Tag('필수', bg: AppColors.coralA(.16), fg: AppColors.coral)
                         : Tag('선택', bg: AppColors.panel2, fg: AppColors.muted),
                     const SizedBox(width: 7),
                     Flexible(
-                      child: Text(it.label,
+                      child: Text(label,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(fontSize: 13, color: AppColors.text)),
@@ -260,15 +341,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
               ),
             ),
-            if (it.doc != null)
-              GestureDetector(
-                onTap: () => _openDoc(it.doc!),
-                behavior: HitTestBehavior.opaque,
-                child: const Padding(
-                  padding: EdgeInsets.fromLTRB(8, 4, 0, 4),
-                  child: Text('보기 ›', style: TextStyle(fontSize: 11.5, color: AppColors.coral)),
-                ),
+            GestureDetector(
+              onTap: () => _openDoc(doc),
+              behavior: HitTestBehavior.opaque,
+              child: const Padding(
+                padding: EdgeInsets.fromLTRB(8, 4, 0, 4),
+                child: Text('보기 ›', style: TextStyle(fontSize: 11.5, color: AppColors.coral)),
               ),
+            ),
           ],
         ),
       ),
@@ -326,18 +406,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   /// 온보딩 저장(PUT /users/onboard) → 성공 시 세션 온보딩 완료 처리.
+  /// 동의한 활성 문서의 legalDocumentId 를 전송한다(version 아님, 서버가 스냅샷).
   /// AuthGate 가 상태 전이로 홈(MainShell)을 렌더한다.
   Future<void> _submit() async {
     setState(() => _submitting = true);
-    final consents = [
-      for (final it in _consentItems)
-        if (_consent[it.key] == true) Consent(type: it.key, documentVersion: '1.0'),
+    final ids = <int>[
+      for (final d in _docs ?? const <LegalDocument>[])
+        if (_consent[d.type] == true) d.id,
     ];
     try {
       await ref.read(userRepositoryProvider).onboard(
             nickname: _nick.text.trim(),
             level: RunnerLevel.fromIndex(_level).wire,
-            consents: consents,
+            legalDocumentIds: ids,
           );
       if (!mounted) return;
       await ref.read(authControllerProvider.notifier).completeOnboarding();

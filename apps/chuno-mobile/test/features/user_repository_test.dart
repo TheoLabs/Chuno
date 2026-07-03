@@ -55,15 +55,11 @@ void main() {
     );
   });
 
-  test('onboard → PUT /users/onboard, body {nickname, level, consents}', () async {
+  test('onboard → PUT /users/onboard, body {nickname, level, legalDocumentIds}', () async {
     final body = {
       'nickname': '러너_추노',
       'level': 'intermediate',
-      'consents': [
-        {'type': 'terms', 'documentVersion': '1.0'},
-        {'type': 'privacy', 'documentVersion': '1.0'},
-        {'type': 'location', 'documentVersion': '1.0'},
-      ],
+      'legalDocumentIds': [1, 2, 3, 4],
     };
     adapter.onPut(
       ApiPaths.onboard,
@@ -75,11 +71,7 @@ void main() {
       repo.onboard(
         nickname: '러너_추노',
         level: RunnerLevel.intermediate.wire,
-        consents: const [
-          Consent(type: 'terms', documentVersion: '1.0'),
-          Consent(type: 'privacy', documentVersion: '1.0'),
-          Consent(type: 'location', documentVersion: '1.0'),
-        ],
+        legalDocumentIds: const [1, 2, 3, 4],
       ),
       completes,
     );
@@ -95,7 +87,7 @@ void main() {
       () => repo.onboard(
         nickname: '러너',
         level: 'beginner',
-        consents: const [Consent(type: 'terms', documentVersion: '1.0')],
+        legalDocumentIds: const [1],
       ),
       throwsA(isA<RequestFailure>()),
     );

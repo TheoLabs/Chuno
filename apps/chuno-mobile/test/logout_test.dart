@@ -37,7 +37,7 @@ class _FakeUserRepository implements UserRepository {
   Future<void> onboard({
     required String nickname,
     required String level,
-    required List<Consent> consents,
+    required List<int> legalDocumentIds,
   }) async {}
   @override
   Future<MeModel> getMe() async => MeModel(id: 'u1', onboardedOn: DateTime(2026));

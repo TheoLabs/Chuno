@@ -30,7 +30,7 @@ class _FakeUserRepository implements UserRepository {
   Future<void> onboard({
     required String nickname,
     required String level,
-    required List<Consent> consents,
+    required List<int> legalDocumentIds,
   }) async {}
 }
 

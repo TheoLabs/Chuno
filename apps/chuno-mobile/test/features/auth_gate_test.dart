@@ -8,6 +8,9 @@ import 'package:chuno_mobile/core/storage/key_value_store.dart';
 import 'package:chuno_mobile/features/auth/auth_gate.dart';
 import 'package:chuno_mobile/features/auth/auth_providers.dart';
 import 'package:chuno_mobile/features/auth/auth_repository.dart';
+import 'package:chuno_mobile/features/legal/legal_models.dart';
+import 'package:chuno_mobile/features/legal/legal_providers.dart';
+import 'package:chuno_mobile/features/legal/legal_repository.dart';
 import 'package:chuno_mobile/features/users/user_models.dart';
 import 'package:chuno_mobile/features/users/user_providers.dart';
 import 'package:chuno_mobile/features/users/user_repository.dart';
@@ -37,11 +40,23 @@ class _FakeUserRepository implements UserRepository {
   Future<void> onboard({
     required String nickname,
     required String level,
-    required List<Consent> consents,
+    required List<int> legalDocumentIds,
   }) async {}
   @override
   Future<MeModel> getMe() async =>
       MeModel(id: 'u1', onboardedOn: onboarded ? DateTime(2026) : null);
+}
+
+/// 온보딩 화면 진입 시 문서 fetch 가 네트워크 없이 통과하도록 하는 fake.
+class _FakeLegalRepository implements LegalDocumentRepository {
+  @override
+  Future<List<LegalDocument>> list({required List<String> types}) async => const [
+        LegalDocument(id: 1, type: 'terms-of-service', version: 'v1.0', title: '이용약관', isRequired: true, status: 'ACTIVE'),
+      ];
+  @override
+  Future<LegalDocument> retrieve(int id) async => const LegalDocument(
+        id: 1, type: 'terms-of-service', version: 'v1.0', title: '이용약관', isRequired: true, status: 'ACTIVE', content: '전문',
+      );
 }
 
 Future<ProviderContainer> _pumpGate(
@@ -53,6 +68,7 @@ Future<ProviderContainer> _pumpGate(
     keyValueStoreProvider.overrideWithValue(InMemoryKeyValueStore(seed)),
     authRepositoryProvider.overrideWithValue(_FakeAuthRepository()),
     userRepositoryProvider.overrideWithValue(_FakeUserRepository(onboarded: onboarded)),
+    legalDocumentRepositoryProvider.overrideWithValue(_FakeLegalRepository()),
   ]);
   addTearDown(container.dispose);
   await tester.pumpWidget(UncontrolledProviderScope(

@@ -42,4 +42,5 @@ class ApiPaths {
   static const String me = '/users/me';
   static const String checkNickname = '/users/check-nickname';
   static const String onboard = '/users/onboard';
+  static const String legalDocuments = '/legal-documents';
 }
