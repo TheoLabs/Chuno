@@ -41,10 +41,10 @@
 
   <div class="group card">
     <div class="gh"><span class="badge be">BACKEND</span> Room 도메인</div>
-    <div class="task"><div class="box"></div><div class="k"><b>Room 애그리거트</b>(RaceGoal·RoomStatus·participants) + Participant(<span class="mono">joinedOn</span>) 엔티티, TypeORM 스키마 <small>S2-1</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>Room 애그리거트</b>(targetDistance·limitMinutes·RoomStatus·participants) + Participant(<span class="mono">joinedOn</span>) 엔티티, TypeORM 스키마 — 스키마·<span class="mono">create</span>·<span class="mono">join</span>·<span class="mono">leave</span>·<span class="mono">cancel</span>·RoomRepository(참가자 애그리거트 단위 로드) 완료 <small>S2-1</small></div></div>
     <div class="task"><div class="box"></div><div class="k">엔드포인트 <span class="mono">POST /rooms</span>(<span class="mono">scheduledStartOn</span> 미래시각만), <span class="mono">GET /rooms</span>(거리·제한시간·빈자리 필터, 임박순), <span class="mono">POST /rooms/:id/join·leave</span>, <span class="mono">DELETE /rooms/:id</span>(방장·모집중) <small>S2-2</small></div></div>
     <div class="task"><div class="box"></div><div class="k"><b>불변식</b> — 정원 초과·시작 후 join(늦참)·중복 join 불가. <b>방장 leave = 방 취소</b> <small>S2-2</small></div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>예약 스케줄러</b>(BullMQ 지연잡) — <span class="mono">scheduledStartOn</span> 도달 시 RECRUITING→STARTING→LIVE 전환, <b>2명 미만이면 CANCELLED</b>(soft), 멱등 처리 <small>S2-3</small></div></div>
+    <div class="task"><div class="box"></div><div class="k"><b>예약 스케줄러</b>(BullMQ 지연잡) — <span class="mono">scheduledStartOn</span>(출발 시각) <span class="mono">−10초</span>에 RECRUITING→STARTING(join 마감, <b>이 시점 2명 미만이면 CANCELLED</b> soft), <span class="mono">scheduledStartOn</span>에 STARTING→LIVE(Δ=10초 고정), 멱등 처리. Room 도메인 메서드 <span class="mono">markStarting</span>·<span class="mono">markLive</span>(S2-1에서 이월)를 이 스케줄러가 호출 <small>S2-3</small></div></div>
     <div class="task"><div class="box"></div><div class="k"><b>socket.io 게이트웨이(로비)</b> — JWT 핸드셰이크, 방 룸 조인, 입퇴장·상태전환 브로드캐스트 + 서버시각(serverTime) 제공 <small>S2-4</small></div></div>
     <div class="task"><div class="box"></div><div class="k">도메인 이벤트(인프로세스) — RoomCreated·ParticipantJoined·RoomStarting·RoomCancelled → 로비 게이트웨이 구독 <small>S2-5</small></div></div>
   </div>
@@ -54,7 +54,7 @@
     <div class="task"><div class="box"></div><div class="k"><b>홈 방 목록</b> 실데이터 + 필터(거리/제한시간/빈자리) + 상태뱃지·임박순 + 빈 목록 분기 <small>S2-6</small></div></div>
     <div class="task"><div class="box"></div><div class="k"><b>방 생성</b> 폼 → POST /rooms, 성공 시 로비 이동 <small>S2-7</small></div></div>
     <div class="task"><div class="box"></div><div class="k"><b>로비</b> — socket.io 연결, 참가자 실시간 입퇴장, 나가기/방삭제, 재접속 <small>S2-8</small></div></div>
-    <div class="task"><div class="box"></div><div class="k">서버시계 동기 카운트다운(오프셋 보정 <span class="mono">remaining = scheduledStartOn − (localNow+offset)</span>), STARTING 진입 시 카운트다운 화면 전환 <small>S2-9</small></div></div>
+    <div class="task"><div class="box"></div><div class="k">서버시계 동기 <b>10초</b> 카운트다운(오프셋 보정 <span class="mono">remaining = scheduledStartOn − (localNow+offset)</span>), STARTING 진입 시 카운트다운 화면 전환 <small>S2-9</small></div></div>
     <div class="task"><div class="box"></div><div class="k">홈 방카드 "참가" → join → 로비 진입, 실패(정원초과·늦참·취소) 안내 <small>S2-11</small></div></div>
   </div>
 
@@ -68,7 +68,7 @@
     <div class="task"><div class="box"></div><div class="k">Redis 연결·설정 + BullMQ 큐 모듈(지연잡용)·헬스체크·graceful shutdown <small>S2-12</small></div></div>
   </div>
 
-  <div class="done-when"><b>완료 기준</b> — 기기 2대(또는 시뮬 2개)에서 한쪽이 방 생성 → 다른쪽이 목록에서 참가 → 양쪽 로비에 서로 실시간 표시 → 예약 시각에 서버시계 기준 카운트다운 진입. 인원 미달 시 자동 취소 확인.</div>
+  <div class="done-when"><b>완료 기준</b> — 기기 2대(또는 시뮬 2개)에서 한쪽이 방 생성 → 다른쪽이 목록에서 참가 → 양쪽 로비에 서로 실시간 표시 → 예약(출발) 시각 10초 전 서버시계 기준 카운트다운 진입, 10초 후 LIVE 동시출발. 인원 미달 시 STARTING 전환 시점에 자동 취소 확인.</div>
 
   <div class="nav">
     <a href="step1.html"><span class="lbl">이전</span>← Step 1 · 기반 &amp; 인증</a>

@@ -199,7 +199,7 @@
       <ul>
         <li><b style="background:var(--ar)"></b>Room</li>
         <li><b style="background:var(--ent)"></b>Participant</li>
-        <li><b style="background:var(--vo)"></b>RaceGoal · RoomStatus</li>
+        <li><b style="background:var(--vo)"></b>RoomStatus</li>
       </ul>
     </div>
     <div class="ctx" style="border-top-color:var(--vo)">
@@ -331,14 +331,15 @@
           <div class="f"><span class="fn">id</span><span class="ft">RoomId</span></div>
           <div class="f"><span class="fn">hostUserId</span><span class="ft">UserId</span></div>
           <div class="f"><span class="fn">name</span><span class="ft">string</span></div>
-          <div class="f"><span class="fn">goal</span><span class="ft">RaceGoal</span><span class="fnote">거리+제한시간</span></div>
+          <div class="f"><span class="fn">targetDistance</span><span class="ft">number</span><span class="fnote">목표거리</span></div>
+          <div class="f"><span class="fn">limitMinutes</span><span class="ft">number</span><span class="fnote">제한시간</span></div>
           <div class="f"><span class="fn">maxParticipants</span><span class="ft">int</span></div>
           <div class="f"><span class="fn">scheduledStartOn</span><span class="ft">CalendarDate</span><span class="fnote">KST · YYYY-MM-DD HH:mm:ss</span></div>
           <div class="f"><span class="fn">status</span><span class="ft">RoomStatus</span></div>
           <div class="f"><span class="fn">participants</span><span class="ft">Participant[]</span></div>
         </div>
         <div class="rel"><b>관계:</b> 1 ── N <b>Participant</b> · 1 ──▶ <b>Race</b>(LIVE 전환 시 생성)</div>
-        <div class="inv">불변식: 2 ≤ max · 정원 초과 join 불가 · 시작 후 join 불가 · 시작 시각 2명 미만 → CANCELLED</div>
+        <div class="inv">불변식: 2 ≤ max · 정원 초과 join 불가 · 시작 후 join 불가 · 시작 시각 2명 미만 → CANCELLED · <b style="color:#c3c9d2">STARTING = 출발(LIVE) 10초 전</b>(Δ=10s, <span style="font-family:var(--mono)">scheduledStartOn</span>=출발 시각) — STARTING 진입 시 join 마감, 이 시점 2명 미만이면 CANCELLED</div>
       </div>
       <div class="card ent" id="ent-participant">
         <div class="hd"><span class="nm">Participant</span><span class="badge ent">Entity</span></div>
@@ -352,9 +353,8 @@
       </div>
       <div class="card vo">
         <div class="hd"><span class="nm">값 객체</span><span class="badge vo">Value Object</span></div>
-        <div class="desc">방의 목표(RaceGoal)와 상태(RoomStatus)를 표현하는 불변 값.</div>
+        <div class="desc">방의 상태(RoomStatus)를 표현하는 불변 값. 목표거리·제한시간(<span style="font-family:var(--mono)">targetDistance</span>·<span style="font-family:var(--mono)">limitMinutes</span>)은 VO가 아닌 Room 직접 컬럼.</div>
         <div class="fields">
-          <div class="f"><span class="fn">RaceGoal</span><span class="fnote">targetKm, limitMinutes</span></div>
           <div class="f"><span class="fn">RoomStatus</span><span class="fnote">RECRUITING·STARTING·LIVE·FINISHED·CANCELLED</span></div>
         </div>
       </div>
@@ -760,9 +760,9 @@
     <h4>Room 상태</h4>
     <div class="flow">
       <span class="st start">RECRUITING</span>
-      <span class="arw">▶<small>예약 T-Δ</small></span>
+      <span class="arw">▶<small>scheduledStartOn − 10s</small></span>
       <span class="st">STARTING</span>
-      <span class="arw">▶<small>카운트다운</small></span>
+      <span class="arw">▶<small>10s 카운트다운</small></span>
       <span class="st">LIVE</span>
       <span class="arw">▶<small>전원완주/시간초과</small></span>
       <span class="st end">FINISHED</span>
@@ -771,6 +771,9 @@
       <span class="arw" style="transform:rotate(180deg)">▶</span>
       <span class="st" style="opacity:.6">RECRUITING/STARTING</span>
       <small style="color:var(--muted); font-family:var(--mono);">2명 미만</small>
+    </div>
+    <div style="margin-top:12px; font-size:11.5px; color:var(--muted); line-height:1.7;">
+      <b style="color:#c3c9d2">STARTING = 출발(LIVE) 10초 전</b>(Δ=10s 고정) — <span style="font-family:var(--mono)">scheduledStartOn</span>은 출발(LIVE) 시각. <span style="font-family:var(--mono)">scheduledStartOn − 10초</span>에 RECRUITING→STARTING 전환(join 마감·카운트다운 시작, 이 시점 2명 미만이면 CANCELLED), <span style="font-family:var(--mono)">scheduledStartOn</span>에 STARTING→LIVE. <span style="font-family:var(--mono)">markStarting</span>/<span style="font-family:var(--mono)">markLive</span> 도메인 메서드 자체는 변경 없음 — 트리거 타이밍은 스케줄러(<a href="../product/issue/step2.html#S2-3">S2-3</a>)가 결정.
     </div>
   </div>
 
@@ -804,7 +807,7 @@
     <tbody>
       <tr class="maprow"><td>로그인 · 온보딩</td><td><span class="pill">User</span><span class="pill">AuthIdentity</span><span class="pill">UserConsent</span><span class="pill">LegalDocument</span><span class="pill">Nickname</span><span class="pill">RunnerLevel</span></td><td>소셜로그인, 닉네임/레벨/위치권한, 약관·위치동의 기록, 약관전문(doc-viewer)은 활성 LegalDocument 조회</td></tr>
       <tr class="maprow"><td>홈 (방 목록)</td><td><span class="pill">Room</span><span class="pill">RoomStatus</span></td><td>모집중/곧시작/LIVE 조회 · 필터</td></tr>
-      <tr class="maprow"><td>방 생성</td><td><span class="pill">Room</span><span class="pill">RaceGoal</span></td><td>거리·제한시간·인원·시작시각</td></tr>
+      <tr class="maprow"><td>방 생성</td><td><span class="pill">Room</span></td><td>targetDistance·limitMinutes·인원(maxParticipants)·시작시각(scheduledStartOn)</td></tr>
       <tr class="maprow"><td>방 로비</td><td><span class="pill">Room</span><span class="pill">Participant</span></td><td>실시간 입퇴장(WS) · 자동 출발 대기</td></tr>
       <tr class="maprow"><td>카운트다운</td><td><span class="pill">RoomStarting</span><span class="pill">Race</span></td><td>서버시계 동기 · GPS fix</td></tr>
       <tr class="maprow"><td>경주 (라이브)</td><td><span class="pill">Race</span><span class="pill">RaceParticipant</span><span class="pill">Progress</span></td><td>거리 보고(좌표X) · 순위 브로드캐스트 · anti-cheat</td></tr>
