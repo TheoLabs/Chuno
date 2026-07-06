@@ -110,6 +110,18 @@
 
   .chip{display:inline-flex; align-items:center; gap:5px; padding:8px 15px; border-radius:var(--r-pill); background:var(--panel2); font-size:12px; border:1px solid var(--line); cursor:pointer; transition:.15s;}
   .chip.active{background:var(--hud); color:var(--on-hud); border-color:var(--hud); font-weight:700;}
+  /* 홈 거리·제한시간 min/max 레인지바 필터 */
+  .rfilter{background:var(--panel); border:1px solid var(--line); border-radius:var(--r-sm); padding:13px 15px 15px; margin-bottom:14px;}
+  .rfilter .rf-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .rfilter .rf-title{font-size:12px; font-weight:700; color:var(--text); letter-spacing:.2px;}
+  .rf-row + .rf-row{margin-top:16px;}
+  .rf-hd{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:11px;}
+  .rf-name{font-size:12px; color:var(--text); font-weight:600;}
+  .rf-val{font-size:12px; color:var(--hud); font-weight:700;}
+  .rf-track{position:relative; height:5px; border-radius:3px; background:var(--panel2); margin:0 9px;}
+  .rf-fill{position:absolute; top:0; bottom:0; border-radius:3px; background:linear-gradient(90deg,var(--huddk),var(--hud)); box-shadow:0 0 12px -4px var(--glow);}
+  .rf-knob{position:absolute; top:50%; width:16px; height:16px; border-radius:50%; background:var(--hud); border:2px solid var(--bg); transform:translate(-50%,-50%); box-shadow:0 2px 9px -1px var(--glow); z-index:2;}
+  .rf-scale{display:flex; justify-content:space-between; margin-top:8px; font-size:10px; color:var(--muted); font-family:var(--mono);}
   .tag{font-size:10px; font-weight:700; padding:4px 10px; border-radius:20px; letter-spacing:.1px;}
   .t-live{background:var(--altint); color:var(--alert);} .t-soon{background:var(--tint2); color:var(--hud);}
   .t-open{background:#2b323a; color:#9aa3ad;} .t-done{background:color-mix(in srgb,var(--done) 18%,transparent); color:var(--done);}
@@ -254,7 +266,8 @@
   <div class="grp">경주 플로우</div>
   <nav class="nav">
     <a data-s="create">방 생성</a>
-    <a data-s="lobby">방 로비</a>
+    <a data-s="lobby">방 로비 · 방장</a>
+    <a data-s="lobby-guest">방 로비 · 참가자</a>
     <a data-s="countdown">카운트다운</a>
     <a data-s="race">경주 · 라이브 <span class="t">anim</span></a>
     <a data-s="result">결과 · 완주</a>
@@ -313,18 +326,40 @@
       <section class="screen" id="home">
         <div class="appbar"><div class="title">추<b>노</b></div><div class="ic" title="알림은 준비 중이에요">🔔</div></div>
         <div class="scrollable"><div class="body">
-          <div style="display:flex; gap:8px; margin-bottom:14px;">
-            <span class="chip active" title="필터는 준비 중이에요">거리 ▾</span><span class="chip" title="필터는 준비 중이에요">제한시간 ▾</span><span class="chip" title="필터는 준비 중이에요">임박순</span>
+          <div class="rfilter">
+            <div class="rf-top">
+              <span class="rf-title">필터</span>
+              <span class="chip active" style="padding:5px 12px; cursor:default;" title="정렬 기준">↕ 임박순</span>
+            </div>
+            <div class="rf-row">
+              <div class="rf-hd"><span class="rf-name">거리</span><span class="rf-val num">3 – 10 km</span></div>
+              <div class="rf-track">
+                <div class="rf-fill" style="left:10.5%; right:52.6%;"></div>
+                <div class="rf-knob" style="left:10.5%;"></div>
+                <div class="rf-knob" style="left:47.4%;"></div>
+              </div>
+              <div class="rf-scale"><span>1km</span><span>20km</span></div>
+            </div>
+            <div class="rf-row">
+              <div class="rf-hd"><span class="rf-name">제한시간</span><span class="rf-val num">20 – 60 분</span></div>
+              <div class="rf-track">
+                <div class="rf-fill" style="left:9.1%; right:54.5%;"></div>
+                <div class="rf-knob" style="left:9.1%;"></div>
+                <div class="rf-knob" style="left:45.5%;"></div>
+              </div>
+              <div class="rf-scale"><span>10분</span><span>120분</span></div>
+            </div>
           </div>
           <div class="panel hud" style="margin-bottom:12px; background:var(--albg); border-color:color-mix(in srgb,var(--alert) 30%,transparent); padding:13px 15px;">
             <div style="display:flex; align-items:center; gap:9px; font-size:12px;"><span class="pulse"></span><b style="color:var(--alert);">LIVE</b><span class="muted">추격전 3건 진행 중</span></div>
           </div>
+          <!-- 내 방(isHost) — GET /rooms 의 isHost=true. 👑 내 방 배지 + '입장'(이미 참가 상태 → 방장 로비 직행) -->
           <div class="panel room" data-go="lobby">
-            <div class="top"><span class="nm">🏃 5km 새벽 추격</span><span class="tag t-soon">곧 시작</span></div>
+            <div class="top"><span class="nm">🏃 5km 새벽 추격 <span class="tag t-soon" style="margin-left:2px; vertical-align:middle;">👑 내 방</span></span><span class="tag t-soon">곧 시작</span></div>
             <div class="meta">목표 5.0km · 제한 40분 · <b>3/6명</b></div>
-            <div class="foot"><span class="meta" style="margin:0;">⏰ 06:00 시작 <span class="tag t-soon" style="margin-left:6px;">12분 후</span></span><span class="btn btn-primary" style="width:auto; height:36px; padding:0 20px; font-size:13px;">참가</span></div>
+            <div class="foot"><span class="meta" style="margin:0;">⏰ 06:00 시작 <span class="tag t-soon" style="margin-left:6px;">12분 후</span></span><span class="btn btn-primary" style="width:auto; height:36px; padding:0 20px; font-size:13px;">입장</span></div>
           </div>
-          <div class="panel room" data-go="lobby">
+          <div class="panel room" data-go="lobby-guest">
             <div class="top"><span class="nm">🏃 10km 챌린지</span><span class="tag t-open">모집중</span></div>
             <div class="meta">목표 10.0km · 제한 70분 · <b>2/8명</b></div>
             <div class="foot"><span class="meta" style="margin:0;">⏰ 07:30 시작</span><span class="btn btn-ghost" style="width:auto; height:36px; padding:0 20px; font-size:13px;">참가</span></div>
@@ -365,16 +400,16 @@
         <div style="padding:14px 18px 32px;"><div class="btn btn-primary" data-go="lobby">방 만들기</div></div>
       </section>
 
-      <!-- 로비 -->
+      <!-- 로비 · 방장(isHost) -->
       <section class="screen" id="lobby">
-        <div class="appbar"><span class="ic" data-go="home">←</span><div class="title" style="font-size:16px;">5km 새벽 추격</div><span class="ic">↗</span></div>
+        <div class="appbar"><span class="ic" data-go="home">←</span><div class="title" style="font-size:16px;">5km 새벽 추격</div><span class="ic" data-go="lobby-guest" title="참가자 뷰로 보기">↗</span></div>
         <div class="scrollable"><div class="body">
           <div class="panel hud" style="text-align:center;">
             <div class="lbl">목표 5.0km · 제한 40분</div>
-            <div class="num" style="font-size:40px; color:var(--hud); margin:8px 0;">12:03</div>
-            <div class="lbl">06:00 출발까지</div>
+            <div class="num" style="font-size:40px; color:var(--hud); margin:8px 0;">06:00</div>
+            <div class="lbl">출발 예정 · 12분 후</div>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin:18px 4px 14px;"><b style="font-size:14px;">참가자</b></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin:18px 4px 14px;"><b style="font-size:14px;">참가자</b><span class="lbl">3/6명</span></div>
           <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; text-align:center;">
             <div><div class="avatar a-me" style="width:44px; height:44px; margin:0 auto 7px;">나</div><div style="font-size:12px;">나 👑</div></div>
             <div><div class="avatar a3" style="width:44px; height:44px; margin:0 auto 7px;">준</div><div style="font-size:12px;">준호</div></div>
@@ -385,7 +420,34 @@
           </div>
         </div></div>
         <div style="padding:14px 18px 12px;"><div class="btn btn-outline" data-go="countdown">▶ 데모: 카운트다운 시작</div></div>
-        <div style="padding:0 18px 32px; display:flex; gap:11px;"><div class="btn btn-alert" style="flex:1;" data-go="home">나가기</div><div class="btn btn-ghost" style="flex:1;" data-go="home">방 삭제</div></div>
+        <!-- 방장 → 방 삭제(ghost) 단일. RECRUITING(모집중)일 때만 노출. -->
+        <div style="padding:0 18px 32px;"><div class="btn btn-ghost" data-go="home">방 삭제</div></div>
+      </section>
+
+      <!-- 로비 · 참가자(비방장) -->
+      <section class="screen" id="lobby-guest">
+        <div class="appbar"><span class="ic" data-go="home">←</span><div class="title" style="font-size:16px;">10km 챌린지</div><span class="ic" data-go="lobby" title="방장 뷰로 보기">↗</span></div>
+        <div class="scrollable"><div class="body">
+          <div class="panel hud" style="text-align:center;">
+            <div class="lbl">목표 10.0km · 제한 70분</div>
+            <div class="num" style="font-size:40px; color:var(--hud); margin:8px 0;">07:30</div>
+            <div class="lbl">출발 예정</div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin:18px 4px 14px;"><b style="font-size:14px;">참가자</b><span class="lbl">2/8명</span></div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; text-align:center;">
+            <div><div class="avatar a3" style="width:44px; height:44px; margin:0 auto 7px;">준</div><div style="font-size:12px;">준호 👑</div></div>
+            <div><div class="avatar a-me" style="width:44px; height:44px; margin:0 auto 7px;">나</div><div style="font-size:12px;">나</div></div>
+            <div><div class="avatar" style="width:44px; height:44px; background:var(--panel2); color:var(--muted); border:1px dashed var(--line); margin:0 auto 7px;">+</div><div class="muted" style="font-size:12px;">대기</div></div>
+            <div><div class="avatar" style="width:44px; height:44px; background:var(--panel2); color:var(--muted); border:1px dashed var(--line); margin:0 auto 7px;">+</div><div class="muted" style="font-size:12px;">대기</div></div>
+            <div><div class="avatar" style="width:44px; height:44px; background:var(--panel2); color:var(--muted); border:1px dashed var(--line); margin:0 auto 7px;">+</div><div class="muted" style="font-size:12px;">대기</div></div>
+            <div><div class="avatar" style="width:44px; height:44px; background:var(--panel2); color:var(--muted); border:1px dashed var(--line); margin:0 auto 7px;">+</div><div class="muted" style="font-size:12px;">대기</div></div>
+            <div><div class="avatar" style="width:44px; height:44px; background:var(--panel2); color:var(--muted); border:1px dashed var(--line); margin:0 auto 7px;">+</div><div class="muted" style="font-size:12px;">대기</div></div>
+            <div><div class="avatar" style="width:44px; height:44px; background:var(--panel2); color:var(--muted); border:1px dashed var(--line); margin:0 auto 7px;">+</div><div class="muted" style="font-size:12px;">대기</div></div>
+          </div>
+        </div></div>
+        <div style="padding:14px 18px 12px;"><div class="btn btn-outline" data-go="countdown">▶ 데모: 카운트다운 시작</div></div>
+        <!-- 참가자 → 나가기(alert) 단일. RECRUITING(모집중)일 때만 노출. -->
+        <div style="padding:0 18px 32px;"><div class="btn btn-alert" data-go="home">나가기</div></div>
       </section>
 
       <!-- 카운트다운 -->

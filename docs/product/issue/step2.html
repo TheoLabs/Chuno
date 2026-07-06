@@ -157,7 +157,7 @@
       <li><span class="box"></span><span>나가기·방삭제(방장) 연동, <span class="mono">roomCancelled</span> 수신 시 홈 복귀+안내</span></li>
       <li><span class="box"></span><span>연결끊김 재접속·재입장(자격 재검증)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 타인이 참가/이탈하면 로비가 즉시 갱신되고, 방 취소 시 안내 후 홈으로 복귀한다. <small>로비 상세 조회(<span class="mono">GET /rooms/:id</span>) 로드는 선구현(<span class="mono">roomDetailProvider</span>·<span class="mono">retrieve</span>, 로딩/에러/데이터 3분기, id int 통일, analyze/test 통과). socket 실시간(입퇴장·<span class="mono">roomStatusChanged</span>)·나가기·방삭제·재접속은 남음(선행 S2-4 소켓 게이트웨이·join/leave 미구현). 참가자 명단 API 부재로 로비 슬롯은 표시용.</small></div>
+    <div class="iaccept"><b>완료</b> — 타인이 참가/이탈하면 로비가 즉시 갱신되고, 방 취소 시 안내 후 홈으로 복귀한다. <small>로비 상세 조회(<span class="mono">GET /rooms/:id</span>) 로드 + 방 삭제(<span class="mono">DELETE /rooms/:id</span>)·나가기(<span class="mono">DELETE /rooms/:id/leave</span>) 실 API 배선·검증 통과(방장=삭제/참가자=나가기, 홈복귀·실패 message 안내, analyze/test 83 통과). 와이어프레임 로비 방장(<span class="mono">#lobby</span>)·참가자(<span class="mono">#lobby-guest</span>) 뷰 반영. 남음: socket 실시간(입퇴장·<span class="mono">roomStatusChanged</span>·<span class="mono">roomCancelled</span> 홈복귀)·재접속(선행 S2-4)·상태전환. 참가자 명단 API 부재로 로비 슬롯 라벨은 표시용.</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S2-4, S2-7</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#lobby">🎨 로비</a><a href="../../domain/index.html#ent-participant">📦 Participant</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
