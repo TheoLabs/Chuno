@@ -10,6 +10,9 @@ import 'package:chuno_mobile/features/auth/auth_providers.dart';
 import 'package:chuno_mobile/features/legal/legal_models.dart';
 import 'package:chuno_mobile/features/legal/legal_providers.dart';
 import 'package:chuno_mobile/features/legal/legal_repository.dart';
+import 'package:chuno_mobile/features/rooms/room_models.dart';
+import 'package:chuno_mobile/features/rooms/room_providers.dart';
+import 'package:chuno_mobile/features/rooms/room_repository.dart';
 import 'package:chuno_mobile/features/users/user_models.dart';
 import 'package:chuno_mobile/features/users/user_providers.dart';
 import 'package:chuno_mobile/features/users/user_repository.dart';
@@ -57,6 +60,53 @@ class _FakeLegalRepository implements LegalDocumentRepository {
       );
 }
 
+/// 방목록/생성을 네트워크 없이 제공하는 fake.
+class _FakeRoomRepository implements RoomRepository {
+  @override
+  Future<List<RoomModel>> list({
+    List<RoomStatus>? statuses,
+    int? minLimitMinutes,
+    int? maxLimitMinutes,
+    int? minTargetDistance,
+    int? maxTargetDistance,
+    int? page,
+    int? limit,
+    String? sort,
+    String? order,
+  }) async =>
+      const [
+        RoomModel(
+          id: 1, hostUserId: 'h1', name: '5km 새벽 추격', targetDistance: 5, limitMinutes: 40,
+          maxParticipants: 6, scheduledStartOn: '2030-01-01 06:00:00', status: RoomStatus.starting,
+          currentParticipantsCount: 3, isHost: false,
+        ),
+        RoomModel(
+          id: 2, hostUserId: 'h2', name: '10km 챌린지', targetDistance: 10, limitMinutes: 70,
+          maxParticipants: 8, scheduledStartOn: '2030-01-01 07:30:00', status: RoomStatus.recruiting,
+          currentParticipantsCount: 2, isHost: false,
+        ),
+      ];
+  @override
+  Future<int> create({
+    required String name,
+    required int targetDistance,
+    required int limitMinutes,
+    required int maxParticipants,
+    required String scheduledStartOn,
+  }) async =>
+      99;
+  @override
+  Future<void> join(int id) async {}
+  @override
+  Future<RoomModel> retrieve(int id) async => const RoomModel(
+        id: 1, hostUserId: 'h1', name: '5km 새벽 추격', targetDistance: 5, limitMinutes: 40,
+        maxParticipants: 6, scheduledStartOn: '2030-01-01 06:00:00', status: RoomStatus.starting,
+        currentParticipantsCount: 3, isHost: true,
+      );
+  @override
+  Future<void> delete(int id) async {}
+}
+
 const _sampleDoc = LegalDocument(
   id: 1, type: 'terms-of-service', version: 'v1.0', title: '이용약관', isRequired: true, status: 'ACTIVE',
 );
@@ -72,6 +122,7 @@ void main() {
           keyValueStoreProvider.overrideWithValue(InMemoryKeyValueStore()),
           userRepositoryProvider.overrideWithValue(_FakeUserRepository()),
           legalDocumentRepositoryProvider.overrideWithValue(_FakeLegalRepository()),
+          roomRepositoryProvider.overrideWithValue(_FakeRoomRepository()),
         ],
         child: MaterialApp(theme: buildAppTheme(), home: home),
       );
@@ -82,6 +133,7 @@ void main() {
     'mainShell(home)': const MainShell(),
     'createRoom': const CreateRoomScreen(),
     'lobby': LobbyScreen(room: Mock.rooms[0]),
+    'lobby(detail)': LobbyScreen(room: Mock.rooms[0], roomId: 1),
     'result(완주)': const ResultScreen(),
     'result(dnf)': const ResultScreen(dnf: true),
     'ranking': wrapTab(const RankingScreen()),
