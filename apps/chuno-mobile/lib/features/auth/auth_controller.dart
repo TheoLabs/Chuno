@@ -44,6 +44,8 @@ class AuthController extends Notifier<AuthState> {
   /// 이미 발급된 토큰 쌍으로 세션을 확립한다.(로그인 성공 후)
   Future<void> establishSession(TokenPair tokens) async {
     await _tokenStore.save(tokens);
+    // 계정이 바뀌었을 수 있으므로 이전 유저의 me 캐시를 버리고 새로 fetch 되게 한다.
+    ref.invalidate(meProvider);
     final onboarded = await _resolveOnboarded();
     state = AuthState.authenticated(onboarded: onboarded);
   }
@@ -76,6 +78,8 @@ class AuthController extends Notifier<AuthState> {
       await _authRepository.logout(refresh);
     }
     await _tokenStore.clear();
+    // 다음 로그인 유저에게 이전 유저 프로필이 노출되지 않도록 me 캐시를 비운다.
+    ref.invalidate(meProvider);
     state = const AuthState.unauthenticated();
   }
 

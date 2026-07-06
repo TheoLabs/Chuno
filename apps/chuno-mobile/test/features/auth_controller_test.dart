@@ -53,10 +53,33 @@ class _FakeUserRepository implements UserRepository {
   }
 }
 
+/// 계정 전환을 흉내내는 fake — 현재 [nickname] 을 그대로 getMe 에 반영한다.
+/// 세션이 바뀔 때 meProvider 가 재조회되는지(=stale 캐시가 안 남는지) 검증용.
+class _SwitchingUserRepository implements UserRepository {
+  String nickname = 'alice';
+  int getMeCalls = 0;
+
+  @override
+  Future<bool> checkNickname(String n) async => true;
+
+  @override
+  Future<void> onboard({
+    required String nickname,
+    required String level,
+    required List<int> legalDocumentIds,
+  }) async {}
+
+  @override
+  Future<MeModel> getMe() async {
+    getMeCalls++;
+    return MeModel(id: nickname, nickname: nickname, onboardedOn: DateTime(2026));
+  }
+}
+
 ProviderContainer _container({
   Map<String, String>? seedTokens,
   _FakeAuthRepository? repo,
-  _FakeUserRepository? users,
+  UserRepository? users,
 }) {
   return ProviderContainer(overrides: [
     keyValueStoreProvider.overrideWithValue(InMemoryKeyValueStore(seedTokens)),
@@ -194,6 +217,25 @@ void main() {
 
     expect(c.read(authControllerProvider).onboarded, isTrue);
     expect(await c.read(keyValueStoreProvider).read('chuno.session.onboarded'), 'true');
+  });
+
+  test('로그아웃→다른 계정 재로그인 시 meProvider 캐시가 무효화되어 재조회된다', () async {
+    final users = _SwitchingUserRepository()..nickname = 'alice';
+    final c = _container(users: users);
+    addTearDown(c.dispose);
+    await _settle(c);
+
+    // 계정 A 로그인 후 me 조회 → alice 캐시.
+    await c.read(authControllerProvider.notifier).login(provider: 'kakao', credential: 'a');
+    expect((await c.read(meProvider.future)).nickname, 'alice');
+
+    // 로그아웃 → 계정 B(google)로 재로그인.
+    await c.read(authControllerProvider.notifier).logout();
+    users.nickname = 'bob';
+    await c.read(authControllerProvider.notifier).login(provider: 'google', credential: 'b');
+
+    // invalidate 로 stale('alice')이 남지 않고 bob 으로 재조회된다.
+    expect((await c.read(meProvider.future)).nickname, 'bob');
   });
 
   test('onSessionExpired → unauthenticated', () async {
