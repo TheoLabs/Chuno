@@ -59,16 +59,16 @@
     <div class="ihead"><span class="iid">S2-2</span><span class="ititle">Room API (생성·탐색·참가·나가기·삭제)</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">방 생성·탐색·참가·나가기·삭제. 불변식을 서비스에서 강제한다.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="mono">POST /rooms</span>(<span class="mono">name</span>·<span class="mono">targetKm</span>·<span class="mono">limitMinutes</span>·<span class="mono">maxParticipants</span>·<span class="mono">scheduledStartOn</span>, 미래시각만)</span></li>
-      <li><span class="box"></span><span><span class="mono">GET /rooms</span>(공개목록+필터 거리·제한시간·빈자리, 상태필터, 임박순=<span class="mono">scheduledStartOn</span> asc, 좌표 미전송)</span></li>
-      <li><span class="box"></span><span><span class="mono">POST /rooms/:id/join</span> · <span class="mono">/leave</span></span></li>
-      <li><span class="box"></span><span><span class="mono">DELETE /rooms/:id</span>(방장·RECRUITING만)</span></li>
-      <li><span class="box"></span><span>불변식 — 정원초과·시작후 join 금지(늦참)·중복 join 금지</span></li>
-      <li><span class="box"></span><span><span class="stag scope">결정</span>방장 leave = <b>방 취소(CANCELLED)</b></span></li>
-      <li><span class="box"></span><span>위반 시 <span class="mono">409</span>/<span class="mono">400</span>, <span class="mono">PATCH</span> 미사용</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">POST /rooms</span>(<span class="mono">name</span>·<span class="mono">targetKm</span>·<span class="mono">limitMinutes</span>·<span class="mono">maxParticipants</span>·<span class="mono">scheduledStartOn</span>, 미래시각만)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">GET /rooms</span>(공개목록+필터 거리·제한시간, 상태필터, 임박순=<span class="mono">scheduledStartOn</span> asc, 좌표 미전송)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">POST /rooms/:id/join</span> · <span class="mono">DELETE /rooms/:id/leave</span></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">DELETE /rooms/:id</span>(방장·RECRUITING만)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>불변식 — 정원초과·시작후 join 금지(늦참)·중복 join 금지</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="stag scope">결정</span>방장 leave = <b>방 취소(CANCELLED)</b></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>위반 시 <span class="mono">409</span>/<span class="mono">400</span>, <span class="mono">PATCH</span> 미사용</span></li>
       <li><span class="box scope"></span><span><span class="stag scope">스코프외</span>관리자 강제취소/삭제·운영은 백오피스 <b>BO4-1</b>(<span class="mono">/api/admins/rooms</span>, <span class="mono">PUT :id/cancel</span>·<span class="mono">DELETE</span>). 여기 <span class="mono">DELETE /rooms/:id</span>는 <b>방장 본인·RECRUITING 한정</b></span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 목록·생성·참가·나가기·삭제가 동작하고, 정원초과·늦참·중복참가·비방장삭제가 명확히 거부된다.</div>
+    <div class="iaccept"><b>통과</b> — 생성·목록·단건·참가·나가기·삭제 전부 동작, 정원초과·늦참·중복·비방장삭제 거부, DELETE는 방장·RECRUITING 한정(가드 추가), leave=DELETE로 스펙 정렬, 빌드 통과. <small>(참고: join 정원검증 이중·cancel 멱등성 non-RECRUITING 400 — 비차단.)</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S2-1</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-room">📦 Room</a><a href="../wireframes/index.html#home">🎨 홈</a><a href="../wireframes/index.html#create">🎨 방 생성</a><a href="../../backoffice/issue/step4.html#BO4-1">🎫 백오피스 BO4-1</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
@@ -124,12 +124,12 @@
     <div class="ihead"><span class="iid">S2-6</span><span class="ititle">홈 방목록 실연동 + 필터</span><span class="badge app">APP</span><span class="pill">M</span></div>
     <div class="idesc">mock 목록을 실 API로 교체하고 필터·상태·카운트다운을 실데이터로.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="mono">GET /rooms</span> 연동(provider), 거리·제한시간·빈자리 필터칩 → 서버쿼리</span></li>
-      <li><span class="box"></span><span>상태뱃지(모집중·곧시작·LIVE)·임박순</span></li>
-      <li><span class="box"></span><span>카드 카운트다운(목록은 서버시각 근사)</span></li>
-      <li><span class="box"></span><span>당겨서 새로고침·스켈레톤, 빈 목록 → <span class="mono">#home-empty</span> 분기</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">GET /rooms</span> 연동(provider), 거리·제한시간 필터칩 → 서버쿼리(<span class="mono">min</span>/<span class="mono">max</span>) <small>빈자리 필터칩은 기획변경으로 미도입</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>상태뱃지(모집중·곧시작·LIVE)·임박순(<span class="mono">sort=scheduledStartOn&amp;order=ASC</span>)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>카드 카운트다운(목록은 서버시각 근사) <small>비-KST 기기서 표시 라벨 오차 있음(비차단, KST MVP 수용)</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>당겨서 새로고침·스켈레톤, 빈 목록 → <span class="mono">#home-empty</span> 분기</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 실제 방 목록이 표시되고, 필터/정렬이 서버에 반영되며, 방이 없으면 빈 상태로 분기한다.</div>
+    <div class="iaccept"><b>통과</b> — 실제 방 목록이 표시되고, 필터/정렬이 서버에 반영되며, 방이 없으면 빈 상태로 분기한다. <small>거리·제한시간 필터칩 서버쿼리 반영·임박순 정렬·상태뱃지·카드 카운트다운·당겨서 새로고침·스켈레톤·빈 목록 분기 모두 충족(빈자리 필터칩은 기획변경으로 없음). <span class="mono">flutter analyze</span> 클린·<span class="mono">flutter test</span> 68 통과. <span class="mono">scheduledStartOn</span> naive 로컬시각 파싱으로 비-KST 기기 표시 라벨/카운트다운 오차 가능(상태뱃지는 서버 status라 정확) — 비차단, KST MVP 수용.</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S2-2, S1-7</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#home">🎨 홈</a><a href="../wireframes/index.html#home-empty">🎨 빈 목록</a><a href="../../domain/index.html#ent-room">📦 Room</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
@@ -138,12 +138,12 @@
     <div class="ihead"><span class="iid">S2-7</span><span class="ititle">방 생성 실연동</span><span class="badge app">APP</span><span class="pill">S</span></div>
     <div class="idesc">생성 폼 입력을 실 API로 보내고 성공 시 로비로 이동.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>이름·목표거리(seg)·제한시간·최대인원·시작시각 → <span class="mono">POST /rooms</span></span></li>
-      <li><span class="box"></span><span>시작시각 피커(KST 미래만)·최대인원 2+ 클라검증</span></li>
-      <li><span class="box"></span><span>"2명 미만 자동 취소" 안내(<span class="mono">#create</span> 경고패널)</span></li>
-      <li><span class="box"></span><span>성공 시 로비 <span class="mono">pushReplacement</span>, 실패 스낵바</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>이름·목표거리(seg)·제한시간·최대인원·시작시각 → <span class="mono">POST /rooms</span></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>시작시각 피커(KST 미래만)·최대인원 2+·제한시간 10+·목표거리 1+ 클라검증(백엔드 가드와 일치)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>"2명 미만 자동 취소" 안내(<span class="mono">#create</span> 경고패널)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>성공 시 로비 <span class="mono">pushReplacement</span>, 실패 스낵바</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 폼으로 방을 만들면 서버에 생성되고 방장으로 로비에 진입한다.</div>
+    <div class="iaccept"><b>통과</b> — 폼으로 방을 만들면 서버에 생성되고 방장으로 로비에 진입한다. <small>생성 폼 → <span class="mono">POST /rooms</span> 연동, 클라검증(시작시각 KST 미래·최대인원 2+·제한시간 10+·목표거리 1+)이 백엔드 가드와 일치, 성공 시 생성 응답 <span class="mono">data.room.id</span>로 로비 <span class="mono">pushReplacement</span>(방장 진입), 실패 스낵바 — 모두 충족. <span class="mono">flutter analyze</span> 클린·<span class="mono">flutter test</span> 68 통과.</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S2-2</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#create">🎨 방 생성</a><a href="../wireframes/index.html#lobby">🎨 로비</a><a href="../../domain/index.html#ent-room">📦 Room</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
@@ -157,7 +157,7 @@
       <li><span class="box"></span><span>나가기·방삭제(방장) 연동, <span class="mono">roomCancelled</span> 수신 시 홈 복귀+안내</span></li>
       <li><span class="box"></span><span>연결끊김 재접속·재입장(자격 재검증)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 타인이 참가/이탈하면 로비가 즉시 갱신되고, 방 취소 시 안내 후 홈으로 복귀한다.</div>
+    <div class="iaccept"><b>완료</b> — 타인이 참가/이탈하면 로비가 즉시 갱신되고, 방 취소 시 안내 후 홈으로 복귀한다. <small>로비 상세 조회(<span class="mono">GET /rooms/:id</span>) 로드는 선구현(<span class="mono">roomDetailProvider</span>·<span class="mono">retrieve</span>, 로딩/에러/데이터 3분기, id int 통일, analyze/test 통과). socket 실시간(입퇴장·<span class="mono">roomStatusChanged</span>)·나가기·방삭제·재접속은 남음(선행 S2-4 소켓 게이트웨이·join/leave 미구현). 참가자 명단 API 부재로 로비 슬롯은 표시용.</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S2-4, S2-7</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#lobby">🎨 로비</a><a href="../../domain/index.html#ent-participant">📦 Participant</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
@@ -191,11 +191,11 @@
     <div class="ihead"><span class="iid">S2-11</span><span class="ititle">방 참가 → 로비 진입 플로우</span><span class="badge app">APP</span><span class="pill">S</span></div>
     <div class="idesc">홈에서 방 카드의 참가 버튼을 눌러 서버에 반영하고 로비로 진입한다.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>방카드 "참가" → <span class="mono">POST /rooms/:id/join</span> → 성공 시 로비 push</span></li>
-      <li><span class="box"></span><span>정원초과·늦참·중복·취소된 방 실패 안내(S2-10 카피)</span></li>
-      <li><span class="box"></span><span>이미 참가 중이면 바로 로비로</span></li>
+      <li><span class="box done"></span><span class="stag done">완료</span><span>방카드 "참가" → <span class="mono">POST /rooms/:id/join</span> → 성공 시 로비 push</span></li>
+      <li><span class="box done"></span><span class="stag done">완료</span><span>정원초과·늦참·중복·취소된 방 실패 안내(S2-10 카피)</span></li>
+      <li><span class="box done"></span><span class="stag done">완료</span><span>이미 참가 중이면 바로 로비로</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 홈에서 참가하면 서버에 반영되고 로비에 진입하며, 실패는 명확히 안내된다.</div>
+    <div class="iaccept"><b>통과</b> — 홈에서 참가하면 서버에 반영되고 로비에 진입하며, 실패는 명확히 안내된다. <small>방카드 참가→POST /rooms/:id/join→로비, 실패(정원초과·늦참·취소·미존재) message 안내, 중복→로비, 방장→바로 로비, analyze/test 76 통과. (참고: '이미 참여 중' 판별이 message 문자열 매칭 — 백엔드 isJoined 플래그 제공 시 대체 권장.)</small></div>
     <div class="imeta"><span class="dep"><b>선행:</b> S2-2, S2-6</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#home">🎨 홈</a><a href="../wireframes/index.html#lobby">🎨 로비</a><a href="../../domain/index.html#ent-participant">📦 Participant</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
