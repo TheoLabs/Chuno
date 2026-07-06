@@ -108,42 +108,59 @@ class RoomModel {
   }
 }
 
-/// 거리·제한시간 필터 프리셋(라벨 + min/max). idx 0 = 전체(필터 없음).
-class RangePreset {
-  final String label;
-  final int? min;
-  final int? max;
-  const RangePreset(this.label, {this.min, this.max});
-}
+/// 필터 레인지바 경계 상수(정수 km·분). 기본 필터 = 전체 범위(미적용).
+const int kDistanceMin = 1; // 목표 거리 최소(km)
+const int kDistanceMax = 20; // 목표 거리 최대(km)
+const int kLimitMin = 10; // 제한 시간 최소(분)
+const int kLimitMax = 120; // 제한 시간 최대(분)
+const int kLimitStep = 5; // 제한 시간 눈금 간격(분)
 
-/// 목표 거리(km) 필터 프리셋.
-const List<RangePreset> distancePresets = [
-  RangePreset('거리 전체'),
-  RangePreset('5km 이하', max: 5),
-  RangePreset('5km 초과', min: 6),
-];
-
-/// 제한 시간(분) 필터 프리셋.
-const List<RangePreset> limitPresets = [
-  RangePreset('제한 전체'),
-  RangePreset('30분 이하', max: 30),
-  RangePreset('30분 초과', min: 31),
-];
-
-/// 홈 방목록 필터 상태(선택된 프리셋 인덱스).
+/// 홈 방목록 필터 상태(거리·제한시간 각각 min/max 범위).
+///
+/// 기본값 = 전체 범위 → 필터 미적용. 서버 쿼리에는 전체 범위일 때 null 을,
+/// 부분 범위일 때 현재 min/max(정수)를 전달한다(query* 게터).
 class RoomFilters {
-  final int distanceIdx;
-  final int limitIdx;
-  const RoomFilters({this.distanceIdx = 0, this.limitIdx = 0});
+  final int distanceMin;
+  final int distanceMax;
+  final int limitMin;
+  final int limitMax;
+  const RoomFilters({
+    this.distanceMin = kDistanceMin,
+    this.distanceMax = kDistanceMax,
+    this.limitMin = kLimitMin,
+    this.limitMax = kLimitMax,
+  });
 
-  bool get distanceActive => distanceIdx != 0;
-  bool get limitActive => limitIdx != 0;
+  /// 거리 범위가 전체 경계와 다르면 활성(필터 적용).
+  bool get distanceActive =>
+      distanceMin != kDistanceMin || distanceMax != kDistanceMax;
 
-  RangePreset get distance => distancePresets[distanceIdx];
-  RangePreset get limit => limitPresets[limitIdx];
+  /// 제한 시간 범위가 전체 경계와 다르면 활성(필터 적용).
+  bool get limitActive => limitMin != kLimitMin || limitMax != kLimitMax;
 
-  RoomFilters copyWith({int? distanceIdx, int? limitIdx}) => RoomFilters(
-        distanceIdx: distanceIdx ?? this.distanceIdx,
-        limitIdx: limitIdx ?? this.limitIdx,
+  /// 서버 쿼리용 값 — 전체 범위면 null(미적용), 아니면 현재 min/max.
+  int? get queryDistanceMin => distanceActive ? distanceMin : null;
+  int? get queryDistanceMax => distanceActive ? distanceMax : null;
+  int? get queryLimitMin => limitActive ? limitMin : null;
+  int? get queryLimitMax => limitActive ? limitMax : null;
+
+  /// 칩 라벨 — 미적용이면 '거리', 적용이면 '3–10km'.
+  String get distanceLabel =>
+      distanceActive ? '$distanceMin–${distanceMax}km' : '거리';
+
+  /// 칩 라벨 — 미적용이면 '제한시간', 적용이면 '20–60분'.
+  String get limitLabel => limitActive ? '$limitMin–$limitMax분' : '제한시간';
+
+  RoomFilters copyWith({
+    int? distanceMin,
+    int? distanceMax,
+    int? limitMin,
+    int? limitMax,
+  }) =>
+      RoomFilters(
+        distanceMin: distanceMin ?? this.distanceMin,
+        distanceMax: distanceMax ?? this.distanceMax,
+        limitMin: limitMin ?? this.limitMin,
+        limitMax: limitMax ?? this.limitMax,
       );
 }

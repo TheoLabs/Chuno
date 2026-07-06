@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/error/app_exception.dart';
 import '../features/rooms/room_models.dart' hide RoomStatus;
 import '../features/rooms/room_providers.dart';
+import '../features/rooms/room_repository.dart';
 import '../models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ui.dart';
@@ -25,11 +27,12 @@ class LobbyScreen extends ConsumerWidget {
     }
     final detail = ref.watch(roomDetailProvider(id));
     return detail.when(
-      data: (r) => _Scaffold(view: _LobbyView.fromModel(r), room: room),
-      loading: () => _Scaffold(view: _LobbyView.fromMock(room), room: room, loading: true),
+      data: (r) => _Scaffold(view: _LobbyView.fromModel(r), room: room, roomId: id),
+      loading: () => _Scaffold(view: _LobbyView.fromMock(room), room: room, roomId: id, loading: true),
       error: (_, _) => _Scaffold(
         view: _LobbyView.fromMock(room),
         room: room,
+        roomId: id,
         onRetry: () => ref.invalidate(roomDetailProvider(id)),
       ),
     );
@@ -46,6 +49,9 @@ class _LobbyView {
   final int max;
   final bool isHost;
 
+  /// 모집중(RECRUITING) 여부 — 방삭제/나가기 액션 활성 조건.
+  final bool isRecruiting;
+
   const _LobbyView({
     required this.name,
     required this.metaLabel,
@@ -54,6 +60,7 @@ class _LobbyView {
     required this.cur,
     required this.max,
     required this.isHost,
+    required this.isRecruiting,
   });
 
   factory _LobbyView.fromModel(RoomModel r) {
@@ -67,6 +74,8 @@ class _LobbyView {
       cur: r.currentParticipantsCount,
       max: r.maxParticipants,
       isHost: r.isHost,
+      // room_models.RoomStatus 는 이 파일에서 hide 라 wire 문자열로 비교.
+      isRecruiting: r.status.wire == 'recruiting',
     );
   }
 
@@ -79,19 +88,21 @@ class _LobbyView {
       cur: r.cur,
       max: r.max,
       isHost: r.status != RoomStatus.live,
+      isRecruiting: r.status != RoomStatus.live,
     );
   }
 }
 
-class _Scaffold extends StatelessWidget {
+class _Scaffold extends ConsumerWidget {
   final _LobbyView view;
   final Room room; // 카운트다운 데모 진입용(기존 목업 플로우 유지)
+  final int? roomId; // 서버 방 id — 있어야 삭제/나가기 실 API 호출.
   final bool loading;
   final VoidCallback? onRetry;
-  const _Scaffold({required this.view, required this.room, this.loading = false, this.onRetry});
+  const _Scaffold({required this.view, required this.room, this.roomId, this.loading = false, this.onRetry});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final emptyCount = (view.max - view.cur).clamp(0, view.max);
     return Scaffold(
       appBar: AppBar(
@@ -169,17 +180,137 @@ class _Scaffold extends StatelessWidget {
               Navigator.of(context).push(MaterialPageRoute(builder: (_) => CountdownScreen(room: room)));
             }),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 0, 18, 32),
-            child: Row(children: [
-              Expanded(child: AppButton('나가기', variant: BtnVariant.alert, onTap: () => Navigator.of(context).pop())),
-              const SizedBox(width: 11),
-              Expanded(child: AppButton('방 삭제', variant: BtnVariant.ghost, onTap: () => Navigator.of(context).pop())),
-            ]),
+          // 방장 = 방 삭제, 비방장 = 나가기(둘 다 모집중일 때만). RECRUITING 이 아니면 미노출.
+          if (view.isRecruiting)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 32),
+              child: view.isHost
+                  ? AppButton('방 삭제', variant: BtnVariant.ghost, onTap: () => _confirmDelete(context, ref))
+                  : AppButton('나가기', variant: BtnVariant.alert, onTap: () => _confirmLeave(context, ref)),
+            )
+          else
+            const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  /// 방장 방 삭제 → 확인 → 로딩 → DELETE /rooms/:id → 홈 복귀/실패 안내.
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    await _runRoomAction(
+      context,
+      ref,
+      confirmTitle: '방 삭제',
+      confirmMessage: '방을 삭제할까요?\n참가자에게 취소가 안내됩니다.',
+      confirmLabel: '삭제',
+      action: (repo, id) => repo.delete(id),
+      successMessage: '방이 삭제되었습니다',
+      fallbackError: '방을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.',
+    );
+  }
+
+  /// 참가자 나가기 → 확인 → 로딩 → DELETE /rooms/:id/leave → 홈 복귀/실패 안내.
+  Future<void> _confirmLeave(BuildContext context, WidgetRef ref) async {
+    await _runRoomAction(
+      context,
+      ref,
+      confirmTitle: '방 나가기',
+      confirmMessage: '방에서 나갈까요?',
+      confirmLabel: '나가기',
+      action: (repo, id) => repo.leave(id),
+      successMessage: '방에서 나갔습니다',
+      fallbackError: '방에서 나가지 못했어요. 잠시 후 다시 시도해 주세요.',
+    );
+  }
+
+  /// 삭제/나가기 공통 흐름 — 확인 다이얼로그 → 로딩 barrier → 실 API → 홈 복귀 + 스낵바.
+  Future<void> _runRoomAction(
+    BuildContext context,
+    WidgetRef ref, {
+    required String confirmTitle,
+    required String confirmMessage,
+    required String confirmLabel,
+    required Future<void> Function(RoomRepository repo, int id) action,
+    required String successMessage,
+    required String fallbackError,
+  }) async {
+    final id = roomId;
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    // roomId 가 없으면(순수 목업 데모) 실 호출 없이 화면만 닫는다.
+    if (id == null) {
+      navigator.pop();
+      return;
+    }
+    final repo = ref.read(roomRepositoryProvider);
+    final ok = await _confirm(
+      context,
+      title: confirmTitle,
+      message: confirmMessage,
+      confirmLabel: confirmLabel,
+    );
+    if (!ok || !context.mounted) return;
+    // 로딩 barrier — 완료까지 버튼 이중 탭을 차단한다.
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black54,
+      builder: (_) => const _ActionLoading(),
+    );
+    try {
+      await action(repo, id);
+      ref.invalidate(roomListProvider);
+      if (!context.mounted) return;
+      navigator.pop(); // 로딩 닫기
+      navigator.popUntil((r) => r.isFirst); // 홈(루트)으로 복귀
+      _snack(messenger, successMessage);
+    } on AppException catch (e) {
+      if (!context.mounted) return;
+      navigator.pop();
+      _snack(messenger, e.message);
+    } catch (_) {
+      if (!context.mounted) return;
+      navigator.pop();
+      _snack(messenger, fallbackError);
+    }
+  }
+
+  Future<bool> _confirm(
+    BuildContext context, {
+    required String title,
+    required String message,
+    required String confirmLabel,
+  }) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.panel,
+        title: Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+        content: Text(message, style: const TextStyle(fontSize: 14, color: AppColors.muted)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('취소', style: TextStyle(color: AppColors.muted)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(confirmLabel, style: const TextStyle(color: AppColors.alert, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
     );
+    return ok == true;
+  }
+
+  void _snack(ScaffoldMessengerState messenger, String msg) {
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(msg),
+        duration: const Duration(milliseconds: 2000),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.panel2,
+      ));
   }
 
   // 상세 응답엔 참가자 명단이 없어 라벨은 표시용(방장=나 강조).
@@ -199,6 +330,24 @@ class _Scaffold extends StatelessWidget {
         const SizedBox(height: 7),
         Text(label, style: TextStyle(fontSize: 12, color: empty ? AppColors.muted : AppColors.text)),
       ],
+    );
+  }
+}
+
+/// 삭제/나가기 진행 중 전체 barrier 로딩(이중 탭 차단).
+class _ActionLoading extends StatelessWidget {
+  const _ActionLoading();
+  @override
+  Widget build(BuildContext context) {
+    return const PopScope(
+      canPop: false,
+      child: Center(
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: CircularProgressIndicator(color: AppColors.coral, strokeWidth: 3),
+        ),
+      ),
     );
   }
 }

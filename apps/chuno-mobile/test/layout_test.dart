@@ -105,6 +105,8 @@ class _FakeRoomRepository implements RoomRepository {
       );
   @override
   Future<void> delete(int id) async {}
+  @override
+  Future<void> leave(int id) async {}
 }
 
 const _sampleDoc = LegalDocument(

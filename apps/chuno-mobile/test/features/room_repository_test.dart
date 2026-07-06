@@ -149,4 +149,49 @@ void main() {
       throwsA(isA<RequestFailure>()),
     );
   });
+
+  group('RoomFilters 레인지→쿼리 매핑', () {
+    test('기본값(전체 범위) = 비활성 · query* 는 모두 null', () {
+      const f = RoomFilters();
+      expect(f.distanceActive, isFalse);
+      expect(f.limitActive, isFalse);
+      expect(f.queryDistanceMin, isNull);
+      expect(f.queryDistanceMax, isNull);
+      expect(f.queryLimitMin, isNull);
+      expect(f.queryLimitMax, isNull);
+      expect(f.distanceLabel, '거리');
+      expect(f.limitLabel, '제한시간');
+    });
+
+    test('경계 그대로여도(1~20, 10~120) 전체 범위면 미적용', () {
+      const f = RoomFilters(
+        distanceMin: kDistanceMin,
+        distanceMax: kDistanceMax,
+        limitMin: kLimitMin,
+        limitMax: kLimitMax,
+      );
+      expect(f.distanceActive, isFalse);
+      expect(f.queryDistanceMin, isNull);
+      expect(f.queryDistanceMax, isNull);
+    });
+
+    test('부분 범위 = 활성 · 현재 min/max 전달 · 칩 라벨', () {
+      const f = RoomFilters(distanceMin: 3, distanceMax: 10, limitMin: 20, limitMax: 60);
+      expect(f.distanceActive, isTrue);
+      expect(f.limitActive, isTrue);
+      expect(f.queryDistanceMin, 3);
+      expect(f.queryDistanceMax, 10);
+      expect(f.queryLimitMin, 20);
+      expect(f.queryLimitMax, 60);
+      expect(f.distanceLabel, '3–10km');
+      expect(f.limitLabel, '20–60분');
+    });
+
+    test('한쪽 경계만 이동해도 활성(예: 3~20km)', () {
+      const f = RoomFilters(distanceMin: 3);
+      expect(f.distanceActive, isTrue);
+      expect(f.queryDistanceMin, 3);
+      expect(f.queryDistanceMax, kDistanceMax);
+    });
+  });
 }

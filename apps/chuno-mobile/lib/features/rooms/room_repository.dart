@@ -39,8 +39,15 @@ abstract class RoomRepository {
   /// 방 단건 조회. `GET /rooms/:id` → `{ data: {...} }`. 로비 상세에서 사용.
   Future<RoomModel> retrieve(int id);
 
-  /// 방 취소(방장). `DELETE /rooms/:id`. (배선 선택)
+  /// 방 취소(방장). `DELETE /rooms/:id` → 성공 `{ data: {} }`.
+  /// 실패는 전부 400(RequestFailure)로 사유가 `message` 에 담긴다:
+  /// 비방장/비-RECRUITING/미존재. 호출부에서 message 로 안내한다.
   Future<void> delete(int id);
+
+  /// 방 나가기(참가자). `DELETE /rooms/:id/leave` → 성공 `{ data: {} }`.
+  /// 실패는 전부 400(RequestFailure)로 사유가 `message` 에 담긴다:
+  /// 비-RECRUITING/미참여/미존재. 호출부에서 message 로 안내한다.
+  Future<void> leave(int id);
 }
 
 /// dio(ApiClient) 기반 구현. core-api 계약을 따른다.
@@ -150,6 +157,15 @@ class HttpRoomRepository implements RoomRepository {
   Future<void> delete(int id) async {
     try {
       await _dio.delete<dynamic>('${ApiPaths.rooms}/$id');
+    } on DioException catch (e) {
+      throw AppException.fromDio(e);
+    }
+  }
+
+  @override
+  Future<void> leave(int id) async {
+    try {
+      await _dio.delete<dynamic>('${ApiPaths.rooms}/$id/leave');
     } on DioException catch (e) {
       throw AppException.fromDio(e);
     }

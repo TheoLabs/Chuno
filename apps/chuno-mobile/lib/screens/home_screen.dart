@@ -82,7 +82,7 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-/// 거리·제한시간 필터 칩(서버 쿼리 반영) + 임박순 정렬 표시.
+/// 거리·제한시간 필터 칩(레인지바 → 서버 쿼리 반영) + 임박순 정렬 표시.
 class _Filters extends StatelessWidget {
   final RoomFilters filters;
   final WidgetRef ref;
@@ -97,22 +97,32 @@ class _Filters extends StatelessWidget {
         children: [
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => _pick(context, '목표 거리', distancePresets, filters.distanceIdx,
-                (i) => ref.read(roomFiltersProvider.notifier).setDistance(i)),
-            child: PillChip(
-              '${filters.distanceActive ? filters.distance.label : '거리'} ▾',
-              active: filters.distanceActive,
+            onTap: () => _pickRange(
+              context,
+              title: '목표 거리',
+              unit: 'km',
+              lo: kDistanceMin,
+              hi: kDistanceMax,
+              divisions: kDistanceMax - kDistanceMin,
+              current: RangeValues(filters.distanceMin.toDouble(), filters.distanceMax.toDouble()),
+              onApply: (mn, mx) => ref.read(roomFiltersProvider.notifier).setDistance(mn, mx),
             ),
+            child: PillChip('${filters.distanceLabel} ▾', active: filters.distanceActive),
           ),
           const SizedBox(width: 8),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => _pick(context, '제한 시간', limitPresets, filters.limitIdx,
-                (i) => ref.read(roomFiltersProvider.notifier).setLimit(i)),
-            child: PillChip(
-              '${filters.limitActive ? filters.limit.label : '제한시간'} ▾',
-              active: filters.limitActive,
+            onTap: () => _pickRange(
+              context,
+              title: '제한 시간',
+              unit: '분',
+              lo: kLimitMin,
+              hi: kLimitMax,
+              divisions: (kLimitMax - kLimitMin) ~/ kLimitStep,
+              current: RangeValues(filters.limitMin.toDouble(), filters.limitMax.toDouble()),
+              onApply: (mn, mx) => ref.read(roomFiltersProvider.notifier).setLimit(mn, mx),
             ),
+            child: PillChip('${filters.limitLabel} ▾', active: filters.limitActive),
           ),
           const SizedBox(width: 8),
           // 정렬은 임박순 고정(서버 sort=scheduledStartOn&order=ASC).
@@ -122,47 +132,121 @@ class _Filters extends StatelessWidget {
     );
   }
 
-  Future<void> _pick(BuildContext context, String title, List<RangePreset> presets,
-      int current, ValueChanged<int> onPick) async {
-    final picked = await showModalBottomSheet<int>(
+  /// 가로 레인지바 바텀시트로 min/max 범위를 고른다.
+  /// '적용'은 현재 값, '초기화'는 전체 범위(필터 미적용)로 pop → onApply.
+  Future<void> _pickRange(
+    BuildContext context, {
+    required String title,
+    required String unit,
+    required int lo,
+    required int hi,
+    required int divisions,
+    required RangeValues current,
+    required void Function(int min, int max) onApply,
+  }) async {
+    final picked = await showModalBottomSheet<RangeValues>(
       context: context,
       backgroundColor: AppColors.panel,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(R.r)),
       ),
-      builder: (ctx) => SafeArea(
+      builder: (ctx) => _RangeSheet(
+        title: title,
+        unit: unit,
+        lo: lo.toDouble(),
+        hi: hi.toDouble(),
+        divisions: divisions,
+        initial: current,
+      ),
+    );
+    if (picked != null) onApply(picked.start.round(), picked.end.round());
+  }
+}
+
+/// 필터 레인지바 바텀시트 — 상단 값 라벨, 코랄 활성 트랙, 하단 '초기화'·'적용'.
+class _RangeSheet extends StatefulWidget {
+  final String title;
+  final String unit;
+  final double lo;
+  final double hi;
+  final int divisions;
+  final RangeValues initial;
+  const _RangeSheet({
+    required this.title,
+    required this.unit,
+    required this.lo,
+    required this.hi,
+    required this.divisions,
+    required this.initial,
+  });
+
+  @override
+  State<_RangeSheet> createState() => _RangeSheetState();
+}
+
+class _RangeSheetState extends State<_RangeSheet> {
+  late RangeValues _values = widget.initial;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = _values.start.round();
+    final e = _values.end.round();
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-              child: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(widget.title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                Text('$s – $e ${widget.unit}', style: numStyle(size: 14, color: AppColors.coral)),
+              ],
             ),
-            for (var i = 0; i < presets.length; i++)
-              InkWell(
-                onTap: () => Navigator.of(ctx).pop(i),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(presets[i].label,
-                          style: TextStyle(
-                              fontSize: 14,
-                              color: i == current ? AppColors.coral : AppColors.text,
-                              fontWeight: i == current ? FontWeight.w700 : FontWeight.w500)),
-                      if (i == current) const Icon(Icons.check, size: 18, color: AppColors.coral),
-                    ],
-                  ),
-                ),
+            const SizedBox(height: 4),
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: AppColors.coral,
+                inactiveTrackColor: AppColors.line,
+                thumbColor: AppColors.coral,
+                overlayColor: AppColors.coralA(.18),
+                valueIndicatorColor: AppColors.coral,
+                trackHeight: 4,
+                rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 9),
               ),
+              child: RangeSlider(
+                values: _values,
+                min: widget.lo,
+                max: widget.hi,
+                divisions: widget.divisions,
+                labels: RangeLabels('$s', '$e'),
+                onChanged: (v) => setState(() => _values = v),
+              ),
+            ),
             const SizedBox(height: 8),
+            Row(children: [
+              Expanded(
+                child: AppButton('초기화',
+                    variant: BtnVariant.ghost,
+                    height: 46,
+                    fontSize: 14,
+                    onTap: () => Navigator.of(context).pop(RangeValues(widget.lo, widget.hi))),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: AppButton('적용',
+                    variant: BtnVariant.primary,
+                    height: 46,
+                    fontSize: 14,
+                    onTap: () => Navigator.of(context).pop(_values)),
+              ),
+            ]),
           ],
         ),
       ),
     );
-    if (picked != null && picked != current) onPick(picked);
   }
 }
 
@@ -298,7 +382,11 @@ class _RoomCard extends StatelessWidget {
     };
     final isLive = room.status == RoomStatus.live;
     final action = AppButton(
-      isLive ? '관전' : '참가',
+      isLive
+          ? '관전'
+          : room.isHost
+              ? '입장'
+              : '참가',
       variant: room.status == RoomStatus.starting ? BtnVariant.primary : BtnVariant.ghost,
       expand: false,
       height: 36,
@@ -313,9 +401,20 @@ class _RoomCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(child: Text(room.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800))),
+                Expanded(
+                  child: Text(
+                    room.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                  ),
+                ),
+                if (room.isHost) ...[
+                  const SizedBox(width: 8),
+                  Tag('👑 내 방', bg: AppColors.coralA(.18), fg: AppColors.coral),
+                ],
+                const SizedBox(width: 8),
                 Tag(tag, bg: tagBg, fg: tagFg),
               ],
             ),
