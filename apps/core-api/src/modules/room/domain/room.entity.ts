@@ -111,6 +111,10 @@ export class Room extends DddAggregate {
       throw new BadRequestException('이미 참여 중인 방입니다.', { description: '이미 참여 중인 방입니다.' });
     }
 
+    if (this.participants.length >= this.maxParticipants) {
+      throw new BadRequestException('방 정원이 가득 찼습니다.', { description: '방 정원이 가득 찼습니다.' });
+    }
+
     this.addParticipant(Participant.of({ userId, isHost: false }));
   }
 
@@ -128,16 +132,24 @@ export class Room extends DddAggregate {
     }
 
     if (participant.isHost) {
-      this.cancel();
+      this.cancel({ userId });
       return;
     }
 
     this.participants = this.participants.filter((p) => p.userId !== userId);
   }
 
-  cancel() {
-    if (this.status === RoomStatus.CANCELLED || this.status === RoomStatus.FINISHED) {
-      return;
+  cancel({ userId }: { userId: number }) {
+    if (this.status !== RoomStatus.RECRUITING) {
+      throw new BadRequestException('모집중인 방만 취소할 수 있습니다.', {
+        description: '모집중인 방만 취소할 수 있습니다.',
+      });
+    }
+
+    if (this.hostUserId !== userId) {
+      throw new BadRequestException('방장만 방을 취소할 수 있습니다.', {
+        description: '방장만 방을 취소할 수 있습니다.',
+      });
     }
 
     this.status = RoomStatus.CANCELLED;

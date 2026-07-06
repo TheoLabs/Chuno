@@ -6,6 +6,8 @@ import { User } from '@modules/user/domain/user.entity';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { Room, RoomStatus } from '@modules/room/domain/room.entity';
 import { Participant } from '@modules/room/domain/participant.entity';
+import { PaginationOptions } from '@libs/utils';
+import { GeneralRoomResponseDto } from '../presentation/dto/room-response.dto';
 
 @Injectable()
 export class GeneralRoomService extends DddService {
@@ -47,6 +49,97 @@ export class GeneralRoomService extends DddService {
       scheduledStartOn,
       participant: Participant.of({ userId: user.id, isHost: true }),
     });
+
+    await this.roomRepository.save([room]);
+
+    return { room: { id: room.id } };
+  }
+
+  async list(
+    {
+      user,
+      statuses,
+      minTargetDistance,
+      maxTargetDistance,
+      minLimitMinutes,
+      maxLimitMinutes,
+    }: {
+      user: User;
+      statuses?: RoomStatus[];
+      minTargetDistance?: number;
+      maxTargetDistance?: number;
+      minLimitMinutes?: number;
+      maxLimitMinutes?: number;
+    },
+    options?: PaginationOptions
+  ) {
+    const [rooms, total] = await Promise.all([
+      this.roomRepository.find(
+        { statuses, minLimitMinutes, maxLimitMinutes, minTargetDistance, maxTargetDistance },
+        { options, relations: { participants: true } }
+      ),
+      this.roomRepository.count({ statuses, minLimitMinutes, maxLimitMinutes, minTargetDistance, maxTargetDistance }),
+    ]);
+
+    return {
+      items: rooms.map((room) =>
+        room.toInstance(GeneralRoomResponseDto, {
+          currentParticipantsCount: room.participants.length,
+          isHost: room.hostUserId === user.id,
+        })
+      ),
+      total,
+    };
+  }
+
+  async retrieve({ user, id }: { user: User; id: number }) {
+    const [room] = await this.roomRepository.find({ id }, { relations: { participants: true } });
+
+    if (!room) {
+      throw new BadRequestException('존재하지 않는 방입니다.', { description: '존재하지 않는 방입니다.' });
+    }
+
+    return room.toInstance(GeneralRoomResponseDto, {
+      currentParticipantsCount: room.participants.length,
+      isHost: room.hostUserId === user.id,
+    });
+  }
+
+  @Transactional()
+  async cancel({ user, id }: { user: User; id: number }) {
+    const [room] = await this.roomRepository.find({ id });
+
+    if (!room) {
+      throw new BadRequestException('존재하지 않는 방입니다.', { description: '존재하지 않는 방입니다.' });
+    }
+
+    room.cancel({ userId: user.id });
+
+    await this.roomRepository.save([room]);
+  }
+
+  @Transactional()
+  async join({ user, id }: { user: User; id: number }) {
+    const [room] = await this.roomRepository.find({ id }, { relations: { participants: true } });
+
+    if (!room) {
+      throw new BadRequestException('존재하지 않는 방입니다.', { description: '존재하지 않는 방입니다.' });
+    }
+
+    room.join({ userId: user.id });
+
+    await this.roomRepository.save([room]);
+  }
+
+  @Transactional()
+  async leave({ user, id }: { user: User; id: number }) {
+    const [room] = await this.roomRepository.find({ id }, { relations: { participants: true } });
+
+    if (!room) {
+      throw new BadRequestException('존재하지 않는 방입니다.', { description: '존재하지 않는 방입니다.' });
+    }
+
+    room.leave({ userId: user.id });
 
     await this.roomRepository.save([room]);
   }
