@@ -49,11 +49,11 @@
 
   <div class="group card">
     <div class="gh"><span class="badge be">BACKEND</span> Race 도메인 &amp; 게이트웨이</div>
-    <div class="task"><div class="box"></div><div class="k"><b>RaceScheduler</b> — LIVE 전환 시 Race 생성, 서버시계 기준 동시출발(startedAt)</div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>RaceGateway(socket.io /race)</b> — JWT 핸드셰이크, joinRoom / progress(거리) / leaderboard 브로드캐스트 / raceFinished</div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>RaceService</b> — 진행 클램프·안티치트(MIN_FEASIBLE_PACE, 순간이동/비현실 페이스 리젝)</div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>종료 판정</b> — 전원 완주 or 제한시간 경과 → FINISHED, finalize <b>멱등</b></div></div>
-    <div class="task"><div class="box"></div><div class="k">RaceParticipant 상태(RUNNING/FINISHED/DNF/DISCONNECTED), 이벤트 RunnerFinished·RaceFinished</div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>RaceScheduler</b> — RoomLive 구독(RaceCreationHandler)이 Race 생성(goal=Room 목표거리/제한시간 승계, 전원 RUNNING), 서버시계 기준 동시출발(<span class="mono">startedAt</span>), 생성 멱등(roomId 유니크+count 선검사) <small>S3-3</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>RaceGateway(socket.io /race)</b> — 전용 네임스페이스, JWT 핸드셰이크, joinRoom(러너만) / progress(거리) / 3초 주기 leaderboard(거리 내림차순) 브로드캐스트 / raceFinished <small>S3-4</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>RaceService 안티치트</b> — <span class="mono">MAX_FEASIBLE_SPEED</span> 24km/h 상한(Δt 기반 실현가능거리 초과 리젝)·역행 리젝·목표초과 클램프·Δt≤0 리젝, 리젝 시 상태 완전 불변 <small>S3-5</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>종료 판정</b> — 전원 완주 자동종료 or 제한시간 지연잡(startedAt+limitMinutes) → FINISHED, 미완주 DNF, finalize <b>멱등</b>(중복 호출 no-op) <small>S3-6</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span>RaceParticipant 상태(RUNNING/FINISHED/DNF/DISCONNECTED), 이벤트 RaceStarted·RunnerFinished·RaceFinished 발행</div></div>
   </div>
 
   <div class="group card">

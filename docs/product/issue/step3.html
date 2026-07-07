@@ -66,44 +66,52 @@
     <div class="ihead"><span class="iid">S3-3</span><span class="ititle">RaceScheduler: Race 생성 · 동시출발</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">방이 LIVE로 전환되면 Race를 만들고 서버시계 기준 동시출발 시각을 확정.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>LIVE 전환 시 Race 생성(goal·runners), <span class="mono">startedAt</span> 서버시계 확정</span></li>
-      <li><span class="box"></span><span>RaceStarted 이벤트 발행</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">RoomLive</span> 이벤트 구독(RaceCreationHandler) → Race 생성 — <span class="mono">goal</span>은 Room의 <span class="mono">targetDistance</span>·<span class="mono">limitMinutes</span> 승계, 러너 전원 <span class="mono">RUNNING</span></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">startedAt</span> 서버시계 <span class="mono">now</span>로 전원 동일하게 확정, <span class="mono">RaceStarted</span> 이벤트 발행</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>생성 멱등 — <span class="mono">roomId</span> 유니크 제약 + count 선검사(중복 <span class="mono">RoomLive</span> 소비에도 Race 중복 생성 없음)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 방 LIVE 시 Race가 생성되고 모든 참가자에게 동일 출발 시각이 전달된다.</div>
+    <div class="iaccept"><b>통과</b> — 방이 LIVE로 전환되면 Race가 생성되고(goal=Room 목표거리/제한시간 승계, 참가자 전원 RUNNING), 서버시계 기준 동일한 <span class="mono">startedAt</span>이 전원에게 전달된다. <span class="mono">roomId</span> 유니크 제약 + count 선검사로 생성이 멱등(중복 생성 없음). domain-events 큐 단일 워커의 팬아웃 디스패처(DiscoveryService 핸들러 수집 → <span class="mono">supports</span> 매칭, 핸들러별 격리 ALS 컨텍스트)가 같은 <span class="mono">RoomLive</span> 이벤트를 로비 브로드캐스트(S2-4)와 Race 생성 두 핸들러에 동시 전달함을 확인. tsc 0에러·jest 42 통과·실부팅 성공.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S2-3</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-race">📦 Race</a><a href="../mvp/step3.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S3-4">
     <div class="ihead"><span class="iid">S3-4</span><span class="ititle">RaceGateway (/race socket.io)</span><span class="badge be">BACKEND</span><span class="pill">L</span></div>
     <div class="idesc">경주의 실시간 중계. 거리만 받아 순위를 브로드캐스트(좌표 미전송).</div>
     <ul class="isub">
-      <li><span class="box"></span><span>JWT 핸드셰이크, <span class="mono">joinRoom</span> / <span class="mono">progress</span>(거리) / <span class="mono">leaderboard</span> 브로드캐스트 / <span class="mono">raceFinished</span></span></li>
-      <li><span class="box"></span><span>주기 순위 산출·전파(2~5초), RaceParticipant 상태 반영</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">/race</span> 전용 네임스페이스, JWT 핸드셰이크(미인증 소켓 거부)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">joinRoom</span>(러너만 허용) · <span class="mono">progress</span>(거리만, 좌표 미전송) · <b>3초 주기</b> <span class="mono">leaderboard</span>(거리 내림차순) 브로드캐스트 · <span class="mono">raceFinished</span></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>네임스페이스 전용 RaceBroadcaster — 로비(기본 네임스페이스, S2-4)와 완전 분리</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 한 참가자의 거리 보고가 같은 방 전원의 리더보드에 실시간 반영된다.</div>
+    <div class="iaccept"><b>통과</b> — <span class="mono">/race</span> 네임스페이스가 JWT 핸드셰이크로 미인증 접속을 거부하고, 러너만 <span class="mono">joinRoom</span>할 수 있으며, 거리 <span class="mono">progress</span> 보고가 3초 주기 <span class="mono">leaderboard</span>(거리 내림차순) 브로드캐스트로 같은 방 전원에게 실시간 반영된다. 로비와 네임스페이스가 분리돼 있어 상호 간섭이 없다. tsc 0에러·jest 42 통과·실부팅 성공.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S2-4, S3-3</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#race">🎨 경주</a><a href="../../domain/index.html#ent-race">📦 Race</a><a href="../../domain/index.html#ent-raceparticipant">📦 RaceParticipant</a><a href="../mvp/step3.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S3-5">
     <div class="ihead"><span class="iid">S3-5</span><span class="ititle">RaceService 안티치트 · 진행 클램프</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">공정성의 핵심. 비현실적 진행은 서버가 최종 판정해 거부.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="mono">MIN_FEASIBLE_PACE</span> 위반(순간이동/비현실 페이스) 리젝</span></li>
-      <li><span class="box"></span><span>진행 클램프(역행 방지·상한), 보고 간격 검증</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">MAX_FEASIBLE_SPEED</span> 24km/h 상한 — 보고 간격(<span class="mono">Δt</span>) 기준 실현가능거리를 초과하면 리젝(순간이동/비현실 페이스 방지)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>역행(거리 감소) 리젝, 목표거리 초과분 클램프</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">Δt ≤ 0</span>(비정상 타임스탬프) 리젝 — 리젝 시 참가자 상태 완전 불변(값 변경 없음)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 조작된 급증 보고가 거부되고 정상 진행만 순위에 반영된다.</div>
+    <div class="iaccept"><b>통과</b> — 직전 보고 이후 경과시간(Δt) 기준 <span class="mono">MAX_FEASIBLE_SPEED</span>(24km/h)로 계산한 실현가능거리를 초과하는 보고, 역행 보고, <span class="mono">Δt≤0</span> 보고가 모두 리젝되고 리젝 시 상태가 완전히 불변으로 유지된다. 목표거리 초과분은 클램프돼 순위에 과대반영되지 않는다. tsc 0에러·jest 42 통과·실부팅 성공.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S3-4</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-raceparticipant">📦 RaceParticipant</a><a href="../mvp/step3.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S3-6">
     <div class="ihead"><span class="iid">S3-6</span><span class="ititle">종료 판정 + finalize 멱등</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">경주를 안전하게 마감. 중복 종료 호출에도 결과가 한 번만 확정.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>전원 완주 or 제한시간 경과 → FINISHED, <span class="mono">raceFinished</span> 브로드캐스트</span></li>
-      <li><span class="box"></span><span>finalize 멱등(중복 방지), RunnerFinished·RaceFinished 이벤트</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>전원 완주 시 자동 종료, 또는 제한시간 지연잡(<span class="mono">startedAt + limitMinutes</span>)으로 <span class="mono">FINISHED</span> 전환</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>미완주 러너는 <span class="mono">DNF</span> 처리, <span class="mono">RunnerFinished</span>·<span class="mono">RaceFinished</span> 이벤트 발행</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>finalize 멱등 — 이미 <span class="mono">FINISHED</span>면 no-op(중복 <span class="mono">RaceFinished</span> 발행 없음)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 완주/시간초과로 경주가 마감되고 재호출해도 결과가 바뀌지 않는다.</div>
+    <div class="iaccept"><b>통과</b> — 전원 완주 시 즉시, 미완주자가 있으면 제한시간 지연잡 도달 시 Race가 <span class="mono">FINISHED</span>로 전환되고 미완주 러너는 <span class="mono">DNF</span>로 확정된다. <span class="mono">RunnerFinished</span>·<span class="mono">RaceFinished</span> 이벤트가 발행되며, finalize를 중복 호출해도 이미 <span class="mono">FINISHED</span>면 no-op(중복 이벤트·결과 변경 없음)이 실측됐다. tsc 0에러·jest 42 통과·실부팅 성공.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S3-4, S3-5</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-race">📦 Race</a><a href="../mvp/step3.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S3-7">

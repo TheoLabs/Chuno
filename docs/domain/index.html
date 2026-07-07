@@ -378,7 +378,7 @@
           <div class="f"><span class="fn">runners</span><span class="ft">RaceParticipant[]</span></div>
         </div>
         <div class="rel"><b>관계:</b> 1 ── N <b>RaceParticipant</b> · 종료 시 N개 <b>RaceResult</b> 생성</div>
-        <div class="inv">종료 조건: 전원 완주 OR 제한시간 경과 · finalize 멱등</div>
+        <div class="inv">생성: <span style="font-family:var(--mono)">RoomLive</span> 이벤트 구독(RaceCreationHandler) → goal은 Room의 <span style="font-family:var(--mono)">targetDistance</span>·<span style="font-family:var(--mono)">limitMinutes</span> 승계, <span style="font-family:var(--mono)">startedAt</span> 서버시계 <span style="font-family:var(--mono)">now</span>로 전원 동일 · 생성 멱등(roomId 유니크+count 선검사) · 종료 조건: 전원 완주 자동종료 <b>OR</b> 제한시간 지연잡(<span style="font-family:var(--mono)">startedAt+limitMinutes</span>) 경과 · finalize 멱등(이미 FINISHED면 no-op)</div>
       </div>
       <div class="card ent" id="ent-raceparticipant">
         <div class="hd"><span class="nm">RaceParticipant</span><span class="badge ent">Entity</span></div>
@@ -390,7 +390,7 @@
           <div class="f"><span class="fn">finishedAt</span><span class="ft">Date?</span></div>
           <div class="f"><span class="fn">lastReportAt</span><span class="ft">Date</span></div>
         </div>
-        <div class="inv">진행 보고는 거리(km)만 · anti-cheat: MIN_FEASIBLE_PACE 위반(순간이동/비현실 페이스) 리젝</div>
+        <div class="inv">진행 보고는 거리(km)만 · anti-cheat: <span style="font-family:var(--mono)">MAX_FEASIBLE_SPEED</span> 24km/h 상한(보고 간격 Δt 기준 실현가능거리 초과 시 리젝=순간이동/비현실 페이스) · 역행(거리 감소) 리젝 · 목표거리 초과분 클램프 · <span style="font-family:var(--mono)">Δt≤0</span> 리젝 · 리젝 시 상태 완전 불변</div>
       </div>
       <div class="card vo">
         <div class="hd"><span class="nm">값 객체</span><span class="badge vo">Value Object</span></div>
@@ -740,9 +740,9 @@
       <tr><td><span class="ev">RoomStarting</span></td><td class="mono">Scheduler→Room</td><td class="mono">Notification("곧 시작")</td><td>T-Δ 카운트다운</td></tr>
       <tr><td><span class="ev">RoomLive</span></td><td class="mono">Scheduler→Room</td><td class="mono">Realtime(WS)·Race 생성 훅(Step3)</td><td>출발(LIVE) 전환</td></tr>
       <tr><td><span class="ev">RoomCancelled</span></td><td class="mono">Room</td><td class="mono">Notification·Points(환불 시)</td><td>인원 미달·방장 이탈·강제취소</td></tr>
-      <tr><td><span class="ev">RaceStarted</span></td><td class="mono">Race</td><td class="mono">Realtime(WS join)</td><td>동시 출발</td></tr>
+      <tr><td><span class="ev">RaceStarted</span></td><td class="mono">RoomLive→Race</td><td class="mono">Realtime(WS join)</td><td>동시 출발(startedAt 서버시계 확정) · RaceCreationHandler가 RoomLive 구독해 생성</td></tr>
       <tr><td><span class="ev">RunnerFinished</span></td><td class="mono">Race</td><td class="mono">Race(종료 판정)</td><td>목표거리 도달</td></tr>
-      <tr><td><span class="ev">RaceFinished</span></td><td class="mono">Race</td><td class="mono">Scoring → Points → Stats → Notification</td><td>핵심 연쇄</td></tr>
+      <tr><td><span class="ev">RaceFinished</span></td><td class="mono">Race</td><td class="mono">Scoring → Points → Stats → Notification</td><td>전원완주 자동 또는 제한시간 지연잡 · finalize 멱등 · Step4 스코어링 훅 지점</td></tr>
       <tr><td><span class="ev">ScoreCalculated</span></td><td class="mono">Scoring</td><td class="mono">Points(적립)·Leaderboard(갱신)</td><td>RaceResult 저장</td></tr>
       <tr><td><span class="ev">PointsAwarded</span></td><td class="mono">Points</td><td class="mono">Notification(선택)</td><td>Score 연동</td></tr>
       <tr><td><span class="ev">ItemPurchased</span></td><td class="mono">Points</td><td class="mono">Entitlement(광고제거 부여)</td><td>스토어</td></tr>
@@ -750,6 +750,9 @@
   </table>
   <div style="margin-top:14px;" class="note-box">
     ⚡ <b>고빈도 진행 보고</b>(RunnerProgressed)는 도메인 이벤트/Kafka가 아니라 <b>socket.io 브로드캐스트</b>로 처리(초당 다수). 이벤트버스는 "완주/종료" 같은 상태 전이 사실에만 사용해 부하를 낮춘다.
+  </div>
+  <div style="margin-top:10px;" class="note-box">
+    🔀 <b>팬아웃 디스패처</b> — <span style="font-family:var(--mono)">domain-events</span> 큐는 단일 워커가 DiscoveryService로 핸들러를 수집해 <span style="font-family:var(--mono)">supports</span> 매칭으로 팬아웃한다(핸들러별 격리 ALS 컨텍스트). 같은 <span style="font-family:var(--mono)">RoomLive</span> 이벤트를 로비 브로드캐스트(S2-4)와 Race 생성(S3-3) 두 핸들러가 각자 반응하는 방식 — Step4의 <span style="font-family:var(--mono)">RaceFinished</span>→스코어링도 핸들러 추가만으로 확장된다.
   </div>
 </section>
 
