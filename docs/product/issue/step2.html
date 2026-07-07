@@ -46,11 +46,11 @@
       <li><span class="box done"></span><span><span class="stag done">완료</span>Participant(<span class="mono">userId</span>·<span class="mono">joinedOn</span>·<span class="mono">isHost</span>, 애그리거트 내부 자식) <small>필드·<span class="mono">isHost</span>·Room 물리FK·User 논리FK(<span class="mono">userId</span> plain) 실측</small></span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">targetDistance</span>·<span class="mono">limitMinutes</span>는 Room 직접 컬럼, <span class="mono">RoomStatus</span>(<span class="mono">RECRUITING</span>·<span class="mono">STARTING</span>·<span class="mono">LIVE</span>·<span class="mono">FINISHED</span>·<span class="mono">CANCELLED</span>)만 VO(enum)</span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span>도메인 메서드 <span class="mono">create</span>(방장 자동 첫 Participant)·<span class="mono">join</span>·<span class="mono">leave</span>·<span class="mono">cancel</span> + 불변식(정원·시작후 join불가·중복·방장leave=취소)</span></li>
-      <li><span class="box scope"></span><span><span class="stag scope">이월</span><span class="mono">markStarting</span>(RECRUITING→STARTING, 2명미만→CANCELLED)·<span class="mono">markLive</span>(STARTING→LIVE)는 예약 스케줄러가 트리거하는 시점에 필요 → <a href="step2.html#S2-3">S2-3</a>에서 구현(사용자 결정)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">markStarting</span>(RECRUITING→STARTING, 2명미만→CANCELLED)·<span class="mono">markLive</span>(STARTING→LIVE) — 예약 스케줄러가 트리거하는 시점에 필요해 <a href="step2.html#S2-3">S2-3</a>에서 구현 완료(이월 해소)</span></li>
       <li><span class="box done"></span><span><span class="stag done">완료</span>RoomRepository(포트, <span class="mono">DddRepository</span>) — participants 애그리거트 단위 로드. <span class="mono">find</span>의 <span class="mono">relations</span> 파라미터로 로드 지원, 저장은 cascade로 애그리거트 단위 O(실측) <small>participants를 항상 로드하는 전용 경로(<span class="mono">findByIdWithParticipants</span>) 보장은 소비 시점(S2-2 Room API)에 적용 — 사용자 결정으로 S2-1 스코프외</small></span></li>
       <li><span class="box done"></span><span><span class="stag scope">결정</span>TypeORM 매핑, <span class="mono">synchronize</span>로 스키마 관리(마이그레이션 미도입, Step1과 동일 결정)</span></li>
     </ul>
-    <div class="iaccept"><b>통과</b> — Room·Participant 스키마·물리/논리 FK·직접컬럼·<span class="mono">RoomStatus</span> VO·도메인 메서드 <span class="mono">create</span>·<span class="mono">join</span>·<span class="mono">leave</span>·<span class="mono">cancel</span>(+불변식)·orphan 삭제·RoomRepository 포트·<span class="mono">synchronize</span> 실측 완료(build/lint 통과), <span class="mono">create</span>가 방장을 <span class="mono">isHost</span>로 포함하고 participants가 애그리거트 단위로 로드된다. (<span class="mono">markStarting</span>·<span class="mono">markLive</span>는 <a href="step2.html#S2-3">S2-3</a> 예약 스케줄러 트리거 시점으로 이월, participants 전용 로드 경로는 S2-2 소비 시점 적용 — 둘 다 스코프 조정.)</div>
+    <div class="iaccept"><b>통과</b> — Room·Participant 스키마·물리/논리 FK·직접컬럼·<span class="mono">RoomStatus</span> VO·도메인 메서드 <span class="mono">create</span>·<span class="mono">join</span>·<span class="mono">leave</span>·<span class="mono">cancel</span>(+불변식)·orphan 삭제·RoomRepository 포트·<span class="mono">synchronize</span> 실측 완료(build/lint 통과), <span class="mono">create</span>가 방장을 <span class="mono">isHost</span>로 포함하고 participants가 애그리거트 단위로 로드된다. (<span class="mono">markStarting</span>·<span class="mono">markLive</span>는 <a href="step2.html#S2-3">S2-3</a>에서 구현 완료 — 이월 해소, participants 전용 로드 경로는 S2-2 소비 시점 적용.)</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-2, S1-3</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-room">📦 Room</a><a href="../../domain/index.html#ent-participant">📦 Participant</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
@@ -77,16 +77,16 @@
     <div class="ihead"><span class="iid">S2-3</span><span class="ititle">예약 스케줄러 (동시출발 트리거)</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">예약 시각에 방 상태를 자동 전환. 인원 미달이면 취소. 동시출발의 트리거.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="stag scope">결정</span><b>BullMQ 지연잡</b> — <span class="mono">scheduledStartOn</span>(서버 KST)은 <b>출발(LIVE) 시각</b>. <span class="mono">scheduledStartOn − 10초</span> 도달 시 <b>RECRUITING→STARTING</b>(10초 카운트다운 시작·<b>join 마감</b>·이 시점 <b>2명 미만이면 CANCELLED</b>, 카운트다운 미개시), <span class="mono">scheduledStartOn</span> 도달 시 <b>STARTING→LIVE</b>(출발). <b>Δ=10초 고정</b></span></li>
-      <li><span class="box"></span><span><span class="stag scope">이월</span>Room 도메인 메서드 <span class="mono">markStarting</span>(RECRUITING→STARTING, 2명 미만→CANCELLED)·<span class="mono">markLive</span>(STARTING→LIVE), 멱등 — 이 태스크에서 구현(<a href="step2.html#S2-1">S2-1</a>에서 이월), 스케줄러(BullMQ, <span class="mono">−10초</span>/정각)가 호출</span></li>
-      <li><span class="box"></span><span>STARTING 전환 시점(<span class="mono">−10초</span>)에 2명 미만이면 → <b>CANCELLED</b>(soft) 목록 비노출·통지</span></li>
-      <li><span class="box"></span><span><span class="stag scope">스코프외</span>LIVE 시 Race 생성은 Step3 경계(여기선 이벤트까지)</span></li>
-      <li><span class="box"></span><span>방 삭제·취소·시각변경 시 잡 취소·재등록</span></li>
-      <li><span class="box"></span><span>도메인 이벤트 발행(<span class="mono">RoomStarting</span>·<span class="mono">RoomCancelled</span>)</span></li>
-      <li><span class="box"></span><span>멱등성(중복·재시작 이중전환 방지)</span></li>
+      <li><span class="box done"></span><span><span class="stag scope">결정</span><b>BullMQ 지연잡</b> — <span class="mono">scheduledStartOn</span>(서버 KST)은 <b>출발(LIVE) 시각</b>. <span class="mono">scheduledStartOn − 10초</span> 도달 시 <b>RECRUITING→STARTING</b>(10초 카운트다운 시작·<b>join 마감</b>·이 시점 <b>2명 미만이면 CANCELLED</b>, 카운트다운 미개시), <span class="mono">scheduledStartOn</span> 도달 시 <b>STARTING→LIVE</b>(출발). <b>Δ=10초 고정</b></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>Room 도메인 메서드 <span class="mono">markStarting</span>(RECRUITING→STARTING, 2명 미만→CANCELLED)·<span class="mono">markLive</span>(STARTING→LIVE), 멱등 구현(<a href="step2.html#S2-1">S2-1</a>에서 이월) — 스케줄러(BullMQ, <span class="mono">−10초</span>/정각)가 호출</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>STARTING 전환 시점(<span class="mono">−10초</span>)에 2명 미만이면 → <b>CANCELLED</b>(soft) 목록 비노출·통지</span></li>
+      <li><span class="box scope"></span><span><span class="stag scope">스코프외</span>LIVE 시 Race 생성은 Step3 경계(여기선 이벤트까지)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>방별 결정적 <span class="mono">jobId</span>로 잡 등록 — 방 취소·삭제 시 잡 취소·재등록 <small>(시각변경 재등록은 시각변경 API 부재로 N/A, 스케줄러 자체는 재등록 지원)</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>RoomSchedulerProcessor가 잡 소비 → 도메인 전환 → 도메인 이벤트 발행(<span class="mono">RoomStarting</span>·<span class="mono">RoomLive</span>·<span class="mono">RoomCancelled</span>)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>멱등성(중복·재시작 이중전환 방지)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — <span class="mono">scheduledStartOn − 10초</span>에 자동 RECRUITING→STARTING(join 마감·카운트다운 시작, 이 시점 2명 미만이면 CANCELLED), <span class="mono">scheduledStartOn</span>(Δ=10초 후)에 STARTING→LIVE, 이벤트 발행, 재시작에도 이중전환이 없다.</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S2-1, S2-2, S2-5</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="iaccept"><b>완료</b> — RoomScheduler가 방별 결정적 <span class="mono">jobId</span>로 BullMQ 지연잡 2개(<span class="mono">scheduledStartOn−10초</span>에 <span class="mono">markStarting</span> / 정각에 <span class="mono">markLive</span>)를 등록하고, 방 취소·삭제 시 잡을 취소·재등록한다(시각변경 API는 아직 없어 N/A). RoomSchedulerProcessor가 잡을 소비해 도메인 전환 후 <span class="mono">RoomStarting</span>·<span class="mono">RoomLive</span>·<span class="mono">RoomCancelled</span> 이벤트를 발행하며, <span class="mono">markStarting</span>/<span class="mono">markLive</span>는 멱등(재시작·중복 잡에도 이중전환 없음)이 실측됐다. tsc 0에러·jest 32/32·실부팅 성공.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S2-1, S2-2, S2-5, S2-12</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-room">📦 Room</a><a href="../../domain/index.html#states">📦 상태 머신</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
 
@@ -94,14 +94,14 @@
     <div class="ihead"><span class="iid">S2-4</span><span class="ititle">로비 socket.io 게이트웨이 (+서버시각 소스)</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">로비 참가자에게 입퇴장·상태전환을 실시간 브로드캐스트. 클라 카운트다운을 위한 서버시각도 함께 제공.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>JWT 핸드셰이크 인증(Step1 시크릿)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>JWT 핸드셰이크 인증(Step1 시크릿) — 미인증 소켓 거부</span></li>
       <li><span class="box scope"></span><span><span class="stag scope">스코프외</span>제재(<span class="mono">SUSPENDED</span>/<span class="mono">BANNED</span>) 게이팅은 백오피스 <b>BO2-4</b>가 이 핸드셰이크에 크로스컷으로 추가(제재 유저 소켓 거부) — 이 태스크는 <b>인증 훅 지점만 확보</b></span></li>
-      <li><span class="box"></span><span>방 룸 조인·이탈, 참가자격 검증(해당 방 Participant만)</span></li>
-      <li><span class="box"></span><span>브로드캐스트 <span class="mono">participantJoined</span>·<span class="mono">participantLeft</span>·<span class="mono">roomStatusChanged</span>·<span class="mono">roomCancelled</span></span></li>
-      <li><span class="box"></span><span>핸드셰이크/응답에 <b>서버 now</b>(<span class="mono">serverTime</span>, KST·epoch) 제공 — S2-9 오프셋 보정용</span></li>
-      <li><span class="box"></span><span>S2-5 이벤트 구독 → 브로드캐스트 배선</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>방 룸 조인(<span class="mono">joinRoom</span>)·이탈(<span class="mono">leaveRoom</span>), 참가자격 검증(해당 방 Participant만 허용)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>LobbyBroadcastProcessor(domain-events 큐 구독)가 <span class="mono">participantJoined</span>·<span class="mono">participantLeft</span>·<span class="mono">roomStatusChanged</span>(starting/live)·<span class="mono">roomCancelled</span> 브로드캐스트, 브로드캐스터 미바인딩 시 안전 스킵</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>핸드셰이크/응답에 <b>서버 now</b>(<span class="mono">serverTime</span>, epoch ms) 제공 — S2-9 오프셋 보정용</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>S2-5 이벤트(domain-events 큐) 구독 → 브로드캐스트 배선</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 참가/이탈·상태전환이 같은 방 클라이언트에 즉시 반영되고, 미인증 소켓은 거부되며, 클라가 서버시각 오프셋을 획득할 수 있다. 제재 게이팅 삽입 지점(핸드셰이크 인증 훅)이 열려 있다.</div>
+    <div class="iaccept"><b>통과</b> — LobbyGateway가 핸드셰이크 JWT 인증(미인증 소켓 거부, 제재 게이팅 BO2-4 훅 지점 확보), <span class="mono">joinRoom</span>(해당 방 Participant만 허용)·<span class="mono">leaveRoom</span>·<span class="mono">serverTime</span>(epoch ms)을 제공한다. LobbyBroadcastProcessor(domain-events 구독)가 참가/이탈·상태전환(starting/live)·취소를 같은 방 클라이언트에 즉시 브로드캐스트하며, 브로드캐스터 미바인딩 시에도 안전하게 스킵된다. tsc 0에러·jest 32/32·실부팅 성공.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S2-1, S2-5</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-participant">📦 Participant</a><a href="../wireframes/index.html#lobby">🎨 로비</a><a href="../../backoffice/issue/step2.html#BO2-4">🎫 백오피스 BO2-4</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
@@ -110,13 +110,13 @@
     <div class="ihead"><span class="iid">S2-5</span><span class="ititle">Room 도메인 이벤트 (인프로세스)</span><span class="badge be">BACKEND</span><span class="pill">S</span></div>
     <div class="idesc">컨텍스트 간 연결을 위한 이벤트 발행. MVP는 인프로세스로.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="mono">RoomCreated</span>·<span class="mono">ParticipantJoined</span>·<span class="mono">RoomStarting</span>·<span class="mono">RoomCancelled</span> 정의(payload <span class="mono">roomId</span>·식별자·발생시각)</span></li>
-      <li><span class="box"></span><span><span class="mono">DddAggregate</span> 이벤트 수집 → 커밋 시 발행</span></li>
-      <li><span class="box"></span><span>구독자 = 로비 게이트웨이(S2-4). <span class="stag scope">스코프외</span>알림·환불 구독은 후속 스텝 훅 지점만 표시</span></li>
-      <li><span class="box"></span><span><span class="mono">RoomCancelled</span> — 관리자 강제취소(백오피스 <b>BO4-1</b>)도 동일 이벤트를 재사용 → 로비 게이트웨이(S2-4) 참가자 브로드캐스트 재사용</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">RoomCreated</span>·<span class="mono">ParticipantJoined</span>·<span class="mono">ParticipantLeft</span>·<span class="mono">RoomStarting</span>·<span class="mono">RoomLive</span>·<span class="mono">RoomCancelled</span> 정의(payload <span class="mono">roomId</span>·식별자·<span class="mono">occurredAt</span>) <small><span class="mono">RoomLive</span>는 LIVE 전환 브로드캐스트 + Step3 Race 생성 훅용으로 신규 추가, <span class="mono">RoomCreated</span>는 정의만(홈은 폴링, MVP 소비자 없음)</small></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">DddAggregate</span>가 join/leave/cancel/<span class="mono">markStarting</span>/<span class="mono">markLive</span>에서 이벤트 수집 → 커밋 성공 후 인프로세스 BullMQ(domain-events)로 발행(ALS 수집 → <span class="mono">@Transactional</span> 커밋 후 플러시, 롤백 시 폐기, 발행 실패는 비치명)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>구독자 = 로비 게이트웨이(S2-4). <span class="stag scope">스코프외</span>알림·환불 구독은 후속 스텝 훅 지점만 표시</span></li>
+      <li><span class="box done"></span><span><span class="stag scope">결정</span><span class="mono">RoomCancelled</span> — 관리자 강제취소(백오피스 <b>BO4-1</b>)도 동일 이벤트를 재사용 → 로비 게이트웨이(S2-4) 참가자 브로드캐스트 재사용</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 방 상태 변화가 이벤트로 발행되고 로비 게이트웨이가 반응한다.</div>
-    <div class="imeta"><span class="dep"><b>선행:</b> S2-1</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="iaccept"><b>완료</b> — 애그리거트가 수집한 이벤트가 커밋 성공 후 인프로세스 BullMQ(domain-events)로 발행되고, 로비 게이트웨이(S2-4)가 구독해 반응한다. 아웃박스→Kafka 경로는 별개 크로스서비스용으로 유지. tsc 0에러·jest 32/32·실부팅 성공.</div>
+    <div class="imeta"><span class="dep"><b>선행:</b> S2-1, S2-12</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-room">📦 Room</a><a href="../../backoffice/issue/step4.html#BO4-1">🎫 백오피스 BO4-1</a><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>
 
@@ -204,11 +204,11 @@
     <div class="ihead"><span class="iid">S2-12</span><span class="ititle">Redis / BullMQ 인프라</span><span class="badge ops">OPS</span><span class="pill">S</span></div>
     <div class="idesc">예약 스케줄러(S2-3)가 기대는 지연잡 큐 인프라.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>Redis 연결·설정(<span class="mono">@configs</span>, 로컬 docker)</span></li>
-      <li><span class="box"></span><span>BullMQ 큐 모듈(지연잡용)·헬스체크·graceful shutdown 연동</span></li>
-      <li><span class="box"></span><span><span class="stag scope">스코프외</span>socket.io Redis 어댑터 — 단일 인스턴스라 스코프 밖</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>Redis 연결·설정(<span class="mono">@configs</span>, 로컬 docker 기본 host/port)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">libs/queue</span> — BullMQ <span class="mono">forRootAsync</span> 커넥션 + <span class="mono">room-scheduler</span>·<span class="mono">domain-events</span> 큐 등록, 부팅 시 Redis fail-fast 헬스체크(<span class="mono">waitUntilReady</span>+PING)와 <span class="mono">/health</span> 반영, graceful shutdown(Nest <span class="mono">enableShutdownHooks</span>)이 BullMQ 커넥션 자동 정리</span></li>
+      <li><span class="box scope"></span><span><span class="stag scope">스코프외</span>socket.io Redis 어댑터 — 단일 인스턴스라 스코프 밖</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 부팅 시 Redis 연결이 성공하고, BullMQ가 지연잡을 수용한다.</div>
+    <div class="iaccept"><b>완료</b> — 부팅 시 Redis 연결이 성공(fail-fast 헬스체크)하고 <span class="mono">/health</span>가 Redis 상태를 반영하며, BullMQ(<span class="mono">room-scheduler</span>·<span class="mono">domain-events</span>)가 지연잡을 수용한다. graceful shutdown 시 BullMQ 커넥션이 자동 정리된다. tsc 0에러·jest 32/32·실부팅 성공.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-1</span><span class="ilinks">관련<a href="../mvp/step2.html">MVP</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../mvp/step2.html">🗺️ MVP</a></div>
   </div>

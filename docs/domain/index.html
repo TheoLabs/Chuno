@@ -736,8 +736,10 @@
       <tr><td><span class="ev">UserOnboarded</span></td><td class="mono">Identity</td><td class="mono">Stats·Points(계정 초기화)</td><td>온보딩 완료</td></tr>
       <tr><td><span class="ev">RoomCreated</span></td><td class="mono">Room</td><td class="mono">—</td><td>홈 목록 노출</td></tr>
       <tr><td><span class="ev">ParticipantJoined</span></td><td class="mono">Room</td><td class="mono">Notification(방장에게)</td><td>실시간 로비 갱신(WS)</td></tr>
+      <tr><td><span class="ev">ParticipantLeft</span></td><td class="mono">Room</td><td class="mono">—</td><td>실시간 로비 갱신(WS)</td></tr>
       <tr><td><span class="ev">RoomStarting</span></td><td class="mono">Scheduler→Room</td><td class="mono">Notification("곧 시작")</td><td>T-Δ 카운트다운</td></tr>
-      <tr><td><span class="ev">RoomCancelled</span></td><td class="mono">Room</td><td class="mono">Notification·Points(환불 시)</td><td>시작 시 2명 미만</td></tr>
+      <tr><td><span class="ev">RoomLive</span></td><td class="mono">Scheduler→Room</td><td class="mono">Realtime(WS)·Race 생성 훅(Step3)</td><td>출발(LIVE) 전환</td></tr>
+      <tr><td><span class="ev">RoomCancelled</span></td><td class="mono">Room</td><td class="mono">Notification·Points(환불 시)</td><td>인원 미달·방장 이탈·강제취소</td></tr>
       <tr><td><span class="ev">RaceStarted</span></td><td class="mono">Race</td><td class="mono">Realtime(WS join)</td><td>동시 출발</td></tr>
       <tr><td><span class="ev">RunnerFinished</span></td><td class="mono">Race</td><td class="mono">Race(종료 판정)</td><td>목표거리 도달</td></tr>
       <tr><td><span class="ev">RaceFinished</span></td><td class="mono">Race</td><td class="mono">Scoring → Points → Stats → Notification</td><td>핵심 연쇄</td></tr>
