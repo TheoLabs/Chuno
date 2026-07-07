@@ -38,6 +38,10 @@ class RaceState {
   /// raceFinished 수신(경주 종료). UI 는 결과 화면 진입.
   final bool raceFinished;
 
+  /// 이 경주의 raceId(ack/leaderboard 스냅샷의 `id`). 종료 시 결과 화면이 이 값으로
+  /// `GET /races/:id/result` 를 직접 조회한다. null=아직 미확보(폴백 폴링).
+  final int? raceId;
+
   /// 내가 완주했음(`runnerFinished{userId==나}` 이벤트로 확정). 3초 주기 leaderboard 보다
   /// 즉시 오는 raceFinished 와의 경쟁조건에서, 최종 스냅샷이 늦어도 완주로 판정하기 위한 플래그.
   final bool myFinished;
@@ -51,6 +55,7 @@ class RaceState {
     this.buffering = false,
     this.raceFinished = false,
     this.myFinished = false,
+    this.raceId,
   });
 
   RaceState copyWith({
@@ -62,6 +67,7 @@ class RaceState {
     bool? buffering,
     bool? raceFinished,
     bool? myFinished,
+    int? raceId,
   }) =>
       RaceState(
         connection: connection ?? this.connection,
@@ -72,6 +78,7 @@ class RaceState {
         buffering: buffering ?? this.buffering,
         raceFinished: raceFinished ?? this.raceFinished,
         myFinished: myFinished ?? this.myFinished,
+        raceId: raceId ?? this.raceId,
       );
 
   /// 내 리더보드 행(서버 스냅샷 기준). 없으면 null.
@@ -179,6 +186,10 @@ class RaceController extends AutoDisposeFamilyNotifier<RaceState, RaceArgs> {
         state = state.copyWith(connection: RaceConnection.disconnected);
       case RaceLeaderboardMsg(:final snapshot, :final serverTimeMs):
         var next = state.copyWith(snapshot: snapshot);
+        // raceId 캡처(ack/주기 스냅샷의 `id`) — 종료 시 결과 직접조회 키. 유효할 때만 갱신.
+        if (snapshot.raceId > 0 && state.raceId != snapshot.raceId) {
+          next = next.copyWith(raceId: snapshot.raceId);
+        }
         if (serverTimeMs != null) {
           next = next.copyWith(clock: ServerClock.fromServerTime(serverTimeMs));
         }

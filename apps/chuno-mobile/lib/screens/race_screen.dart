@@ -85,15 +85,18 @@ class _LiveRaceViewState extends ConsumerState<LiveRaceView> {
     if (next.raceFinished && !_wasFinished) {
       _wasFinished = true;
       HapticFeedback.heavyImpact();
-      _goResult(finished: myFinished);
+      _goResult(finished: myFinished, raceId: next.raceId);
     }
   }
 
-  void _goResult({required bool finished}) {
+  void _goResult({required bool finished, int? raceId}) {
     if (_navigatedToResult || !mounted) return;
     _navigatedToResult = true;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => ResultScreen(userId: widget.userId, dnf: !finished)),
+      MaterialPageRoute(
+        builder: (_) =>
+            ResultScreen(raceId: raceId, userId: widget.userId, dnf: !finished),
+      ),
     );
   }
 
@@ -121,8 +124,9 @@ class _LiveRaceViewState extends ConsumerState<LiveRaceView> {
       ),
     );
     if (ok == true && mounted) {
+      final raceId = ref.read(raceControllerProvider(_args)).raceId;
       ref.read(raceControllerProvider(_args).notifier).quit();
-      _goResult(finished: false);
+      _goResult(finished: false, raceId: raceId);
     }
   }
 

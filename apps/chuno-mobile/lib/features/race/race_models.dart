@@ -67,6 +67,8 @@ class RaceGoal {
 
 /// 리더보드 스냅샷 — 주기(~3초) 브로드캐스트 및 joinRoom ack 의 race 필드.
 class LeaderboardSnapshot {
+  /// raceId — 서버가 `id` 로 노출(종료 후 `GET /races/:id/result` 직접 조회용). 0=미상.
+  final int raceId;
   final int roomId;
   final RaceStatus status;
   final int startedAtMs; // 출발 시각 epoch ms(서버 권위)
@@ -74,6 +76,7 @@ class LeaderboardSnapshot {
   final List<LeaderboardEntry> runners; // 거리 내림차순
 
   const LeaderboardSnapshot({
+    this.raceId = 0,
     required this.roomId,
     required this.status,
     required this.startedAtMs,
@@ -84,6 +87,7 @@ class LeaderboardSnapshot {
   factory LeaderboardSnapshot.fromJson(Map<String, dynamic> j) {
     final rawRunners = (j['runners'] as List?) ?? const [];
     return LeaderboardSnapshot(
+      raceId: (j['id'] as num?)?.toInt() ?? 0,
       roomId: (j['roomId'] as num?)?.toInt() ?? 0,
       status: RaceStatus.fromWire(j['status']?.toString()),
       startedAtMs: (j['startedAt'] as num?)?.toInt() ?? 0,

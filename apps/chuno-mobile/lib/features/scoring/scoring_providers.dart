@@ -34,10 +34,11 @@ final runnerStatsProvider = FutureProvider<RunnerStatsSummary>((ref) async {
 /// 경주 결과 화면 인자 — raceId(있으면 직접 조회) + 내 userId(내 행 식별).
 typedef RaceResultArgs = ({int? raceId, int userId});
 
-/// 결과 화면 뷰모델. raceId 가 있으면 그 경주 결과를 바로 조회하고,
-/// 없으면(라이브 종료 직후 raceId 미확보) 내 최신 기록을 폴백 폴링해 raceId 를 확보한다.
+/// 결과 화면 뷰모델. raceId 직접조회 우선 — 경주 화면이 스냅샷(`id`)에서 캡처한 raceId 를
+/// 넘기므로 통상 `GET /races/:id/result` 를 바로 조회한다(반환 유저가 이전 경주 결과를 보던 리스크 해소).
 ///
-/// 결과는 RaceFinished 를 비동기 소비해 적재되므로, 라이브 종료 직후엔 아직 미기록일 수 있다 →
+/// raceId 를 끝내 확보 못한 폴백 경로에서만 내 최신 기록을 폴링해 raceId 를 확보한다(안전망).
+/// 결과는 RaceFinished 를 비동기 소비해 적재되므로, 라이브 종료 직후엔 아직 미기록일 수 있어
 /// 몇 차례 지연 재시도(폴링)로 적재를 기다린다.
 final raceResultViewProvider =
     FutureProvider.autoDispose.family<RaceResultView, RaceResultArgs>((ref, args) async {

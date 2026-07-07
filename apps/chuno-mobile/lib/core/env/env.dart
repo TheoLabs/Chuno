@@ -47,4 +47,5 @@ class ApiPaths {
   static const String rankings = '/rankings';
   static const String myResults = '/users/me/results';
   static String raceResult(int raceId) => '/races/$raceId/result';
+  static const String deviceTokens = '/users/me/device-tokens';
 }

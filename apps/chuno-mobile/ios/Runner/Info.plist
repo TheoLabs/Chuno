@@ -11,7 +11,13 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
+		<!-- S5-2 푸시(FCM/APNs) 백그라운드 수신. -->
+		<string>remote-notification</string>
+		<string>fetch</string>
 	</array>
+	<!-- S5-2 FCM 스위즐링 사용(별도 AppDelegate 개입 없이 APNs 토큰 매핑). -->
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<!-- dev 전용: 로컬 http(localhost) 백엔드 호출 허용. arbitrary loads 전체 허용은 하지 않는다. -->

@@ -59,8 +59,10 @@ GeoSample geo(double lat, {required int tMs}) => GeoSample(
 LeaderboardSnapshot snap({
   required String status,
   required List<Map<String, dynamic>> runners,
+  int? raceId,
 }) =>
     LeaderboardSnapshot.fromJson({
+      'id': ?raceId,
       'roomId': 1,
       'status': status,
       'startedAt': 1000,
@@ -117,6 +119,18 @@ void main() {
     expect(s.snapshot!.runners.length, 2);
     expect(s.myEntry(42)!.distanceKm, 2.4);
     expect(s.myEntry(42)!.rank, 2);
+  });
+
+  test('leaderboard 의 raceId(id) 를 RaceState 에 캡처 → 결과 직접조회 키', () async {
+    expect(read().raceId, isNull);
+    channel.emit(RaceLeaderboardMsg(
+      snap(status: 'live', raceId: 77, runners: [
+        {'rank': 1, 'userId': 42, 'distanceKm': 3.0, 'status': 'running', 'finishedAt': null},
+      ]),
+      serverTimeMs: DateTime.now().millisecondsSinceEpoch,
+    ));
+    await settle();
+    expect(read().raceId, 77);
   });
 
   test('finished 스냅샷/raceFinished → raceFinished 플래그', () async {
