@@ -103,7 +103,7 @@
     <ul class="isub">
       <li><span class="box done"></span><span><span class="stag done">완료</span>시상대·전체 순위·점수 4축 분해(완주/DNF) — <span class="mono">GET /races/:id/result</span></span></li>
     </ul>
-    <div class="iaccept"><b>통과</b> — 경주를 마치면 실제 순위·점수 4축 분해(완주/DNF)가 결과 화면에 표시된다. flutter analyze 이슈 없음 · 테스트 133개 통과.</div>
+    <div class="iaccept"><b>통과</b> — 경주를 마치면 실제 순위·점수 4축 분해(완주/DNF)가 결과 화면에 표시된다. flutter analyze 이슈 없음 · 테스트 133개 통과. <b>강건화</b>(S5-2 연동) — 백엔드가 리더보드 스냅샷에 <span class="mono">raceId</span>를 노출해 앱이 종료 후 <span class="mono">GET /races/:id/result</span>를 직접 조회하도록 바꿔, 반환 유저가 이전 경주 결과를 보게 되는 위험을 없앴다(최신기록 폴링 우회 제거).</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S4-5</span><span class="ilinks">관련<a href="../mvp/step4.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
     <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#result">🎨 결과</a><a href="../wireframes/index.html#result-dnf">🎨 결과(DNF)</a><a href="../../domain/index.html#ent-raceresult">📦 RaceResult</a><a href="../mvp/step4.html">🗺️ MVP</a></div>
   </div>

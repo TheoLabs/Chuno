@@ -55,11 +55,13 @@
     <div class="ihead"><span class="iid">S5-2</span><span class="ititle">푸시 수신 / 권한 / 딥링크</span><span class="badge app">APP</span><span class="pill">M</span></div>
     <div class="idesc">앱에서 알림 권한을 받고 수신·탭 시 올바른 화면으로 이동.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>알림 권한 요청, 토큰 등록, 포그라운드/백그라운드 수신</span></li>
-      <li><span class="box"></span><span>딥링크 — 해당 방/결과 화면으로 이동</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">firebase_messaging</span> 알림 권한 요청(iOS·Android 13+ <span class="mono">POST_NOTIFICATIONS</span>) + FCM 토큰 획득 → 로그인/앱 시작 시 <span class="mono">POST /users/me/device-tokens{token,platform}</span> 등록, <span class="mono">onTokenRefresh</span> 재등록, 로그아웃 시 DELETE(백엔드 계약 {token} 일치)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>포그라운드 수신(인앱 배너/스낵바), 백그라운드 탭(<span class="mono">onMessageOpenedApp</span>)·콜드스타트(<span class="mono">getInitialMessage</span>) 딥링크 — <span class="mono">RACE_STARTING</span>/<span class="mono">PARTICIPANT_JOINED</span>→해당 방 로비, <span class="mono">RESULT_READY</span>→결과 화면(raceId)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>Firebase 미설정 시 graceful(<span class="mono">initializeApp</span> try/catch → 푸시만 비활성, 백엔드 no-op와 대칭)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 푸시를 탭하면 관련 방/결과 화면으로 정확히 진입한다.</div>
+    <div class="iaccept"><b>완료</b> — 알림 권한 요청·토큰 등록/재등록/로그아웃 삭제, 포그라운드 수신, 백그라운드 탭·콜드스타트 딥링크(방 로비/결과 화면 raceId)까지 flutter analyze 이슈 없음 · 테스트 167개 통과(fake 기반)로 검증됐다. <b>미검증</b>: 실 FCM 수신·백그라운드/콜드스타트 딥링크·APNs는 실기기 + 사용자 Firebase 프로젝트 파일(<span class="mono">google-services.json</span>/<span class="mono">GoogleService-Info.plist</span>) 배치 후에만 검증 가능(현재 미배치 — <span class="mono">PUSH_SETUP.md</span>에 절차 안내). Android <span class="mono">google-services</span> gradle 플러그인은 파일 부재로 미적용 상태.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S5-1</span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#lobby">🎨 로비</a><a href="../wireframes/index.html#result">🎨 결과</a><a href="../../domain/index.html#ent-notification">📦 Notification</a><a href="../mvp/step5.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue design" id="S5-3">
