@@ -24,7 +24,7 @@ import { GeneralRoomService } from '@modules/room/applications/general-room.serv
  * (제재 게이팅 BO2-4는 이 핸드셰이크 훅에 크로스컷으로 추가될 지점.)
  *
  * 클라이언트는 방 상세 화면에서 `joinRoom`으로 해당 방 소켓 룸에 참여하고, 서버시각을 받아 카운트다운 오프셋(S2-9)을 맞춘다.
- * 입퇴장·상태전환·취소 브로드캐스트는 도메인 이벤트를 구독하는 `LobbyBroadcastProcessor`가 발신한다.
+ * 입퇴장·상태전환·취소 브로드캐스트는 도메인 이벤트를 구독하는 `LobbyBroadcastHandler`(팬아웃 디스패처가 호출)가 발신한다.
  *
  * NOTE(네임스페이스): MVP는 기본 네임스페이스('/')를 쓴다 — 브로드캐스터가 루트 io 서버를 그대로 쓰면 되기 때문.
  * S3-4('/race')에서 네임스페이스 분리가 필요하면 브로드캐스터를 네임스페이스 인지형으로 확장한다.

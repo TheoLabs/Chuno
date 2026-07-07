@@ -26,7 +26,11 @@ import { BullDomainEventPublisher } from './bull-domain-event-publisher';
         connection: { host: configs.redis.host, port: configs.redis.port },
       }),
     }),
-    BullModule.registerQueue({ name: QUEUE.ROOM_SCHEDULER }, { name: QUEUE.DOMAIN_EVENTS }),
+    BullModule.registerQueue(
+      { name: QUEUE.ROOM_SCHEDULER },
+      { name: QUEUE.RACE_SCHEDULER },
+      { name: QUEUE.DOMAIN_EVENTS }
+    ),
   ],
   providers: [
     QueueHealthIndicator,

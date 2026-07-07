@@ -1,6 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import type { Job } from 'bullmq';
 import { QUEUE } from '@libs/queue';
+import { runWithContext } from '@libs/context';
 import { GeneralRoomService } from '@modules/room/applications/general-room.service';
 
 /**
@@ -22,10 +23,13 @@ export class RoomSchedulerProcessor extends WorkerHost {
     const roomId = Number(job.data?.roomId);
     if (!roomId) return;
 
-    if (job.name === 'markStarting') {
-      await this.rooms.markStarting(roomId);
-    } else if (job.name === 'markLive') {
-      await this.rooms.markLive(roomId);
-    }
+    // 워커 경계 — ALS 스토어를 열어 @Transactional(markStarting/markLive)이 동작하게 한다.
+    await runWithContext(async () => {
+      if (job.name === 'markStarting') {
+        await this.rooms.markStarting(roomId);
+      } else if (job.name === 'markLive') {
+        await this.rooms.markLive(roomId);
+      }
+    });
   }
 }
