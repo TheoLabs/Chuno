@@ -5,10 +5,20 @@ import { LegalDocumentModule } from '@modules/legal-document/legal-document.modu
 import { RoomModule } from '@modules/room/room.module';
 import { RaceModule } from '@modules/race/race.module';
 import { ScoringModule } from '@modules/scoring/scoring.module';
+import { NotificationModule } from '@modules/notification/notification.module';
 import { DomainEventsModule } from '@modules/domain-events/domain-events.module';
 
 @Module({
-  imports: [UserModule, AuthModule, LegalDocumentModule, RoomModule, RaceModule, ScoringModule, DomainEventsModule],
-  exports: [UserModule, AuthModule, LegalDocumentModule, RoomModule, RaceModule, ScoringModule],
+  imports: [
+    UserModule,
+    AuthModule,
+    LegalDocumentModule,
+    RoomModule,
+    RaceModule,
+    ScoringModule,
+    NotificationModule,
+    DomainEventsModule,
+  ],
+  exports: [UserModule, AuthModule, LegalDocumentModule, RoomModule, RaceModule, ScoringModule, NotificationModule],
 })
 export class DomainModule {}

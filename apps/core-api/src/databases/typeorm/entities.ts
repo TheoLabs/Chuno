@@ -11,6 +11,8 @@ import { RaceParticipant } from '@modules/race/domain/race-participant.entity';
 import { RaceResult } from '@modules/scoring/domain/race-result.entity';
 import { RunnerStats } from '@modules/scoring/domain/runner-stats.entity';
 import { RaceStatApplied } from '@modules/scoring/domain/race-stat-applied.entity';
+import { DeviceToken } from '@modules/notification/domain/device-token.entity';
+import { Notification } from '@modules/notification/domain/notification.entity';
 
 export default [
   DddEvent,
@@ -26,4 +28,6 @@ export default [
   RaceResult,
   RunnerStats,
   RaceStatApplied,
+  DeviceToken,
+  Notification,
 ];

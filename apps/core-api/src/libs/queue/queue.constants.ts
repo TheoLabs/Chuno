@@ -10,6 +10,7 @@
 export const QUEUE = {
   ROOM_SCHEDULER: 'room-scheduler',
   RACE_SCHEDULER: 'race-scheduler',
+  NOTIFICATION_SCHEDULER: 'notification-scheduler',
   DOMAIN_EVENTS: 'domain-events',
 } as const;
 
