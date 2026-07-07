@@ -8,6 +8,9 @@ import { Room } from '@modules/room/domain/room.entity';
 import { Participant } from '@modules/room/domain/participant.entity';
 import { Race } from '@modules/race/domain/race.entity';
 import { RaceParticipant } from '@modules/race/domain/race-participant.entity';
+import { RaceResult } from '@modules/scoring/domain/race-result.entity';
+import { RunnerStats } from '@modules/scoring/domain/runner-stats.entity';
+import { RaceStatApplied } from '@modules/scoring/domain/race-stat-applied.entity';
 
 export default [
   DddEvent,
@@ -20,4 +23,7 @@ export default [
   Participant,
   Race,
   RaceParticipant,
+  RaceResult,
+  RunnerStats,
+  RaceStatApplied,
 ];
