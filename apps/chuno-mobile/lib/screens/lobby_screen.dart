@@ -7,10 +7,12 @@ import '../features/rooms/room_models.dart' hide RoomStatus;
 import '../features/rooms/room_models.dart' as rm;
 import '../features/rooms/room_providers.dart';
 import '../features/rooms/room_repository.dart';
+import '../features/users/user_providers.dart';
 import '../models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ui.dart';
 import 'countdown_screen.dart';
+import 'race_screen.dart';
 import 'server_countdown_screen.dart';
 
 class LobbyScreen extends ConsumerWidget {
@@ -66,34 +68,57 @@ class LobbyScreen extends ConsumerWidget {
       if (next.status == rm.RoomStatus.starting) {
         _onStarting(context, ref, id);
       } else if (next.status == rm.RoomStatus.live) {
-        _onLive(context);
+        _onLive(context, ref, id);
       }
     }
   }
 
   /// STARTING(예약 T−10s) → 서버시계 동기 카운트다운 화면으로 전환.
+  /// 0 도달(LIVE) 시 onLive 로 경주 화면(실연동)에 진입한다.
   void _onStarting(BuildContext context, WidgetRef ref, int id) {
     final detail = ref.read(roomDetailProvider(id)).valueOrNull;
     final clock = ref.read(lobbySocketProvider(id)).clock;
+    final userId = _myUserId(ref);
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => ServerCountdownScreen(
+      builder: (ctx) => ServerCountdownScreen(
         targetEpochMs: detail?.scheduledStartEpochMs,
         clock: clock,
+        onLive: userId == null ? null : () => _enterRace(ctx, id, userId),
       ),
     ));
   }
 
-  /// LIVE(출발) — 경주 화면은 Step3 경계라 플레이스홀더 토스트로 전환만 표시.
-  void _onLive(BuildContext context) {
+  /// LIVE(출발) — 카운트다운 없이 즉시 LIVE 통보 시. 경주 화면(실연동) 진입.
+  void _onLive(BuildContext context, WidgetRef ref, int id) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(
-        content: Text('출발! 경주 화면은 준비 중이에요'),
-        duration: Duration(milliseconds: 2000),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.panel2,
-      ));
+    final userId = _myUserId(ref);
+    if (userId == null) {
+      // 사용자 식별 불가(비정상) — 안내만.
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(
+          content: Text('출발! 경주 화면을 열 수 없어요'),
+          duration: Duration(milliseconds: 2000),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.panel2,
+        ));
+      return;
+    }
+    _enterRace(context, id, userId);
+  }
+
+  /// 경주 화면(LiveRaceView) 진입 — 카운트다운/로비 위로 push.
+  void _enterRace(BuildContext context, int roomId, int userId) {
+    if (!context.mounted) return;
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+      builder: (_) => RaceScreen(room: room, roomId: roomId, userId: userId),
+    ));
+  }
+
+  /// 내 사용자 id(정수). meProvider 미로딩/비정수면 null.
+  int? _myUserId(WidgetRef ref) {
+    final me = ref.read(meProvider).valueOrNull;
+    return int.tryParse(me?.id ?? '');
   }
 
   /// 방 취소(roomCancelled) → 안내 다이얼로그 후 홈(루트) 복귀.

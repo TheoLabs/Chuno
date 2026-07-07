@@ -18,6 +18,11 @@ import 'package:chuno_mobile/features/rooms/room_providers.dart';
 import 'package:chuno_mobile/features/rooms/room_repository.dart';
 import 'package:chuno_mobile/features/rooms/room_socket.dart';
 import 'package:chuno_mobile/features/rooms/server_clock.dart';
+import 'package:chuno_mobile/features/race/geo.dart';
+import 'package:chuno_mobile/features/race/location_service.dart';
+import 'package:chuno_mobile/features/race/race_models.dart';
+import 'package:chuno_mobile/features/race/race_providers.dart';
+import 'package:chuno_mobile/features/race/race_socket.dart';
 import 'package:chuno_mobile/screens/server_countdown_screen.dart';
 import 'package:chuno_mobile/features/users/user_models.dart';
 import 'package:chuno_mobile/features/users/user_providers.dart';
@@ -132,6 +137,74 @@ class _SilentSocketChannel implements RoomSocketChannel {
   }
 }
 
+/// 실서버 없이 경주 화면 렌더용 — 조용한 '/race' 소켓 채널.
+class _SilentRaceSocketChannel implements RaceSocketChannel {
+  final _c = StreamController<RaceSocketMessage>.broadcast();
+  @override
+  Stream<RaceSocketMessage> get messages => _c.stream;
+  @override
+  void connect() {}
+  @override
+  void joinRoom(int roomId) {}
+  @override
+  void reportProgress(int roomId, double distanceKm) {}
+  @override
+  void leaveRoom(int roomId) {}
+  @override
+  void dispose() => _c.close();
+}
+
+/// 위치 스트림을 방출하지 않는 fake — 플러그인 의존 제거.
+class _SilentLocationService implements LocationService {
+  @override
+  Stream<GeoSample> positions() => const Stream.empty();
+  @override
+  Future<LocationAuth> currentAuth() async => LocationAuth.always;
+  @override
+  Future<LocationAuth> ensureAlwaysPermission() async => LocationAuth.always;
+  @override
+  Future<bool> openSettings() async => true;
+}
+
+/// 연결 즉시 리더보드 스냅샷을 방출하는 fake — 실연동 콘텐츠 레이아웃 렌더용.
+class _EmittingRaceSocketChannel implements RaceSocketChannel {
+  final _c = StreamController<RaceSocketMessage>.broadcast();
+  @override
+  Stream<RaceSocketMessage> get messages => _c.stream;
+  @override
+  void connect() {
+    Future.microtask(() {
+      if (_c.isClosed) return;
+      _c.add(const RaceDisconnected()); // 연결끊김 배너 동시 노출(오버플로우 스트레스)
+      _c.add(RaceLeaderboardMsg(LeaderboardSnapshot.fromJson({
+        'roomId': 1,
+        'status': 'live',
+        'startedAt': DateTime.now().millisecondsSinceEpoch - 300000,
+        'goal': {'targetDistance': 5, 'limitMinutes': 40},
+        'runners': [
+          for (var k = 0; k < 6; k++)
+            {
+              'rank': k + 1,
+              'userId': k == 1 ? 42 : 100 + k,
+              'distanceKm': 4.5 - k * 0.4,
+              'status': 'running',
+              'finishedAt': null,
+            },
+        ],
+      })));
+    });
+  }
+
+  @override
+  void joinRoom(int roomId) {}
+  @override
+  void reportProgress(int roomId, double distanceKm) {}
+  @override
+  void leaveRoom(int roomId) {}
+  @override
+  void dispose() => _c.close();
+}
+
 const _sampleDoc = LegalDocument(
   id: 1, type: 'terms-of-service', version: 'v1.0', title: '이용약관', isRequired: true, status: 'ACTIVE',
 );
@@ -149,6 +222,8 @@ void main() {
           legalDocumentRepositoryProvider.overrideWithValue(_FakeLegalRepository()),
           roomRepositoryProvider.overrideWithValue(_FakeRoomRepository()),
           roomSocketChannelFactoryProvider.overrideWithValue((_) => _SilentSocketChannel()),
+          raceSocketChannelFactoryProvider.overrideWithValue((_) => _SilentRaceSocketChannel()),
+          locationServiceProvider.overrideWithValue(_SilentLocationService()),
         ],
         child: MaterialApp(theme: buildAppTheme(), home: home),
       );
@@ -217,7 +292,7 @@ void main() {
     expect(tester.takeException(), isNull, reason: 'serverCountdown(GO) 렌더 예외');
   });
 
-  testWidgets('race(라이브) 오버플로우 없이 렌더된다', (tester) async {
+  testWidgets('race(라이브 목업) 오버플로우 없이 렌더된다', (tester) async {
     tester.view.physicalSize = const Size(390, 700);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -227,6 +302,31 @@ void main() {
     await tester.pump();
     expect(tester.takeException(), isNull, reason: 'race 렌더 예외');
     // 타이머 정리를 위해 위젯 폐기
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('race(실연동 콘텐츠) 오버플로우 없이 렌더된다', (tester) async {
+    tester.view.physicalSize = const Size(390, 700);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final channel = _EmittingRaceSocketChannel();
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        keyValueStoreProvider.overrideWithValue(InMemoryKeyValueStore()),
+        raceSocketChannelFactoryProvider.overrideWithValue((_) => channel),
+        locationServiceProvider.overrideWithValue(_SilentLocationService()),
+      ],
+      child: MaterialApp(
+        theme: buildAppTheme(),
+        home: RaceScreen(room: Mock.rooms[0], roomId: 1, userId: 42),
+      ),
+    ));
+    await tester.pump(); // 소켓 이벤트 반영
+    await tester.pump(const Duration(milliseconds: 800)); // 리더보드 애니메이션
+    expect(find.text('나'), findsWidgets, reason: '내 행 렌더');
+    expect(tester.takeException(), isNull, reason: 'race 실연동 렌더 예외');
     await tester.pumpWidget(const SizedBox());
   });
 

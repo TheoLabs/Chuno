@@ -14,6 +14,9 @@ import 'package:chuno_mobile/features/auth/auth_repository.dart';
 import 'package:chuno_mobile/features/legal/legal_models.dart';
 import 'package:chuno_mobile/features/legal/legal_providers.dart';
 import 'package:chuno_mobile/features/legal/legal_repository.dart';
+import 'package:chuno_mobile/features/race/geo.dart';
+import 'package:chuno_mobile/features/race/location_service.dart';
+import 'package:chuno_mobile/features/race/race_providers.dart';
 import 'package:chuno_mobile/features/users/user_models.dart';
 import 'package:chuno_mobile/features/users/user_providers.dart';
 import 'package:chuno_mobile/features/users/user_repository.dart';
@@ -92,6 +95,18 @@ class _FakeLegalRepository implements LegalDocumentRepository {
       );
 }
 
+/// 위치 권한 단계가 플러그인 없이 통과하도록 하는 fake(항상 허용).
+class _FakeLocationService implements LocationService {
+  @override
+  Future<LocationAuth> currentAuth() async => LocationAuth.always;
+  @override
+  Future<LocationAuth> ensureAlwaysPermission() async => LocationAuth.always;
+  @override
+  Future<bool> openSettings() async => true;
+  @override
+  Stream<GeoSample> positions() => const Stream.empty();
+}
+
 Future<void> _pump(
   WidgetTester tester,
   _FakeUserRepository users, {
@@ -105,6 +120,7 @@ Future<void> _pump(
     authRepositoryProvider.overrideWithValue(_FakeAuthRepository()),
     userRepositoryProvider.overrideWithValue(users),
     legalDocumentRepositoryProvider.overrideWithValue(legal ?? _FakeLegalRepository()),
+    locationServiceProvider.overrideWithValue(_FakeLocationService()),
   ]);
   addTearDown(container.dispose);
   await tester.pumpWidget(UncontrolledProviderScope(

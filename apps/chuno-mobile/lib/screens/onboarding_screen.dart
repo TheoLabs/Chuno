@@ -4,6 +4,8 @@ import '../core/error/app_exception.dart';
 import '../features/auth/auth_providers.dart';
 import '../features/legal/legal_models.dart';
 import '../features/legal/legal_providers.dart';
+import '../features/race/location_service.dart';
+import '../features/race/race_providers.dart';
 import '../features/users/user_models.dart';
 import '../features/users/user_providers.dart';
 import '../theme/app_theme.dart';
@@ -37,6 +39,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   static const int _consentIndex = 2;
+  static const int _locationIndex = 3;
 
   int i = 0;
   int _level = 1;
@@ -364,11 +367,68 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       return;
     }
     if (i == _consentIndex && !_allRequired) return; // 필수 미동의 시 진행 차단
+    // 위치 권한 단계: OS 권한을 실제로 요청(항상 허용까지). 결과와 무관하게 다음 단계로
+    // — 온보딩을 하드블록하지 않고, 경주 시작 시 다시 검증한다.
+    if (i == _locationIndex) {
+      await _requestLocation();
+      return;
+    }
     if (i < steps.length - 1) {
       setState(() => i++);
     } else {
       await _submit();
     }
+  }
+
+  /// '항상 허용(백그라운드)' 위치 권한 요청. 영구 거부면 설정 유도 다이얼로그.
+  /// 플러그인 부재/실기기 아님 등은 조용히 무시(비차단).
+  Future<void> _requestLocation() async {
+    try {
+      final svc = ref.read(locationServiceProvider);
+      final result = await svc.ensureAlwaysPermission();
+      if (!mounted) return;
+      if (result == LocationAuth.deniedForever ||
+          result == LocationAuth.serviceDisabled) {
+        await _showSettingsGuide(svc, result);
+      }
+    } catch (_) {
+      // 무시 — 온보딩 진행을 막지 않는다.
+    }
+    if (mounted) setState(() => i++);
+  }
+
+  /// 영구 거부/서비스 꺼짐 시 설정 화면으로 유도.
+  Future<void> _showSettingsGuide(
+      LocationService svc, LocationAuth result) async {
+    final disabled = result == LocationAuth.serviceDisabled;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.panel,
+        title: Text(disabled ? '위치 서비스가 꺼져 있어요' : '위치 권한이 필요해요',
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+        content: Text(
+          disabled
+              ? '기기 설정에서 위치 서비스를 켜야 경주 거리를 측정할 수 있어요.'
+              : '경주 거리 측정을 위해 설정에서 위치 권한을 "항상 허용"으로 바꿔주세요.',
+          style: const TextStyle(fontSize: 14, color: AppColors.muted, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('나중에', style: TextStyle(color: AppColors.muted)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              svc.openSettings();
+            },
+            child: const Text('설정 열기',
+                style: TextStyle(color: AppColors.coral, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
   }
 
   /// 닉네임 중복확인(GET /users/check-nickname) → 사용가능 시 다음 단계로.

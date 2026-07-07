@@ -4,6 +4,14 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>경주 중 뛴 거리를 측정해 실시간 순위를 공유하기 위해 위치 정보가 필요합니다. 좌표는 서버로 전송하지 않고 거리만 계산합니다.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>화면을 꺼도 경주 거리를 계속 측정하려면 "항상 허용(백그라운드)" 위치 권한이 필요합니다. 좌표는 서버로 전송하지 않고 거리만 계산합니다.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<!-- dev 전용: 로컬 http(localhost) 백엔드 호출 허용. arbitrary loads 전체 허용은 하지 않는다. -->

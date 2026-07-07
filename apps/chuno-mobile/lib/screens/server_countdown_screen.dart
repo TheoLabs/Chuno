@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../features/rooms/server_clock.dart';
 import '../theme/app_theme.dart';
@@ -56,10 +57,15 @@ class _ServerCountdownScreenState extends State<ServerCountdownScreen> {
 
   void _tick() {
     final s = _compute();
-    if (s != _seconds && mounted) setState(() => _seconds = s);
+    if (s != _seconds && mounted) {
+      setState(() => _seconds = s);
+      // 카운트다운 매 초 가벼운 진동(S3-10) — 3·2·1 리듬.
+      if (s > 0) HapticFeedback.lightImpact();
+    }
     if (s <= 0) {
       _t?.cancel();
       if (mounted && !_live) {
+        HapticFeedback.heavyImpact(); // 출발 순간 강한 진동
         setState(() => _live = true);
         widget.onLive?.call();
       }
