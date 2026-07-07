@@ -41,22 +41,22 @@
 
   <div class="group card">
     <div class="gh"><span class="badge be">BACKEND</span> 정산 체인 (RaceFinished 구독)</div>
-    <div class="task"><div class="box"></div><div class="k"><b>ScoringModule</b> — 서버 권위 4축(등수300·거리200·완주220·여유100, ≤1000). 배점 밸런싱은 이후, MVP는 초안 그대로</div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>RaceResult 저장</b> — 유저별 완주여부·거리·완주시간·등수·점수, 멱등</div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>RunnerStats 누적</b> — totalScore·거리·경기수·승률, 티어 계산(컷 기준 임시)</div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>랭킹</b> — 전체 누적 + 주간/월간(RaceResult 날짜 윈도우 or Redis ZSET)</div></div>
-    <div class="task"><div class="box"></div><div class="k">엔드포인트 <span class="mono">GET /rankings?scope=</span>, <span class="mono">GET /me/results</span>(기록), <span class="mono">GET /races/:id/result</span></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>ScoringModule</b> — 서버 권위 순수함수 4축(등수≤300·거리≤200·완주220·여유≤100, ≤1000). 배점 밸런싱은 이후, MVP는 초안 그대로 <small>S4-1</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>RaceResult 저장</b> — 유저별 완주여부·거리·완주시간·등수·점수, <span class="mono">(raceId,userId)</span> 유니크+count 선검사로 멱등 <small>S4-2</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>RunnerStats 누적</b> — totalScore·거리·경기수·승수, 티어 계산(컷 기준 임시), <span class="mono">RaceStatApplied</span> 마커로 멱등(S4-2와 독립된 둘째 핸들러) <small>S4-3</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>랭킹</b> — 전체 누적(RunnerStats) + 주간/월간(RaceResult <span class="mono">createdAt</span> 7/30일 SQL 윈도우 집계, Season 테이블 없음), 내 순위·주변 ±3 <small>S4-4 — Redis ZSET은 MVP 미도입/후속 최적화</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span>엔드포인트 <span class="mono">GET /rankings?scope=</span>, <span class="mono">GET /users/me/results</span>(기록), <span class="mono">GET /races/:id/result</span> — 전부 UserGuard·GET만 <small>S4-5</small></div></div>
   </div>
 
   <div class="group card">
     <div class="gh"><span class="badge app">APP</span> 화면 실연동</div>
-    <div class="task"><div class="box"></div><div class="k"><b>결과 화면</b> — 시상대·순위·점수 4축 분해 실데이터(완주/DNF)</div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>랭킹</b> — 전체/주간/월간 세그먼트 실데이터, 내 랭킹 카드·티어</div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>기록</b> — 지난 경주 리스트 + 상세, 프로필 누적 통계(거리·경기·승률)</div></div>
-    <div class="task"><div class="box"></div><div class="k">mock 데이터·레이어 제거, 전 화면 실 repository로 교체</div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>결과 화면</b> — 시상대·순위·점수 4축 분해 실데이터(완주/DNF) <small>S4-6</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>랭킹</b> — 전체/주간/월간 세그먼트 실데이터, 내 랭킹 카드·티어 <small>S4-7</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>기록</b> — 지난 경주 리스트 + 상세, 프로필 누적 통계(거리·경기·승률) <small>S4-8</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span>mock 데이터·레이어 제거, 전 화면 실 repository로 교체 <small>S4-9 — flutter analyze 이슈 없음·테스트 133</small></div></div>
   </div>
 
-  <div class="done-when"><b>완료 기준</b> — 경주를 마치면 즉시 결과 화면에 점수가 뜨고, 랭킹·기록·프로필 통계에 누적 반영된다. 주간/월간 랭킹이 날짜 윈도우로 맞게 집계됨.</div>
+  <div class="done-when"><b>완료 기준</b> — 경주를 마치면 즉시 결과 화면에 점수가 뜨고, 랭킹·기록·프로필 통계에 누적 반영된다. 주간/월간 랭킹이 날짜 윈도우로 맞게 집계됨. <b style="color:var(--done)">충족</b> — tsc 0에러·jest 63 통과·부팅+인증 401(백엔드), flutter analyze 이슈 없음·테스트 133(앱) 확인.</div>
 
   <div class="nav">
     <a href="step3.html"><span class="lbl">이전</span>← Step 3 · 경주 코어</a>

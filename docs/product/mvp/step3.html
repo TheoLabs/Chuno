@@ -41,10 +41,10 @@
 
   <div class="group card">
     <div class="gh"><span class="badge app">APP</span> 실 GPS 추적 (가장 어려운 부분)</div>
-    <div class="task"><div class="box"></div><div class="k"><b>geolocator 백그라운드 추적</b> — iOS UIBackgroundModes[location]·allowBackgroundLocationUpdates, Android 포그라운드 서비스</div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>거리 계산 + 노이즈 필터</b> — 저정확도 좌표 버림, 미세 드리프트/순간이동 무시, 누적 km 스트림(RunTracker)</div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>좌표는 서버 미전송</b>, 누적거리(km)만 주기 보고 — 프라이버시 원칙 유지</div></div>
-    <div class="task"><div class="box"></div><div class="k">화면잠금·백그라운드에서도 측정 지속, 배터리 고려</div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>geolocator 백그라운드 추적</b> — iOS UIBackgroundModes[location]·allowBackgroundLocationUpdates, Android ACCESS_BACKGROUND_LOCATION·FOREGROUND_SERVICE_LOCATION <small>S3-2</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>거리 계산 + 3중 노이즈필터</b> — 저정확도(30m 컷)·정지 드리프트(3m 컷)·순간이동(32km/h 컷), 누적 km 스트림(RunTracker) <small>S3-1</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>좌표는 서버 미전송</b>, 누적거리(km)만 주기 보고 — 프라이버시 원칙 유지 <small>S3-1</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span>화면잠금·백그라운드에서도 측정 지속 <small>S3-1, S3-2 — 실 GPS/백그라운드 실기기 검증은 미완(코드·네이티브 설정은 완료)</small></div></div>
   </div>
 
   <div class="group card">
@@ -58,15 +58,15 @@
 
   <div class="group card">
     <div class="gh"><span class="badge app">APP</span> 경주 화면 실연동</div>
-    <div class="task"><div class="box"></div><div class="k">socket.io 클라이언트 — 진행률 보고 + leaderboard 수신, <b>세로 리더보드 실시간 재정렬</b>(이미 위젯 있음)</div></div>
-    <div class="task"><div class="box"></div><div class="k">타겟 격차(Δ)·내 페이스·남은시간 실데이터, 완주/DNF 결과 진입</div></div>
-    <div class="task"><div class="box"></div><div class="k"><b>오프라인 내성</b> — 끊겨도 로컬 GPS로 내 화면 지속, 복귀 시 재동기화</div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span>socket.io 클라이언트 — 진행률 보고 + leaderboard 수신, <b>세로 리더보드 실시간 재정렬</b> <small>S3-7</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span>타겟 격차(Δ)·내 페이스·남은시간 실데이터, 완주/DNF 결과 진입(완주/DNF 오분류 경쟁조건 수정) <small>S3-7</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>오프라인 내성</b> — 끊겨도 로컬 GPS로 내 화면 지속, 복귀 시 재동기화 <small>S3-8 — flutter analyze 이슈 없음·테스트 133, 실 socket.io 왕복/실기기는 미검증</small></div></div>
   </div>
 
   <div class="group card">
     <div class="gh"><span class="badge design">DESIGN</span> 경주 엣지 UX</div>
-    <div class="task"><div class="box"></div><div class="k">연결끊김 배너·재동기화, GPS 약함/미확보, 중도 포기(DNF) 확인, 마지막 1명 처리</div></div>
-    <div class="task"><div class="box"></div><div class="k">카운트다운/완주 <b>햅틱·사운드</b> — 경쟁 손맛</div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span>연결끊김 배너·재동기화, GPS 약함/미확보, 중도 포기(DNF) 확인, 마지막 1명 처리 <small>S3-9</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span>카운트다운/출발/완주 <b>햅틱</b>(HapticFeedback) — 경쟁 손맛 <small>S3-10 — 오디오 사운드는 경량화를 위해 제외</small></div></div>
   </div>
 
   <div class="risk"><b>주의</b> — 실외 실기기 필드 테스트가 필수(시뮬레이터 GPS 주입으론 한계). 2대 이상으로 서로 다른 경로를 실제로 뛰며 동시출발·순위·안티치트를 반복 검증. 시계 동기화(서버 권위) 어긋나면 공정성 붕괴 → 최우선 확인.</div>

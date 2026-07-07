@@ -42,24 +42,26 @@
     <div class="ihead"><span class="iid">S3-1</span><span class="ititle">RunTracker: 백그라운드 GPS + 노이즈필터</span><span class="badge app">APP</span><span class="pill">L</span></div>
     <div class="idesc">실제로 뛴 거리를 정확히 측정하는 핵심 모듈. 좌표가 아니라 누적 거리만 산출.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="mono">geolocator</span> 위치 스트림, 화면잠금·백그라운드에서도 지속</span></li>
-      <li><span class="box"></span><span>노이즈필터 — 저정확도(accuracy 큰) 버림, 미세 드리프트/순간이동 점프 무시</span></li>
-      <li><span class="box"></span><span>누적 거리(km) 스트림 노출, 배터리 고려</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">geolocator</span> 위치 스트림, 화면잠금·백그라운드에서도 지속</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>3중 노이즈필터 — 저정확도(accuracy 30m 초과) 컷·정지 드리프트(3m 미만) 컷·순간이동(32km/h 초과) 컷</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>누적 거리(km) 스트림만 노출, 좌표는 서버로 전송하지 않음</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 실제 이동 시 누적 거리가 합리적으로 증가하고 정지 시 드리프트가 누적되지 않는다.</div>
+    <div class="iaccept"><b>통과</b> — geolocator 위치 스트림에 3중 노이즈필터(저정확도 30m 컷·정지 드리프트 3m 컷·순간이동 32km/h 컷)를 적용해 실제 이동 시 누적 거리가 합리적으로 증가하고 정지 시 드리프트가 누적되지 않는다. 누적거리(km)만 노출하며 좌표는 전송하지 않는다. flutter analyze 이슈 없음 · 테스트 133개 통과(유닛은 fake 위치 스트림으로 실검증). 실 GPS 신호·백그라운드 지속은 실기기 환경 제약으로 미검증(코드/네이티브 설정은 완료).</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S3-2</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#race">🎨 경주</a><a href="../../domain/index.html#ent-raceparticipant">📦 RaceParticipant</a><a href="../mvp/step3.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S3-2">
     <div class="ihead"><span class="iid">S3-2</span><span class="ititle">위치 권한 (항상 허용/백그라운드)</span><span class="badge app">APP</span><span class="pill">M</span></div>
     <div class="idesc">경주 중 화면을 꺼도 측정하려면 백그라운드 위치 권한이 필요.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>iOS: <span class="mono">UIBackgroundModes[location]</span>·allowBackgroundLocationUpdates·Info.plist 문구</span></li>
-      <li><span class="box"></span><span>Android: 위치·FOREGROUND_SERVICE_LOCATION·포그라운드 서비스 알림</span></li>
-      <li><span class="box"></span><span>권한 거부 플로우(설정 유도) 연결</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>iOS: <span class="mono">UIBackgroundModes[location]</span>·allowBackgroundLocationUpdates·Info.plist 문구</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>Android: <span class="mono">ACCESS_BACKGROUND_LOCATION</span>·<span class="mono">FOREGROUND_SERVICE_LOCATION</span> 등 매니페스트 설정</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>always 승격 플로우 + 권한 거부 시 설정 유도(온보딩 연동)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 항상 허용 권한 취득 후 백그라운드에서도 위치 업데이트가 들어온다.</div>
+    <div class="iaccept"><b>통과</b> — iOS Info.plist(NSLocation*·UIBackgroundModes location)·Android(ACCESS_BACKGROUND_LOCATION·FOREGROUND_SERVICE_LOCATION 등) 네이티브 설정, always 승격 플로우, 거부 시 설정 유도(온보딩 연동)가 모두 구현됐다. flutter analyze 이슈 없음 · 테스트 133개 통과. 실기기에서의 실제 권한 프롬프트·승인 흐름은 미검증.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S1-11</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#permission">🎨 권한</a><a href="../../domain/index.html#model">📦 도메인 모델</a><a href="../mvp/step3.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S3-3">
@@ -118,45 +120,49 @@
     <div class="ihead"><span class="iid">S3-7</span><span class="ititle">경주 화면 socket 실연동</span><span class="badge app">APP</span><span class="pill">M</span></div>
     <div class="idesc">RunTracker 거리를 보고하고 서버 리더보드를 받아 실시간 순위 표시.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>socket.io 클라 — 거리 <span class="mono">progress</span> 전송 + <span class="mono">leaderboard</span> 수신</span></li>
-      <li><span class="box"></span><span>세로 리더보드 재정렬(위젯 존재)·타겟 격차(Δ)·페이스·남은시간 실데이터</span></li>
-      <li><span class="box"></span><span>완주/DNF 결과 화면 진입</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>socket.io 클라 — 거리 <span class="mono">progress</span> 전송 + <span class="mono">leaderboard</span> 수신</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>세로 리더보드 재정렬·타겟 격차(Δ)·페이스·남은시간 실데이터</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>완주/DNF 결과 화면 진입 — 완주/DNF 오분류 경쟁조건 수정(<span class="mono">RunnerFinished</span> 수신 즉시 완주로 확정)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 내가 뛴 거리가 상대 화면에, 상대 거리가 내 화면에 실시간으로 반영된다.</div>
+    <div class="iaccept"><b>통과</b> — 내가 뛴 거리가 상대 화면에, 상대 거리가 내 화면에 실시간으로 반영되며 세로 리더보드가 재정렬되고 타겟 격차(Δ)·페이스·남은시간이 실데이터로 표시된다. 완주/DNF가 동시에 도달하는 경쟁조건에서 완주/DNF가 오분류되던 문제를 <span class="mono">RunnerFinished</span> 즉시 확정으로 수정했다. flutter analyze 이슈 없음 · 테스트 133개 통과(유닛은 fake socket으로 실검증). 실 socket.io 왕복은 실기기/환경 제약으로 미검증.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S3-1, S3-4</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#race">🎨 경주</a><a href="../../domain/index.html#ent-race">📦 Race</a><a href="../../domain/index.html#ent-raceparticipant">📦 RaceParticipant</a><a href="../mvp/step3.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S3-8">
     <div class="ihead"><span class="iid">S3-8</span><span class="ititle">오프라인 내성</span><span class="badge app">APP</span><span class="pill">M</span></div>
     <div class="idesc">경주 중 네트워크가 끊겨도 내 측정은 지속되고 복귀 시 재동기화.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>끊김 시 로컬 GPS로 내 화면 계속, 거리 버퍼링</span></li>
-      <li><span class="box"></span><span>복귀 시 재전송·재동기화, 연결끊김 표시</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>끊김 시 로컬 GPS로 내 화면 계속, 거리 버퍼링</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>복귀 시 재전송·재동기화, 연결끊김 표시</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 일시적 끊김 후 복귀하면 그 사이 거리가 반영되어 순위가 맞춰진다.</div>
+    <div class="iaccept"><b>통과</b> — 일시적 끊김 시 로컬에서 거리 측정·버퍼링을 지속하고, 복귀하면 버퍼가 재전송돼 그 사이 거리가 반영되고 순위가 맞춰진다. flutter analyze 이슈 없음 · 테스트 133개 통과. 실 네트워크 단절/복귀 시나리오는 실기기 환경 제약으로 미검증.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S3-7</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#race">🎨 경주</a><a href="../../domain/index.html#ent-raceparticipant">📦 RaceParticipant</a><a href="../mvp/step3.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue design" id="S3-9">
     <div class="ihead"><span class="iid">S3-9</span><span class="ititle">경주 엣지 UX</span><span class="badge design">DESIGN</span><span class="pill">M</span></div>
     <div class="idesc">경주 중 발생하는 예외 상황들의 화면·안내.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>연결끊김 배너·재동기화, GPS 약함/미확보</span></li>
-      <li><span class="box"></span><span>중도 포기(DNF) 확인, 마지막 1명 남음 처리</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>연결끊김 배너·재동기화, GPS 약함/미확보</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>중도 포기(DNF) 확인, 마지막 1명 남음 처리</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 각 예외 상황에서 사용자가 상태를 이해하고 대응할 수 있다.</div>
+    <div class="iaccept"><b>통과</b> — 연결끊김 배너·GPS 약함 안내·DNF 확인·마지막 1명 남음 처리 화면이 구현돼 각 예외 상황에서 사용자가 상태를 이해하고 대응할 수 있다. flutter analyze 이슈 없음 · 테스트 133개 통과.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S3-7</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#race">🎨 경주</a><a href="../../domain/index.html#ent-raceparticipant">📦 RaceParticipant</a><a href="../mvp/step3.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue design" id="S3-10">
     <div class="ihead"><span class="iid">S3-10</span><span class="ititle">햅틱 · 사운드</span><span class="badge design">DESIGN</span><span class="pill">S</span></div>
     <div class="idesc">경쟁 손맛을 살리는 감각 피드백.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>카운트다운 진동·사운드, 완주 축하 연출</span></li>
-      <li><span class="box"></span><span>순위 역전 등 주요 순간 햅틱(선택)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>카운트다운·출발·완주 햅틱(<span class="mono">HapticFeedback</span>)</span></li>
+      <li><span class="box"></span><span><span class="stag defer">제외</span>오디오 사운드 — 경량화를 위해 이번 범위에서 제외</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 카운트다운·완주에 햅틱/사운드가 동작한다.</div>
+    <div class="iaccept"><b>통과</b> — 카운트다운·출발·완주 시점에 <span class="mono">HapticFeedback</span> 기반 햅틱이 동작한다. 오디오 사운드는 경량화를 위해 미포함. flutter analyze 이슈 없음 · 테스트 133개 통과.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> —</span><span class="ilinks">관련<a href="../mvp/step3.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#countdown">🎨 카운트다운</a><a href="../wireframes/index.html#race">🎨 경주</a><a href="../../domain/index.html#ent-raceparticipant">📦 RaceParticipant</a><a href="../mvp/step3.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue ops" id="S3-11">

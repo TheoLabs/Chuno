@@ -420,7 +420,7 @@
           <div class="f"><span class="fn">score</span><span class="ft">Score</span></div>
           <div class="f"><span class="fn">pointsAwarded</span><span class="ft">int</span></div>
         </div>
-        <div class="rel">기록/랭킹/포인트의 원천. 날짜 윈도우로 주간·월간 집계.</div>
+        <div class="rel">기록/랭킹/포인트의 원천. 날짜 윈도우로 주간·월간 집계. 멱등 — <b>(raceId, userId)</b> 유니크 + count 선검사(참가자 수만큼만 저장).</div>
       </div>
       <div class="card ar" id="ent-runnerstats">
         <div class="hd"><span class="nm">RunnerStats</span><span class="badge ar">Aggregate</span></div>
@@ -432,9 +432,9 @@
           <div class="f"><span class="fn">raceCount · winCount</span><span class="ft">int</span></div>
           <div class="f"><span class="fn">tier</span><span class="ft">Tier</span></div>
         </div>
-        <div class="rel">RaceFinished 구독 → 누적 갱신</div>
+        <div class="rel">RaceFinished 구독(RaceResult와 별개 핸들러) → 누적 갱신. 멱등 — <b>RaceStatApplied</b> 마커(레이스별 1회 적용).</div>
       </div>
-      <div class="card vo">
+      <div class="card vo" id="ent-score">
         <div class="hd"><span class="nm">Score</span><span class="badge vo">Value Object</span></div>
         <div class="desc">경주 1건의 점수를 4개 축으로 분해해 담는 계산 결과 값. 서버가 권위적으로 산출.</div>
         <div class="fields">
@@ -444,16 +444,16 @@
           <div class="f"><span class="fn">finishBonus</span><span class="fnote">220</span></div>
           <div class="f"><span class="fn">marginScore</span><span class="fnote">≤ 100 (완주 여유)</span></div>
         </div>
-        <div class="inv">서버 권위 계산 · 배점 밸런싱은 MVP 이후</div>
+        <div class="inv">서버 권위 계산(순수함수, 결정적) · 미완주자는 완주보너스 0 + 거리·등수 비례 · 배점 밸런싱은 MVP 이후</div>
       </div>
       <div class="card rm" id="ent-leaderboard">
         <div class="hd"><span class="nm">Leaderboard</span><span class="badge rm">Read Model</span></div>
-        <div class="desc">누적/주간/월간 순위를 빠르게 조회하기 위한 읽기 전용 투영(Redis ZSET).</div>
+        <div class="desc">누적/주간/월간 순위를 빠르게 조회하기 위한 읽기 전용 투영.</div>
         <div class="fields">
           <div class="f"><span class="fn">scope</span><span class="ft">전체·주간·월간</span></div>
-          <div class="f"><span class="fn">store</span><span class="ft">Redis ZSET</span></div>
+          <div class="f"><span class="fn">store</span><span class="ft">MVP: SQL(날짜 윈도우)</span><span class="fnote">Redis ZSET은 후속 최적화, 미도입</span></div>
         </div>
-        <div class="rel">RaceResult/Stats 투영 · 명시적 Season 테이블 없음</div>
+        <div class="rel">전체=RunnerStats · 주간/월간=RaceResult createdAt 7/30일 윈도우 SQL 집계 · 명시적 Season 테이블 없음</div>
       </div>
     </div>
   </div>
@@ -742,9 +742,8 @@
       <tr><td><span class="ev">RoomCancelled</span></td><td class="mono">Room</td><td class="mono">Notification·Points(환불 시)</td><td>인원 미달·방장 이탈·강제취소</td></tr>
       <tr><td><span class="ev">RaceStarted</span></td><td class="mono">RoomLive→Race</td><td class="mono">Realtime(WS join)</td><td>동시 출발(startedAt 서버시계 확정) · RaceCreationHandler가 RoomLive 구독해 생성</td></tr>
       <tr><td><span class="ev">RunnerFinished</span></td><td class="mono">Race</td><td class="mono">Race(종료 판정)</td><td>목표거리 도달</td></tr>
-      <tr><td><span class="ev">RaceFinished</span></td><td class="mono">Race</td><td class="mono">Scoring → Points → Stats → Notification</td><td>전원완주 자동 또는 제한시간 지연잡 · finalize 멱등 · Step4 스코어링 훅 지점</td></tr>
-      <tr><td><span class="ev">ScoreCalculated</span></td><td class="mono">Scoring</td><td class="mono">Points(적립)·Leaderboard(갱신)</td><td>RaceResult 저장</td></tr>
-      <tr><td><span class="ev">PointsAwarded</span></td><td class="mono">Points</td><td class="mono">Notification(선택)</td><td>Score 연동</td></tr>
+      <tr><td><span class="ev">RaceFinished</span></td><td class="mono">Race</td><td class="mono">RaceResult 생성(S4-2) · RunnerStats 누적(S4-3)</td><td>전원완주 자동 또는 제한시간 지연잡 · finalize 멱등 · 같은 이벤트에 <b>독립된 두 핸들러</b>가 반응(팬아웃, 핸들러별 ALS 격리) · Score는 RaceResult 생성 시 순수함수로 인라인 계산(별도 이벤트 아님)</td></tr>
+      <tr><td><span class="ev">PointsAwarded</span></td><td class="mono">Points</td><td class="mono">Notification(선택)</td><td>계획 — Points 컨텍스트 미구현, RaceResult의 <span class="mono">pointsAwarded</span> 값은 계산되나 적립 반영은 MVP 미노출</td></tr>
       <tr><td><span class="ev">ItemPurchased</span></td><td class="mono">Points</td><td class="mono">Entitlement(광고제거 부여)</td><td>스토어</td></tr>
     </tbody>
   </table>

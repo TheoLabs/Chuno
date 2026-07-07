@@ -42,94 +42,103 @@
     <div class="ihead"><span class="iid">S4-1</span><span class="ititle">ScoringModule (4축 · 서버 권위)</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">경주 1건의 점수를 서버가 확정. 클라는 표시만.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>4축 — 등수300·거리200·완주220·여유100 (≤1000)</span></li>
-      <li><span class="box"></span><span>미완주자 처리(완주보너스 0, 거리·등수 비례). 배점 밸런싱은 이후, MVP는 초안</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>4축 — 등수≤300·거리≤200·완주220·여유≤100 (합계 ≤1000)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>미완주자 처리(완주보너스 0, 거리·등수 비례). 배점 밸런싱은 이후, MVP는 초안</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 동일 경주 입력에 대해 서버가 일관된 4축 점수를 산출한다.</div>
+    <div class="iaccept"><b>통과</b> — 서버 권위 순수함수로 4축(등수≤300·거리≤200·완주220·여유≤100, 합계≤1000)을 계산하며, 미완주자는 완주보너스 0으로 거리·등수에 비례해 결정적으로 산출된다(등수는 <span class="mono">finishTime</span>→거리 순 산정). 동일 입력에 항상 동일 결과. tsc 0에러·jest 63 통과·부팅 검증(인증 401 확인) 완료.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S3-6</span><span class="ilinks">관련<a href="../mvp/step4.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-score">📦 Score</a><a href="../mvp/step4.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S4-2">
     <div class="ihead"><span class="iid">S4-2</span><span class="ititle">RaceResult 저장 (RaceFinished 구독)</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">경주 종료 이벤트를 받아 유저별 결과를 원천 데이터로 저장.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>RaceFinished 구독 → 유저별 완주여부·거리·완주시간·등수·점수 저장</span></li>
-      <li><span class="box"></span><span>멱등(중복 이벤트에도 1건), pointsAwarded 계산(적립은 MVP 미노출이어도 값은 계산 가능)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">RaceFinished</span> 구독(ScoringResultHandler) → 참가자 수만큼 유저별 완주여부·거리·완주시간·등수·점수 저장</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>멱등 — <span class="mono">(raceId, userId)</span> 유니크 + count 선검사(중복 이벤트에도 1건), <span class="mono">pointsAwarded</span> 계산(적립 반영은 MVP 미노출)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 경주가 끝나면 참가자 수만큼 RaceResult가 정확히 저장된다.</div>
+    <div class="iaccept"><b>통과</b> — <span class="mono">RaceFinished</span> 구독 핸들러가 참가자 수만큼 정확히 RaceResult를 저장하며, <span class="mono">(raceId, userId)</span> 유니크 제약 + count 선검사로 중복 이벤트 소비에도 멱등(중복 저장 없음)이 실측됐다. tsc 0에러·jest 63 통과·부팅 검증 완료.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S4-1, S3-6</span><span class="ilinks">관련<a href="../mvp/step4.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-raceresult">📦 RaceResult</a><a href="../mvp/step4.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S4-3">
     <div class="ihead"><span class="iid">S4-3</span><span class="ititle">RunnerStats 누적 + 티어</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">전체 누적 지표와 티어. 프로필·랭킹의 기반.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>totalScore·totalDistanceKm·raceCount·winCount 누적 갱신</span></li>
-      <li><span class="box"></span><span>티어 계산(브론즈~다이아, 컷 기준 임시)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>totalScore·totalDistanceKm·raceCount·winCount 누적 갱신</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>티어 계산(브론즈~다이아, 컷 기준 임시) + <span class="mono">RaceStatApplied</span> 마커로 멱등</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 경주 종료마다 내 누적 통계·티어가 갱신된다.</div>
+    <div class="iaccept"><b>통과</b> — 경주 종료마다 내 누적 통계(총점·거리·경기수·승수)·티어가 갱신되며, <span class="mono">RaceStatApplied</span> 마커로 같은 경주에 대한 중복 적용이 방지된다. S4-2(RaceResult)와 같은 <span class="mono">RaceFinished</span>에 반응하는 둘째 트랜잭셔널 핸들러이며, 디스패처가 핸들러별로 ALS를 격리해 두 트랜잭션이 교차오염 없이 안전함을 확인했다. tsc 0에러·jest 63 통과.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S4-2</span><span class="ilinks">관련<a href="../mvp/step4.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-runnerstats">📦 RunnerStats</a><a href="../mvp/step4.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S4-4">
     <div class="ihead"><span class="iid">S4-4</span><span class="ititle">랭킹 (전체 / 주간 / 월간)</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">누적 + 롤링 윈도우 랭킹. 명시적 Season 테이블 없이 날짜 윈도우로.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>전체 누적(RunnerStats) + 주간/월간(RaceResult 날짜 윈도우 or Redis ZSET)</span></li>
-      <li><span class="box"></span><span>내 순위·주변 순위 조회</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>전체 누적(RunnerStats) + 주간/월간(RaceResult <span class="mono">createdAt</span> 7/30일 윈도우 SQL 집계, Season 테이블 없음)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>내 순위·주변 ±3 순위 조회</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 전체/주간/월간 랭킹이 올바른 기간으로 집계된다.</div>
+    <div class="iaccept"><b>통과</b> — 전체(RunnerStats 누적)·주간·월간(RaceResult <span class="mono">createdAt</span> 기준 7/30일 SQL 날짜 윈도우 집계) 랭킹이 올바른 기간으로 산출되고, 내 순위·주변 ±3위 조회가 동작한다. Redis ZSET 기반 Leaderboard는 MVP에 미도입(후속 최적화). tsc 0에러·jest 63 통과.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S4-2</span><span class="ilinks">관련<a href="../mvp/step4.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-runnerstats">📦 RunnerStats</a><a href="../../domain/index.html#ent-leaderboard">📦 Leaderboard</a><a href="../mvp/step4.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue" id="S4-5">
     <div class="ihead"><span class="iid">S4-5</span><span class="ititle">랭킹 / 기록 / 결과 API</span><span class="badge be">BACKEND</span><span class="pill">S</span></div>
     <div class="idesc">앱 화면이 소비할 조회 엔드포인트.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="mono">GET /rankings?scope=</span>, <span class="mono">GET /me/results</span>, <span class="mono">GET /races/:id/result</span></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">GET /rankings?scope=all|weekly|monthly</span>, <span class="mono">GET /users/me/results</span>, <span class="mono">GET /races/:id/result</span> — 전부 <span class="mono">UserGuard</span> 인증</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 결과·랭킹·기록 화면이 필요한 데이터를 한 번에 받는다.</div>
+    <div class="iaccept"><b>통과</b> — 세 엔드포인트 모두 <span class="mono">UserGuard</span>로 보호된 GET이며, 목록은 <span class="mono">{ data: { items, total } }</span>, 단건은 <span class="mono">{ data: {...} }</span> 응답 포맷을 따른다. 결과·랭킹·기록 화면이 필요한 데이터를 한 번에 받는다. tsc 0에러·jest 63 통과·부팅+인증 401 확인.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S4-2, S4-3, S4-4</span><span class="ilinks">관련<a href="../mvp/step4.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-raceresult">📦 RaceResult</a><a href="../../domain/index.html#ent-runnerstats">📦 RunnerStats</a><a href="../mvp/step4.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S4-6">
     <div class="ihead"><span class="iid">S4-6</span><span class="ititle">결과 화면 실연동</span><span class="badge app">APP</span><span class="pill">S</span></div>
     <div class="idesc">경주 직후 시상대·순위·점수 분해를 실데이터로.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>시상대·전체 순위·점수 4축 분해(완주/DNF) — <span class="mono">GET /races/:id/result</span></span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>시상대·전체 순위·점수 4축 분해(완주/DNF) — <span class="mono">GET /races/:id/result</span></span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 경주를 마치면 실제 순위·점수가 결과 화면에 표시된다.</div>
+    <div class="iaccept"><b>통과</b> — 경주를 마치면 실제 순위·점수 4축 분해(완주/DNF)가 결과 화면에 표시된다. flutter analyze 이슈 없음 · 테스트 133개 통과.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S4-5</span><span class="ilinks">관련<a href="../mvp/step4.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#result">🎨 결과</a><a href="../wireframes/index.html#result-dnf">🎨 결과(DNF)</a><a href="../../domain/index.html#ent-raceresult">📦 RaceResult</a><a href="../mvp/step4.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S4-7">
     <div class="ihead"><span class="iid">S4-7</span><span class="ititle">랭킹 실연동</span><span class="badge app">APP</span><span class="pill">S</span></div>
     <div class="idesc">전체/주간/월간 랭킹과 내 순위·티어를 실데이터로.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>세그먼트 전환 → <span class="mono">GET /rankings?scope=</span>, 내 랭킹 카드·티어 뱃지</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>세그먼트 전환 → <span class="mono">GET /rankings?scope=</span>, 내 랭킹 카드·티어 뱃지</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 세그먼트별 랭킹과 내 위치가 실제 데이터로 나타난다.</div>
+    <div class="iaccept"><b>통과</b> — 전체/주간/월간 세그먼트별 랭킹과 내 순위·티어가 실제 데이터로 나타난다. flutter analyze 이슈 없음 · 테스트 133개 통과.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S4-5</span><span class="ilinks">관련<a href="../mvp/step4.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#ranking">🎨 랭킹</a><a href="../../domain/index.html#ent-runnerstats">📦 RunnerStats</a><a href="../../domain/index.html#ent-leaderboard">📦 Leaderboard</a><a href="../mvp/step4.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S4-8">
     <div class="ihead"><span class="iid">S4-8</span><span class="ititle">기록 / 프로필 통계 실연동</span><span class="badge app">APP</span><span class="pill">S</span></div>
     <div class="idesc">지난 경주 히스토리와 누적 통계를 실데이터로.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>지난 경주 리스트(<span class="mono">GET /me/results</span>) + 상세, 프로필 누적 거리·경기·승률</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>지난 경주 리스트(<span class="mono">GET /users/me/results</span>) + 상세, 프로필 누적 거리·경기·승률</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 기록·프로필에 내 실제 경주 이력과 통계가 반영된다.</div>
+    <div class="iaccept"><b>통과</b> — 기록·프로필에 내 실제 경주 이력과 누적 통계가 반영된다. flutter analyze 이슈 없음 · 테스트 133개 통과.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S4-5</span><span class="ilinks">관련<a href="../mvp/step4.html">MVP</a><a href="../wireframes/index.html">화면</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../wireframes/index.html#history">🎨 기록</a><a href="../wireframes/index.html#profile">🎨 프로필</a><a href="../../domain/index.html#ent-raceresult">📦 RaceResult</a><a href="../mvp/step4.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S4-9">
     <div class="ihead"><span class="iid">S4-9</span><span class="ititle">mock 데이터 제거</span><span class="badge app">APP</span><span class="pill">S</span></div>
     <div class="idesc">스캐폴딩용 mock을 걷어내고 전 화면을 실 repository로 통일.</div>
     <ul class="isub">
-      <li><span class="box"></span><span><span class="mono">data/mock.dart</span> 등 제거, 전 화면 실 repository 연결 확인</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">data/mock.dart</span> 등 제거, 전 화면 실 repository 연결 확인</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 앱 어디에도 mock 경로가 남지 않고 모든 데이터가 서버에서 온다.</div>
+    <div class="iaccept"><b>통과</b> — 앱 어디에도 mock 경로가 남지 않고 모든 데이터가 서버에서 온다. flutter analyze 이슈 없음 · 테스트 133개 통과.</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S4-6, S4-7, S4-8</span><span class="ilinks">관련<a href="../mvp/step4.html">MVP</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../mvp/step4.html">🗺️ MVP</a></div>
   </div>
 
   <div class="nav">

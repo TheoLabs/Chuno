@@ -88,16 +88,16 @@
   <div class="stepsec">
     <div class="sh"><span class="snum">STEP 3</span><span class="stitle">경주 코어 — 실 GPS + 실시간 순위</span><span class="sgo"><a href="step3.html">상세 →</a> · <a href="../mvp/step3.html">MVP</a></span></div>
     <div class="rows">
-      <a class="row" href="step3.html#S3-1"><span class="iid">S3-1</span><span class="rt">RunTracker: geolocator 백그라운드 + 노이즈필터</span><span class="badge app">APP</span><span class="pill">L</span></a>
-      <a class="row" href="step3.html#S3-2"><span class="iid">S3-2</span><span class="rt">위치 권한 (항상 허용/백그라운드) 처리</span><span class="badge app">APP</span><span class="pill">M</span></a>
+      <a class="row" href="step3.html#S3-1"><span class="iid">S3-1</span><span class="rt">RunTracker: geolocator 백그라운드 + 노이즈필터 <span class="stag done">완료</span></span><span class="badge app">APP</span><span class="pill">L</span></a>
+      <a class="row" href="step3.html#S3-2"><span class="iid">S3-2</span><span class="rt">위치 권한 (항상 허용/백그라운드) 처리 <span class="stag done">완료</span></span><span class="badge app">APP</span><span class="pill">M</span></a>
       <a class="row" href="step3.html#S3-3"><span class="iid">S3-3</span><span class="rt">RaceScheduler: Race 생성 · 동시출발 <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">M</span></a>
       <a class="row" href="step3.html#S3-4"><span class="iid">S3-4</span><span class="rt">RaceGateway (/race socket.io: progress/leaderboard) <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">L</span></a>
       <a class="row" href="step3.html#S3-5"><span class="iid">S3-5</span><span class="rt">RaceService 안티치트 · 진행 클램프 <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">M</span></a>
       <a class="row" href="step3.html#S3-6"><span class="iid">S3-6</span><span class="rt">종료 판정 + finalize 멱등 <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">M</span></a>
-      <a class="row" href="step3.html#S3-7"><span class="iid">S3-7</span><span class="rt">경주 화면 socket 실연동</span><span class="badge app">APP</span><span class="pill">M</span></a>
-      <a class="row" href="step3.html#S3-8"><span class="iid">S3-8</span><span class="rt">오프라인 내성 (로컬 지속 · 재동기화)</span><span class="badge app">APP</span><span class="pill">M</span></a>
-      <a class="row" href="step3.html#S3-9"><span class="iid">S3-9</span><span class="rt">경주 엣지 UX (끊김/GPS약함/DNF/1명)</span><span class="badge design">DES</span><span class="pill">M</span></a>
-      <a class="row" href="step3.html#S3-10"><span class="iid">S3-10</span><span class="rt">햅틱 / 사운드 (카운트다운·완주)</span><span class="badge design">DES</span><span class="pill">S</span></a>
+      <a class="row" href="step3.html#S3-7"><span class="iid">S3-7</span><span class="rt">경주 화면 socket 실연동 <span class="stag done">완료</span></span><span class="badge app">APP</span><span class="pill">M</span></a>
+      <a class="row" href="step3.html#S3-8"><span class="iid">S3-8</span><span class="rt">오프라인 내성 (로컬 지속 · 재동기화) <span class="stag done">완료</span></span><span class="badge app">APP</span><span class="pill">M</span></a>
+      <a class="row" href="step3.html#S3-9"><span class="iid">S3-9</span><span class="rt">경주 엣지 UX (끊김/GPS약함/DNF/1명) <span class="stag done">완료</span></span><span class="badge design">DES</span><span class="pill">M</span></a>
+      <a class="row" href="step3.html#S3-10"><span class="iid">S3-10</span><span class="rt">햅틱 / 사운드 (카운트다운·완주) <span class="stag done">완료</span></span><span class="badge design">DES</span><span class="pill">S</span></a>
       <a class="row" href="step3.html#S3-11"><span class="iid">S3-11</span><span class="rt">실외 실기기 필드 테스트</span><span class="badge ops">OPS</span><span class="pill">L</span></a>
     </div>
   </div>
@@ -106,15 +106,15 @@
   <div class="stepsec">
     <div class="sh"><span class="snum">STEP 4</span><span class="stitle">점수 · 랭킹 · 기록</span><span class="sgo"><a href="step4.html">상세 →</a> · <a href="../mvp/step4.html">MVP</a></span></div>
     <div class="rows">
-      <a class="row" href="step4.html#S4-1"><span class="iid">S4-1</span><span class="rt">ScoringModule (4축 · 서버 권위)</span><span class="badge be">BE</span><span class="pill">M</span></a>
-      <a class="row" href="step4.html#S4-2"><span class="iid">S4-2</span><span class="rt">RaceResult 저장 (RaceFinished 구독 · 멱등)</span><span class="badge be">BE</span><span class="pill">M</span></a>
-      <a class="row" href="step4.html#S4-3"><span class="iid">S4-3</span><span class="rt">RunnerStats 누적 + 티어</span><span class="badge be">BE</span><span class="pill">M</span></a>
-      <a class="row" href="step4.html#S4-4"><span class="iid">S4-4</span><span class="rt">랭킹 (전체 / 주간 / 월간)</span><span class="badge be">BE</span><span class="pill">M</span></a>
-      <a class="row" href="step4.html#S4-5"><span class="iid">S4-5</span><span class="rt">랭킹 / 기록 / 결과 API</span><span class="badge be">BE</span><span class="pill">S</span></a>
-      <a class="row" href="step4.html#S4-6"><span class="iid">S4-6</span><span class="rt">결과 화면 실연동</span><span class="badge app">APP</span><span class="pill">S</span></a>
-      <a class="row" href="step4.html#S4-7"><span class="iid">S4-7</span><span class="rt">랭킹 실연동</span><span class="badge app">APP</span><span class="pill">S</span></a>
-      <a class="row" href="step4.html#S4-8"><span class="iid">S4-8</span><span class="rt">기록 / 프로필 통계 실연동</span><span class="badge app">APP</span><span class="pill">S</span></a>
-      <a class="row" href="step4.html#S4-9"><span class="iid">S4-9</span><span class="rt">mock 데이터 제거</span><span class="badge app">APP</span><span class="pill">S</span></a>
+      <a class="row" href="step4.html#S4-1"><span class="iid">S4-1</span><span class="rt">ScoringModule (4축 · 서버 권위) <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step4.html#S4-2"><span class="iid">S4-2</span><span class="rt">RaceResult 저장 (RaceFinished 구독 · 멱등) <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step4.html#S4-3"><span class="iid">S4-3</span><span class="rt">RunnerStats 누적 + 티어 <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step4.html#S4-4"><span class="iid">S4-4</span><span class="rt">랭킹 (전체 / 주간 / 월간) <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">M</span></a>
+      <a class="row" href="step4.html#S4-5"><span class="iid">S4-5</span><span class="rt">랭킹 / 기록 / 결과 API <span class="stag done">완료</span></span><span class="badge be">BE</span><span class="pill">S</span></a>
+      <a class="row" href="step4.html#S4-6"><span class="iid">S4-6</span><span class="rt">결과 화면 실연동 <span class="stag done">완료</span></span><span class="badge app">APP</span><span class="pill">S</span></a>
+      <a class="row" href="step4.html#S4-7"><span class="iid">S4-7</span><span class="rt">랭킹 실연동 <span class="stag done">완료</span></span><span class="badge app">APP</span><span class="pill">S</span></a>
+      <a class="row" href="step4.html#S4-8"><span class="iid">S4-8</span><span class="rt">기록 / 프로필 통계 실연동 <span class="stag done">완료</span></span><span class="badge app">APP</span><span class="pill">S</span></a>
+      <a class="row" href="step4.html#S4-9"><span class="iid">S4-9</span><span class="rt">mock 데이터 제거 <span class="stag done">완료</span></span><span class="badge app">APP</span><span class="pill">S</span></a>
     </div>
   </div>
 
