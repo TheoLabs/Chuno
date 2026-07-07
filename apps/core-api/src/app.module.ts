@@ -9,9 +9,11 @@ import { ContextMiddleware, UUIDMiddleware } from './middlewares';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { RequestLoggerInterceptor } from '@libs/interceptors';
 import { ExceptionFilter } from '@libs/filters';
+import { SocketModule } from '@libs/socket';
+import { QueueModule } from '@libs/queue';
 
 @Module({
-  imports: [ConfigsModule, DatabasesModule, ContextModule, DomainModule],
+  imports: [ConfigsModule, DatabasesModule, ContextModule, QueueModule, SocketModule, DomainModule],
   controllers: [AppController],
   providers: [
     AppService,

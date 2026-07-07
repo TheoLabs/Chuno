@@ -3,3 +3,4 @@ export * from './ddd-base-aggregate';
 export * from './ddd-event';
 export * from './ddd-repository';
 export * from './ddd-service';
+export * from './domain-event-publisher';

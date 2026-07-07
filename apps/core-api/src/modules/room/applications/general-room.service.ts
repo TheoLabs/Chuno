@@ -8,10 +8,14 @@ import { Room, RoomStatus } from '@modules/room/domain/room.entity';
 import { Participant } from '@modules/room/domain/participant.entity';
 import { PaginationOptions } from '@libs/utils';
 import { GeneralRoomResponseDto } from '../presentation/dto/room-response.dto';
+import { RoomScheduler } from './room-scheduler.service';
 
 @Injectable()
 export class GeneralRoomService extends DddService {
-  constructor(private readonly roomRepository: RoomRepository) {
+  constructor(
+    private readonly roomRepository: RoomRepository,
+    private readonly scheduler: RoomScheduler
+  ) {
     super();
   }
 
@@ -51,6 +55,9 @@ export class GeneralRoomService extends DddService {
     });
 
     await this.roomRepository.save([room]);
+
+    // 예약 지연잡 등록(−10s STARTING / 정각 LIVE). 롤백돼도 잡은 없는 방을 로드해 no-op(멱등).
+    await this.scheduler.schedule(room.id, room.scheduledStartOn);
 
     return { room: { id: room.id } };
   }
@@ -92,6 +99,12 @@ export class GeneralRoomService extends DddService {
     };
   }
 
+  /** 소켓 로비 참여 자격 검증용 — 해당 방의 Participant인지(REST로 이미 입장했는지) 확인. */
+  async isParticipant(roomId: number, userId: number): Promise<boolean> {
+    const [room] = await this.roomRepository.find({ id: roomId }, { relations: { participants: true } });
+    return !!room && room.participants.some((participant) => participant.userId === userId);
+  }
+
   async retrieve({ user, id }: { user: User; id: number }) {
     const [room] = await this.roomRepository.find({ id }, { relations: { participants: true } });
 
@@ -116,6 +129,7 @@ export class GeneralRoomService extends DddService {
     room.cancel({ userId: user.id });
 
     await this.roomRepository.save([room]);
+    await this.scheduler.cancel(room.id); // 예약 잡 제거(best-effort)
   }
 
   @Transactional()
@@ -141,6 +155,35 @@ export class GeneralRoomService extends DddService {
 
     room.leave({ userId: user.id });
 
+    await this.roomRepository.save([room]);
+    // 호스트 이탈이면 방이 취소됨 → 예약 잡 제거.
+    if (room.status === RoomStatus.CANCELLED) {
+      await this.scheduler.cancel(room.id);
+    }
+  }
+
+  /** 예약 −10초 트리거(스케줄러 잡). RECRUITING→STARTING(2명 미만이면 CANCELLED). 멱등. */
+  @Transactional()
+  async markStarting(id: number) {
+    const [room] = await this.roomRepository.find({ id }, { relations: { participants: true } });
+    if (!room) return; // 삭제/롤백된 방 — no-op
+
+    room.markStarting();
+    await this.roomRepository.save([room]);
+
+    // 2명 미만으로 취소됐다면 남은 markLive 잡 제거(best-effort).
+    if (room.status === RoomStatus.CANCELLED) {
+      await this.scheduler.cancel(room.id);
+    }
+  }
+
+  /** 예약 정각 트리거(스케줄러 잡). STARTING→LIVE. 멱등. */
+  @Transactional()
+  async markLive(id: number) {
+    const [room] = await this.roomRepository.find({ id });
+    if (!room) return;
+
+    room.markLive();
     await this.roomRepository.save([room]);
   }
 }

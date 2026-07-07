@@ -2,6 +2,13 @@ import { today } from '@libs/date';
 import { DddAggregate } from '@libs/ddd';
 import { CalendarDate } from '@libs/types';
 import { Participant } from '@modules/room/domain/participant.entity';
+import {
+  ParticipantJoined,
+  ParticipantLeft,
+  RoomCancelled,
+  RoomLive,
+  RoomStarting,
+} from '@modules/room/domain/events/room.events';
 import { BadRequestException } from '@nestjs/common';
 import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -116,6 +123,8 @@ export class Room extends DddAggregate {
     }
 
     this.addParticipant(Participant.of({ userId, isHost: false }));
+    // 이미 영속된 방이라 this.id 유효 — 커밋 후 로비 브로드캐스트(participantJoined).
+    this.publishEvent(new ParticipantJoined(this.id, userId));
   }
 
   leave({ userId }: { userId: number }) {
@@ -137,6 +146,7 @@ export class Room extends DddAggregate {
     }
 
     this.participants = this.participants.filter((p) => p.userId !== userId);
+    this.publishEvent(new ParticipantLeft(this.id, userId));
   }
 
   cancel({ userId }: { userId: number }) {
@@ -153,6 +163,32 @@ export class Room extends DddAggregate {
     }
 
     this.status = RoomStatus.CANCELLED;
+    this.publishEvent(new RoomCancelled(this.id, this.hostUserId));
+  }
+
+  /**
+   * 예약 −10초: 참여 마감·카운트다운 시작(RECRUITING→STARTING). 이 시점 2명 미만이면 취소(CANCELLED, 카운트다운 미개시).
+   * 멱등 — RECRUITING이 아니면 no-op(재시작/중복 잡에도 이중전환 없음). 예약 스케줄러(S2-3)가 호출.
+   */
+  markStarting() {
+    if (this.status !== RoomStatus.RECRUITING) return;
+
+    if (this.participants.length < 2) {
+      this.status = RoomStatus.CANCELLED;
+      this.publishEvent(new RoomCancelled(this.id, this.hostUserId));
+      return;
+    }
+
+    this.status = RoomStatus.STARTING;
+    this.publishEvent(new RoomStarting(this.id));
+  }
+
+  /** 예약 정각: 출발(STARTING→LIVE). 멱등 — STARTING이 아니면 no-op. */
+  markLive() {
+    if (this.status !== RoomStatus.STARTING) return;
+
+    this.status = RoomStatus.LIVE;
+    this.publishEvent(new RoomLive(this.id));
   }
 
   private addParticipant(participant: Participant) {

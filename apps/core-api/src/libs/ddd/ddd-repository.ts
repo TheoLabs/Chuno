@@ -48,11 +48,18 @@ export abstract class DddRepository<T extends DddAggregate> {
   }
 
   private async saveEvents(events: DddEvent[]) {
+    if (events.length === 0) return;
+
+    // (1) 인프로세스 발행용: 원본 도메인 이벤트를 ALS 컨텍스트에 수집한다.
+    //     @Transactional 데코레이터가 커밋 성공 후 이 수집분을 BullMQ(domain-events)로 발행한다(팬텀 방지).
+    const collected = this.context.get<DddEvent[]>(ContextKey.DDD_EVENTS) ?? [];
+    collected.push(...events);
+    this.context.set(ContextKey.DDD_EVENTS, collected);
+
+    // (2) 아웃박스: 같은 트랜잭션으로 ddd_events에 적재 → Debezium CDC → Kafka(크로스서비스 durable).
     const traceId = this.context.get<string>(ContextKey.TXID);
     const dddEvents = events.map((event) => DddEvent.fromEvent(event));
     dddEvents.forEach((event) => event.setTraceId(traceId));
-
-    // 도메인 이벤트를 같은 트랜잭션으로 ddd_events(아웃박스)에 적재한다. 전파는 Debezium CDC → Kafka.
     await this.entityManager.save(dddEvents);
   }
 }

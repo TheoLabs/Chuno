@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { type DataSourceOptions } from 'typeorm';
-import { AppleConfig, GoogleConfig, JwtConfig } from './configuration';
+import { AppleConfig, GoogleConfig, JwtConfig, RedisConfig } from './configuration';
 
 @Injectable()
 export class ConfigsService {
@@ -29,6 +29,10 @@ export class ConfigsService {
 
   get jwt() {
     return this.configService.get<JwtConfig>('jwt')!;
+  }
+
+  get redis() {
+    return this.configService.get<RedisConfig>('redis')!;
   }
 
   get authDevMode() {

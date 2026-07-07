@@ -16,11 +16,17 @@ export interface JwtConfig {
   refreshExpiresInDays: number;
 }
 
+export interface RedisConfig {
+  host: string;
+  port: number;
+}
+
 interface AppConfig {
   mysql: DataSourceOptions;
   google: GoogleConfig;
   apple: AppleConfig;
   jwt: JwtConfig;
+  redis: RedisConfig;
   // dev 토큰(dev:<sub>:<email>)으로 소셜 검증을 우회하는 로컬 개발 모드.
   authDevMode: boolean;
 }
@@ -46,6 +52,11 @@ export default (env: Record<string, any> = process.env): AppConfig => ({
     accessSecret: env.JWT_ACCESS_SECRET ?? 'dev-access-secret-change-me',
     accessExpiresIn: env.JWT_ACCESS_EXPIRES_IN ?? '15m',
     refreshExpiresInDays: Number(env.JWT_REFRESH_EXPIRES_DAYS ?? 30),
+  },
+  redis: {
+    // 로컬은 docker redis(localhost:6379) 기본값 — env로 오버라이드.
+    host: env.REDIS_HOST ?? 'localhost',
+    port: Number(env.REDIS_PORT ?? 6379),
   },
   authDevMode: env.AUTH_DEV_MODE === 'true',
 });
