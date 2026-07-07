@@ -41,9 +41,9 @@
 
   <div class="group card">
     <div class="gh"><span class="badge be">BACKEND</span><span class="badge app">APP</span> 푸시 알림</div>
-    <div class="task"><div class="box"></div><div class="k"><b>FCM/APNs</b> 연동 — DeviceToken 등록, 이벤트 구독(Notification 컨텍스트) → 발송</div></div>
-    <div class="task"><div class="box"></div><div class="k">시나리오 — 경주 임박(T-10분/T-1분), 새 참가자, 결과 도착</div></div>
-    <div class="task"><div class="box"></div><div class="k">앱 — 알림 권한 요청, 포그라운드/백그라운드 수신·딥링크(해당 방/결과로)</div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span><b>FCM 연동</b> — DeviceToken 등록/삭제 API(token UNIQUE upsert), <span class="mono">FirebasePushSender</span>(크레덴셜 optional — 미설정 시 no-op, 유효 시 실발송) <small>S5-1</small></div></div>
+    <div class="task"><div class="box done"></div><div class="k"><span class="stag done">완료</span>이벤트 구독(팬아웃) → 새 참가자(방장)·경주 임박 RoomStarting(T-10s, 참가자 전원)·결과 도착(러너 전원), dedupeKey 유니크로 멱등 <small>S5-1 — 선택 T-1분 리마인더는 dedupeKey 재사용 안전망(진짜 1분전 예고 아님), 실 FCM 발송·실기기 도달은 크레덴셜+실기기 필요(미검증)</small></div></div>
+    <div class="task"><div class="box"></div><div class="k">앱 — 알림 권한 요청, 포그라운드/백그라운드 수신·딥링크(해당 방/결과로) <small>S5-2</small></div></div>
   </div>
 
   <div class="group card">

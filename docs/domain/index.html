@@ -502,17 +502,21 @@
         <div class="desc">푸시 발송 대상 기기 토큰. 유저당 여러 기기 가능.</div>
         <div class="fields">
           <div class="f"><span class="fn">userId</span><span class="ft">UserId</span></div>
-          <div class="f"><span class="fn">token · platform</span><span class="ft">string</span></div>
+          <div class="f"><span class="fn">token</span><span class="ft">string</span><span class="fnote">UNIQUE</span></div>
+          <div class="f"><span class="fn">platform</span><span class="ft">ios·android</span></div>
         </div>
+        <div class="rel"><b>POST/DELETE /api/users/me/device-tokens</b>로 등록/해제(<b>UserGuard</b>). <b>token UNIQUE</b> — 재등록 시 소유 유저·플랫폼을 갱신(upsert)해 재로그인·기기변경 시 새 유저로 재귀속.</div>
       </div>
       <div class="card rm" id="ent-notification">
         <div class="hd"><span class="nm">Notification</span><span class="badge rm">Projection</span></div>
         <div class="desc">타 컨텍스트 이벤트를 구독해 생성되는 알림 발송 기록(순수 소비자).</div>
         <div class="fields">
+          <div class="f"><span class="fn">userId</span><span class="ft">UserId</span></div>
           <div class="f"><span class="fn">type</span><span class="ft">NotiType</span><span class="fnote">RACE_STARTING·PARTICIPANT_JOINED·RESULT_READY</span></div>
           <div class="f"><span class="fn">payload · sentAt</span><span class="ft">—</span></div>
+          <div class="f"><span class="fn">dedupeKey</span><span class="ft">string</span><span class="fnote">UNIQUE — type:room:{id}:user:{id}</span></div>
         </div>
-        <div class="rel">타 컨텍스트 이벤트 구독 → 푸시 발송(순수 소비자)</div>
+        <div class="rel">ParticipantJoined·RoomStarting·RaceFinished 구독 → <b>PushSender</b>(FCM <span class="mono">sendEachForMulticast</span>) 발송. <b>dedupeKey UNIQUE</b>로 멱등(중복 이벤트에도 신규 대상만 발송) · 크레덴셜(<span class="mono">FIREBASE_SERVICE_ACCOUNT</span>) 미설정 시 초기화 스킵 + no-op(부팅 안전, 실발송 미검증).</div>
       </div>
     </div>
   </div>
@@ -737,12 +741,12 @@
       <tr><td><span class="ev">RoomCreated</span></td><td class="mono">Room</td><td class="mono">—</td><td>홈 목록 노출</td></tr>
       <tr><td><span class="ev">ParticipantJoined</span></td><td class="mono">Room</td><td class="mono">Notification(방장에게)</td><td>실시간 로비 갱신(WS)</td></tr>
       <tr><td><span class="ev">ParticipantLeft</span></td><td class="mono">Room</td><td class="mono">—</td><td>실시간 로비 갱신(WS)</td></tr>
-      <tr><td><span class="ev">RoomStarting</span></td><td class="mono">Scheduler→Room</td><td class="mono">Notification("곧 시작")</td><td>T-Δ 카운트다운</td></tr>
+      <tr><td><span class="ev">RoomStarting</span></td><td class="mono">Scheduler→Room</td><td class="mono">Notification("곧 시작", 참가자 전원)</td><td>T-Δ 카운트다운 · T-10s 즉시 발송 + 선택 T-1분 리마인더 지연잡(같은 dedupeKey 재사용 → 사실상 즉시·중복 없는 안전망, 진짜 1분전 예고 아님)</td></tr>
       <tr><td><span class="ev">RoomLive</span></td><td class="mono">Scheduler→Room</td><td class="mono">Realtime(WS)·Race 생성 훅(Step3)</td><td>출발(LIVE) 전환</td></tr>
       <tr><td><span class="ev">RoomCancelled</span></td><td class="mono">Room</td><td class="mono">Notification·Points(환불 시)</td><td>인원 미달·방장 이탈·강제취소</td></tr>
       <tr><td><span class="ev">RaceStarted</span></td><td class="mono">RoomLive→Race</td><td class="mono">Realtime(WS join)</td><td>동시 출발(startedAt 서버시계 확정) · RaceCreationHandler가 RoomLive 구독해 생성</td></tr>
       <tr><td><span class="ev">RunnerFinished</span></td><td class="mono">Race</td><td class="mono">Race(종료 판정)</td><td>목표거리 도달</td></tr>
-      <tr><td><span class="ev">RaceFinished</span></td><td class="mono">Race</td><td class="mono">RaceResult 생성(S4-2) · RunnerStats 누적(S4-3)</td><td>전원완주 자동 또는 제한시간 지연잡 · finalize 멱등 · 같은 이벤트에 <b>독립된 두 핸들러</b>가 반응(팬아웃, 핸들러별 ALS 격리) · Score는 RaceResult 생성 시 순수함수로 인라인 계산(별도 이벤트 아님)</td></tr>
+      <tr><td><span class="ev">RaceFinished</span></td><td class="mono">Race</td><td class="mono">RaceResult 생성(S4-2) · RunnerStats 누적(S4-3) · Notification 발송(S5-1, 러너 전원)</td><td>전원완주 자동 또는 제한시간 지연잡 · finalize 멱등 · 같은 이벤트에 <b>독립된 세 핸들러</b>가 반응(팬아웃, 핸들러별 ALS 격리) · Score는 RaceResult 생성 시 순수함수로 인라인 계산(별도 이벤트 아님)</td></tr>
       <tr><td><span class="ev">PointsAwarded</span></td><td class="mono">Points</td><td class="mono">Notification(선택)</td><td>계획 — Points 컨텍스트 미구현, RaceResult의 <span class="mono">pointsAwarded</span> 값은 계산되나 적립 반영은 MVP 미노출</td></tr>
       <tr><td><span class="ev">ItemPurchased</span></td><td class="mono">Points</td><td class="mono">Entitlement(광고제거 부여)</td><td>스토어</td></tr>
     </tbody>
@@ -751,7 +755,7 @@
     ⚡ <b>고빈도 진행 보고</b>(RunnerProgressed)는 도메인 이벤트/Kafka가 아니라 <b>socket.io 브로드캐스트</b>로 처리(초당 다수). 이벤트버스는 "완주/종료" 같은 상태 전이 사실에만 사용해 부하를 낮춘다.
   </div>
   <div style="margin-top:10px;" class="note-box">
-    🔀 <b>팬아웃 디스패처</b> — <span style="font-family:var(--mono)">domain-events</span> 큐는 단일 워커가 DiscoveryService로 핸들러를 수집해 <span style="font-family:var(--mono)">supports</span> 매칭으로 팬아웃한다(핸들러별 격리 ALS 컨텍스트). 같은 <span style="font-family:var(--mono)">RoomLive</span> 이벤트를 로비 브로드캐스트(S2-4)와 Race 생성(S3-3) 두 핸들러가 각자 반응하는 방식 — Step4의 <span style="font-family:var(--mono)">RaceFinished</span>→스코어링도 핸들러 추가만으로 확장된다.
+    🔀 <b>팬아웃 디스패처</b> — <span style="font-family:var(--mono)">domain-events</span> 큐는 단일 워커가 DiscoveryService로 핸들러를 수집해 <span style="font-family:var(--mono)">supports</span> 매칭으로 팬아웃한다(핸들러별 격리 ALS 컨텍스트). 같은 <span style="font-family:var(--mono)">RoomLive</span> 이벤트를 로비 브로드캐스트(S2-4)와 Race 생성(S3-3) 두 핸들러가 각자 반응하는 방식 — Step4의 <span style="font-family:var(--mono)">RaceFinished</span>→스코어링(2핸들러)에 Step5의 <span style="font-family:var(--mono)">Notification</span> 발송(S5-1)이 세 번째 핸들러로 더해져도 기존 핸들러엔 영향 없이 확장됐다. Notification 컨텍스트는 <span style="font-family:var(--mono)">ParticipantJoined</span>·<span style="font-family:var(--mono)">RoomStarting</span>·<span style="font-family:var(--mono)">RaceFinished</span> 세 이벤트를 구독하는 또 다른 팬아웃 구독자다.
   </div>
 </section>
 

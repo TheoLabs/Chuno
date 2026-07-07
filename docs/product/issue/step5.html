@@ -42,11 +42,13 @@
     <div class="ihead"><span class="iid">S5-1</span><span class="ititle">FCM/APNs + DeviceToken + Notification 발송</span><span class="badge be">BACKEND</span><span class="pill">M</span></div>
     <div class="idesc">예약 경주 모델의 필수 요소. 이벤트를 구독해 푸시 발송.</div>
     <ul class="isub">
-      <li><span class="box"></span><span>DeviceToken 등록 API, FCM/APNs 발송기</span></li>
-      <li><span class="box"></span><span>이벤트 구독(Notification 컨텍스트) → 경주 임박(T-10/1분)·새 참가자·결과 도착</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span><span class="mono">POST/DELETE /api/users/me/device-tokens</span>(token UNIQUE upsert·소유자 재귀속) + <span class="mono">FirebasePushSender</span>(크레덴셜 optional — 미설정 시 초기화 스킵+no-op, 유효 시 <span class="mono">sendEachForMulticast</span> 실발송)</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>이벤트 구독(팬아웃 핸들러) — <span class="mono">ParticipantJoined</span>→방장, <span class="mono">RoomStarting</span>(T-10s)→참가자 전원, <span class="mono">RaceFinished</span>→러너 전원. <span class="mono">dedupeKey</span>(type:room:user) 유니크로 멱등(신규 대상만 발송), 발송 실패 비치명</span></li>
+      <li><span class="box done"></span><span><span class="stag done">완료</span>선택 T-1분 리마인더 지연잡 배선 — 트리거가 RoomStarting(T-10s)이라 실질은 <span class="mono">dedupeKey</span> 재사용 즉시·중복없음 안전망(진짜 1분전 예고 아님, 정직하게 표기)</span></li>
     </ul>
-    <div class="iaccept"><b>완료</b> — 경주 임박·결과 시 실제 기기에 푸시가 도착한다.</div>
+    <div class="iaccept"><b>완료</b> — DeviceToken 등록/삭제, 이벤트 구독 팬아웃 발송(3종), dedupeKey 멱등까지 code-reviewer 검증 통과(tsc 0에러·jest 81 통과·크레덴셜 없이 부팅 성공·핸들러 8개 확인). <b>미검증</b>: 실 FCM 발송·실기기 도달은 크레덴셜+실기기 필요(코드/배선까지만 확인).</div>
     <div class="imeta"><span class="dep"><b>선행:</b> S4-2</span><span class="ilinks">관련<a href="../mvp/step5.html">MVP</a><a href="../../domain/index.html">도메인</a></span></div>
+    <div class="irelated"><span class="irl-lbl">바로가기</span><a href="../../domain/index.html#ent-devicetoken">📦 DeviceToken</a><a href="../../domain/index.html#ent-notification">📦 Notification</a><a href="../mvp/step5.html">🗺️ MVP</a></div>
   </div>
 
   <div class="issue app" id="S5-2">
