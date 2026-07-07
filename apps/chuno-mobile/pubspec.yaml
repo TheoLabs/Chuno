@@ -39,6 +39,7 @@ dependencies:
   flutter_riverpod: ^2.6.1        # 앱 전체 상태관리 기준
   dio: ^5.7.0                     # HTTP 클라이언트 + 인터셉터
   flutter_secure_storage: ^9.2.2  # 토큰 보안 저장
+  socket_io_client: ^3.1.6
 
 dev_dependencies:
   flutter_test:

@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/error/app_exception.dart';
+import '../features/rooms/lobby_socket_controller.dart';
 import '../features/rooms/room_models.dart' hide RoomStatus;
+import '../features/rooms/room_models.dart' as rm;
 import '../features/rooms/room_providers.dart';
 import '../features/rooms/room_repository.dart';
 import '../models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ui.dart';
 import 'countdown_screen.dart';
+import 'server_countdown_screen.dart';
 
 class LobbyScreen extends ConsumerWidget {
   /// 표시용 폴백(생성/목록에서 넘겨받은 값). [roomId] 가 있으면 상세 조회가 우선한다.
@@ -21,21 +24,106 @@ class LobbyScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final id = roomId;
-    // roomId 없으면(목록 미연동 경로) 폴백 목업으로 즉시 렌더.
+    // roomId 없으면(목록 미연동 경로) 폴백 목업으로 즉시 렌더(소켓 미사용).
     if (id == null) {
       return _Scaffold(view: _LobbyView.fromMock(room), room: room);
     }
+    // 소켓 실시간 — 진입 시 연결·joinRoom, 이탈 시 leaveRoom·정리(autoDispose).
+    final socket = ref.watch(lobbySocketProvider(id));
+    ref.listen(lobbySocketProvider(id), (prev, next) {
+      _handleSocket(context, ref, id, prev, next);
+    });
+    final disconnected = socket.connection == LobbyConnection.disconnected;
     final detail = ref.watch(roomDetailProvider(id));
     return detail.when(
-      data: (r) => _Scaffold(view: _LobbyView.fromModel(r), room: room, roomId: id),
-      loading: () => _Scaffold(view: _LobbyView.fromMock(room), room: room, roomId: id, loading: true),
+      data: (r) => _Scaffold(
+          view: _LobbyView.fromModel(r), room: room, roomId: id, disconnected: disconnected),
+      loading: () => _Scaffold(
+          view: _LobbyView.fromMock(room), room: room, roomId: id, loading: true, disconnected: disconnected),
       error: (_, _) => _Scaffold(
         view: _LobbyView.fromMock(room),
         room: room,
         roomId: id,
+        disconnected: disconnected,
         onRetry: () => ref.invalidate(roomDetailProvider(id)),
       ),
     );
+  }
+
+  /// 소켓 상태 변화 반응 — 방 취소(홈 복귀)·상태전환(STARTING 카운트다운/LIVE 안내).
+  void _handleSocket(
+    BuildContext context,
+    WidgetRef ref,
+    int id,
+    LobbySocketState? prev,
+    LobbySocketState next,
+  ) {
+    if (next.cancelled && (prev == null || !prev.cancelled)) {
+      _onRoomCancelled(context);
+      return;
+    }
+    if (next.status != prev?.status) {
+      if (next.status == rm.RoomStatus.starting) {
+        _onStarting(context, ref, id);
+      } else if (next.status == rm.RoomStatus.live) {
+        _onLive(context);
+      }
+    }
+  }
+
+  /// STARTING(예약 T−10s) → 서버시계 동기 카운트다운 화면으로 전환.
+  void _onStarting(BuildContext context, WidgetRef ref, int id) {
+    final detail = ref.read(roomDetailProvider(id)).valueOrNull;
+    final clock = ref.read(lobbySocketProvider(id)).clock;
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => ServerCountdownScreen(
+        targetEpochMs: detail?.scheduledStartEpochMs,
+        clock: clock,
+      ),
+    ));
+  }
+
+  /// LIVE(출발) — 경주 화면은 Step3 경계라 플레이스홀더 토스트로 전환만 표시.
+  void _onLive(BuildContext context) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(
+        content: Text('출발! 경주 화면은 준비 중이에요'),
+        duration: Duration(milliseconds: 2000),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.panel2,
+      ));
+  }
+
+  /// 방 취소(roomCancelled) → 안내 다이얼로그 후 홈(루트) 복귀.
+  Future<void> _onRoomCancelled(BuildContext context) async {
+    if (!context.mounted) return;
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.panel,
+        title: const Text('방이 취소되었어요', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+        content: const Text('방장이 방을 취소했거나 시작 인원이 부족해요.', style: TextStyle(fontSize: 14, color: AppColors.muted)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('확인', style: TextStyle(color: AppColors.coral, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    navigator.popUntil((r) => r.isFirst); // 홈(루트)으로 복귀
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(
+        content: Text('방이 취소되었습니다'),
+        duration: Duration(milliseconds: 2000),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.panel2,
+      ));
   }
 }
 
@@ -98,8 +186,11 @@ class _Scaffold extends ConsumerWidget {
   final Room room; // 카운트다운 데모 진입용(기존 목업 플로우 유지)
   final int? roomId; // 서버 방 id — 있어야 삭제/나가기 실 API 호출.
   final bool loading;
+
+  /// 소켓 끊김 표시(재접속 중). true 면 상단에 안내 배너를 노출한다.
+  final bool disconnected;
   final VoidCallback? onRetry;
-  const _Scaffold({required this.view, required this.room, this.roomId, this.loading = false, this.onRetry});
+  const _Scaffold({required this.view, required this.room, this.roomId, this.loading = false, this.disconnected = false, this.onRetry});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -130,6 +221,18 @@ class _Scaffold extends ConsumerWidget {
                     child: Row(children: [
                       const Expanded(child: Muted('방 정보를 불러오지 못했어요', size: 12, color: AppColors.text)),
                       AppButton('다시 시도', variant: BtnVariant.outline, expand: false, height: 32, fontSize: 12, onTap: onRetry),
+                    ]),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (disconnected) ...[
+                  Panel(
+                    color: AppColors.panel2,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    child: const Row(children: [
+                      Icon(Icons.wifi_off, size: 16, color: AppColors.muted),
+                      SizedBox(width: 8),
+                      Expanded(child: Muted('연결이 끊겼어요 · 다시 연결 중…', size: 12)),
                     ]),
                   ),
                   const SizedBox(height: 12),

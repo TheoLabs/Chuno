@@ -1,5 +1,7 @@
 // 레이아웃 오버플로우 회귀 테스트 — 작은 화면(390x700)에서 각 화면이
 // RenderFlex overflow 없이 렌더링되는지 확인.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,9 +12,13 @@ import 'package:chuno_mobile/features/auth/auth_providers.dart';
 import 'package:chuno_mobile/features/legal/legal_models.dart';
 import 'package:chuno_mobile/features/legal/legal_providers.dart';
 import 'package:chuno_mobile/features/legal/legal_repository.dart';
+import 'package:chuno_mobile/features/rooms/lobby_socket_controller.dart';
 import 'package:chuno_mobile/features/rooms/room_models.dart';
 import 'package:chuno_mobile/features/rooms/room_providers.dart';
 import 'package:chuno_mobile/features/rooms/room_repository.dart';
+import 'package:chuno_mobile/features/rooms/room_socket.dart';
+import 'package:chuno_mobile/features/rooms/server_clock.dart';
+import 'package:chuno_mobile/screens/server_countdown_screen.dart';
 import 'package:chuno_mobile/features/users/user_models.dart';
 import 'package:chuno_mobile/features/users/user_providers.dart';
 import 'package:chuno_mobile/features/users/user_repository.dart';
@@ -109,6 +115,23 @@ class _FakeRoomRepository implements RoomRepository {
   Future<void> leave(int id) async {}
 }
 
+/// 실서버 없이 로비 렌더용 — 아무 이벤트도 흘리지 않는 조용한 소켓 채널.
+class _SilentSocketChannel implements RoomSocketChannel {
+  final _c = StreamController<RoomSocketMessage>.broadcast();
+  @override
+  Stream<RoomSocketMessage> get messages => _c.stream;
+  @override
+  void connect() {}
+  @override
+  Future<Map<String, dynamic>> emitAck(String e, Map<String, dynamic> d) async => const {};
+  @override
+  void emit(String e, Map<String, dynamic> d) {}
+  @override
+  void dispose() {
+    _c.close();
+  }
+}
+
 const _sampleDoc = LegalDocument(
   id: 1, type: 'terms-of-service', version: 'v1.0', title: '이용약관', isRequired: true, status: 'ACTIVE',
 );
@@ -125,6 +148,7 @@ void main() {
           userRepositoryProvider.overrideWithValue(_FakeUserRepository()),
           legalDocumentRepositoryProvider.overrideWithValue(_FakeLegalRepository()),
           roomRepositoryProvider.overrideWithValue(_FakeRoomRepository()),
+          roomSocketChannelFactoryProvider.overrideWithValue((_) => _SilentSocketChannel()),
         ],
         child: MaterialApp(theme: buildAppTheme(), home: home),
       );
@@ -156,6 +180,41 @@ void main() {
       await tester.pump();
       expect(tester.takeException(), isNull, reason: '$name 렌더 예외');
     });
+  });
+
+  testWidgets('serverCountdown(카운트다운) 오버플로우 없이 렌더된다', (tester) async {
+    tester.view.physicalSize = const Size(390, 700);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    // 미래 목표 → 카운트다운(타이머) 상태로 렌더.
+    final future = DateTime.now().millisecondsSinceEpoch + 10000;
+    await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(),
+      home: ServerCountdownScreen(targetEpochMs: future, clock: ServerClock.unsynced),
+    ));
+    await tester.pump();
+    expect(tester.takeException(), isNull, reason: 'serverCountdown 렌더 예외');
+    await tester.pumpWidget(const SizedBox()); // 타이머 정리
+  });
+
+  testWidgets('serverCountdown(출발) 오버플로우 없이 렌더된다', (tester) async {
+    tester.view.physicalSize = const Size(390, 700);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    // 과거 목표 → 즉시 LIVE(GO) 상태, 타이머 없음.
+    final past = DateTime.now().millisecondsSinceEpoch - 5000;
+    await tester.pumpWidget(MaterialApp(
+      theme: buildAppTheme(),
+      home: ServerCountdownScreen(targetEpochMs: past, clock: ServerClock.unsynced),
+    ));
+    await tester.pump();
+    expect(find.text('GO'), findsOneWidget);
+    expect(find.text('로비로 돌아가기'), findsOneWidget);
+    expect(tester.takeException(), isNull, reason: 'serverCountdown(GO) 렌더 예외');
   });
 
   testWidgets('race(라이브) 오버플로우 없이 렌더된다', (tester) async {

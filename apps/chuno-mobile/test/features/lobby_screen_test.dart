@@ -1,13 +1,17 @@
 // LobbyScreen 상세 실연동 — roomId 있으면 GET /rooms/:id 로 상세 로드/렌더.
 // + 방장 방삭제(DELETE /rooms/:id)·참가자 나가기(DELETE /rooms/:id/leave) 실 API 배선.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:chuno_mobile/core/error/app_exception.dart';
+import 'package:chuno_mobile/features/rooms/lobby_socket_controller.dart';
 import 'package:chuno_mobile/features/rooms/room_models.dart';
 import 'package:chuno_mobile/features/rooms/room_providers.dart';
 import 'package:chuno_mobile/features/rooms/room_repository.dart';
+import 'package:chuno_mobile/features/rooms/room_socket.dart';
 import 'package:chuno_mobile/models.dart' as mock;
 import 'package:chuno_mobile/screens/lobby_screen.dart';
 import 'package:chuno_mobile/theme/app_theme.dart';
@@ -75,8 +79,68 @@ const _fallback = mock.Room(
   startInfo: '06:00 시작', status: mock.RoomStatus.soon,
 );
 
+/// 실서버 없이 로비 렌더용 — 아무 이벤트도 흘리지 않는 조용한 소켓 채널.
+class _SilentSocketChannel implements RoomSocketChannel {
+  final _c = StreamController<RoomSocketMessage>.broadcast();
+  @override
+  Stream<RoomSocketMessage> get messages => _c.stream;
+  @override
+  void connect() {}
+  @override
+  Future<Map<String, dynamic>> emitAck(String e, Map<String, dynamic> d) async => const {};
+  @override
+  void emit(String e, Map<String, dynamic> d) {}
+  @override
+  void dispose() {
+    _c.close();
+  }
+}
+
+/// 테스트가 이벤트를 밀어넣을 수 있는 제어형 소켓 채널.
+class _CtrlSocketChannel implements RoomSocketChannel {
+  final _c = StreamController<RoomSocketMessage>.broadcast();
+  void push(RoomSocketMessage m) => _c.add(m);
+  @override
+  Stream<RoomSocketMessage> get messages => _c.stream;
+  @override
+  void connect() {}
+  @override
+  Future<Map<String, dynamic>> emitAck(String e, Map<String, dynamic> d) async => const {'serverTime': 0};
+  @override
+  void emit(String e, Map<String, dynamic> d) {}
+  @override
+  void dispose() {
+    _c.close();
+  }
+}
+
+final _silentSocket = roomSocketChannelFactoryProvider.overrideWithValue((_) => _SilentSocketChannel());
+
+/// 홈 → 로비 push 하니스에 제어형 채널을 주입한다.
+Widget _pushAppWithChannel(RoomRepository repo, RoomSocketChannel channel) => ProviderScope(
+      overrides: [
+        roomRepositoryProvider.overrideWithValue(repo),
+        roomSocketChannelFactoryProvider.overrideWithValue((_) => channel),
+      ],
+      child: MaterialApp(
+        theme: buildAppTheme(),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const LobbyScreen(room: _fallback, roomId: 7),
+                )),
+                child: const Text('홈-마커'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
 Widget _app(RoomRepository repo) => ProviderScope(
-      overrides: [roomRepositoryProvider.overrideWithValue(repo)],
+      overrides: [roomRepositoryProvider.overrideWithValue(repo), _silentSocket],
       child: MaterialApp(
         theme: buildAppTheme(),
         home: const LobbyScreen(room: _fallback, roomId: 7),
@@ -85,7 +149,7 @@ Widget _app(RoomRepository repo) => ProviderScope(
 
 /// 홈 → 로비 push 하는 하니스(성공 시 홈 복귀 검증용).
 Widget _pushApp(RoomRepository repo) => ProviderScope(
-      overrides: [roomRepositoryProvider.overrideWithValue(repo)],
+      overrides: [roomRepositoryProvider.overrideWithValue(repo), _silentSocket],
       child: MaterialApp(
         theme: buildAppTheme(),
         home: Builder(
@@ -235,5 +299,41 @@ void main() {
     expect(find.text('방에 참여 중이지 않습니다.'), findsOneWidget);
     expect(find.text('홈-마커'), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('roomCancelled 수신 → 안내 다이얼로그 → 확인 시 홈 복귀', (tester) async {
+    _sized(tester);
+    final channel = _CtrlSocketChannel();
+    await tester.pumpWidget(_pushAppWithChannel(_DetailRepo(isHost: false), channel));
+    await tester.tap(find.text('홈-마커'));
+    await tester.pumpAndSettle();
+
+    channel.push(const RoomCancelledMsg());
+    await tester.pumpAndSettle();
+    expect(find.text('방이 취소되었어요'), findsOneWidget);
+
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+    expect(find.text('홈-마커'), findsOneWidget); // 홈(루트)으로 복귀
+    expect(find.text('방이 취소되었습니다'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('roomStatusChanged starting → 서버시계 카운트다운 화면으로 전환', (tester) async {
+    _sized(tester);
+    final channel = _CtrlSocketChannel();
+    // scheduledStartOn=2030(먼 미래) → 카운트다운(대기) 상태로 진입.
+    await tester.pumpWidget(_pushAppWithChannel(_DetailRepo(isHost: false), channel));
+    await tester.tap(find.text('홈-마커'));
+    await tester.pumpAndSettle();
+
+    channel.push(const RoomStatusChangedMsg('starting'));
+    await tester.pump(); // stream 이벤트 → controller 상태 변경
+    await tester.pump(); // ref.listen 콜백 → Navigator.push
+    await tester.pump(const Duration(milliseconds: 400)); // 라우트 전환 완료
+    expect(find.text('동시 출발 대기'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox()); // 카운트다운 타이머 정리
   });
 }

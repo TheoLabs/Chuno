@@ -87,6 +87,26 @@ class RoomModel {
     return DateTime.tryParse(s.contains('T') ? s : s.replaceFirst(' ', 'T'));
   }
 
+  /// 예약 시작 시각의 epoch ms(파싱 실패 시 null). 서버시계 카운트다운 타겟용.
+  /// `scheduledStartOn`은 **KST(UTC+9) 벽시계** 문자열이므로, 기기 로컬 타임존과 무관하게
+  /// 절대 시각(epoch)으로 변환한다: 컴포넌트를 UTC로 재구성한 뒤 9시간을 뺀다.
+  /// (표시용 `startAt`/`startLabel`은 로컬 파싱 그대로 — 라벨 오차는 KST MVP 수용 범위.)
+  int? get scheduledStartEpochMs {
+    final s = scheduledStartOn.trim();
+    if (s.isEmpty) return null;
+    final naive = DateTime.tryParse(s.contains('T') ? s : s.replaceFirst(' ', 'T'));
+    if (naive == null) return null;
+    final asUtc = DateTime.utc(
+      naive.year,
+      naive.month,
+      naive.day,
+      naive.hour,
+      naive.minute,
+      naive.second,
+    );
+    return asUtc.subtract(const Duration(hours: 9)).millisecondsSinceEpoch;
+  }
+
   /// 'HH:mm 시작' 라벨(파싱 실패 시 원본 폴백).
   String get startLabel {
     final at = startAt;
