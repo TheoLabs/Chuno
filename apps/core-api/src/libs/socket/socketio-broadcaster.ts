@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { Server, Socket } from 'socket.io';
 import { RealtimeBroadcaster } from './realtime-broadcaster';
 import { RoomRegistry, roomKey } from './room-registry';
@@ -14,6 +14,7 @@ import { RoomRegistry, roomKey } from './room-registry';
  */
 @Injectable()
 export class SocketIoBroadcaster extends RealtimeBroadcaster {
+  private readonly logger = new Logger(SocketIoBroadcaster.name);
   private server?: Server;
 
   /** 게이트웨이 afterInit에서 io 서버를 바인딩한다. */
@@ -29,7 +30,13 @@ export class SocketIoBroadcaster extends RealtimeBroadcaster {
   }
 
   toRoom(roomId: number, event: string, payload?: unknown): void {
-    this.io.to(roomKey(roomId)).emit(event, payload);
+    // 미바인딩 시 조용히 스킵(throw 아님) — 서버가 안 떠 있으면 수신 대상 소켓도 없다.
+    // 재기동 직후 백로그 잡이 바인딩 전에 소비돼도 잡 실패/유실로 번지지 않게 한다.
+    if (!this.server) {
+      this.logger.warn(`io 미바인딩 — 브로드캐스트 스킵 (room=${roomId}, event=${event})`);
+      return;
+    }
+    this.server.to(roomKey(roomId)).emit(event, payload);
   }
 
   join(client: Socket, roomId: number): void {

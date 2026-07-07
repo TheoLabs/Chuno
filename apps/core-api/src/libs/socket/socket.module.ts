@@ -8,9 +8,6 @@ import { ServerClock } from './server-clock';
 /**
  * 실시간(socket.io) 공통 인프라 — 전역 모듈.
  *
- * ⚠️ practice 폴더 — 클론 코딩용 레퍼런스. AppModule에 등록돼 있지 않아 실제 앱에 영향 없음.
- * 실제로 쓰려면 이 모듈(들)을 `libs/socket` 등으로 옮기고 AppModule.imports에 추가한다.
- *
  * 전송·인증·컨텍스트·발행 포트·서버시계를 한데 묶어, 어느 도메인 모듈이든 주입해 쓰게 한다.
  * 도메인/애플리케이션 레이어는 구현(SocketIoBroadcaster)이 아니라 **포트(RealtimeBroadcaster)** 에
  * 의존해야 한다(테스트 목 주입·구현 교체 용이).
