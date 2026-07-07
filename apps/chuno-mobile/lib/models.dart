@@ -50,21 +50,3 @@ class RaceRunner {
   });
 }
 
-class RankEntry {
-  final int rank;
-  final String name;
-  final Color color;
-  final String score;
-  final String? tier;
-  final bool isMe;
-  const RankEntry(this.rank, this.name, this.color, this.score, {this.tier, this.isMe = false});
-}
-
-class HistoryEntry {
-  final String title;
-  final String sub;
-  final String place;
-  final Color placeColor;
-  final String score;
-  const HistoryEntry(this.title, this.sub, this.place, this.placeColor, this.score);
-}

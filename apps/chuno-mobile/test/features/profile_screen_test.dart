@@ -4,11 +4,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:chuno_mobile/features/scoring/scoring_models.dart';
+import 'package:chuno_mobile/features/scoring/scoring_providers.dart';
+import 'package:chuno_mobile/features/scoring/scoring_repository.dart';
 import 'package:chuno_mobile/features/users/user_models.dart';
 import 'package:chuno_mobile/features/users/user_providers.dart';
 import 'package:chuno_mobile/features/users/user_repository.dart';
 import 'package:chuno_mobile/screens/profile_screen.dart';
 import 'package:chuno_mobile/theme/app_theme.dart';
+
+/// 전체 랭킹에서 내 순위 7위를 돌려주는 fake(신원 라인 부기 검증용).
+class _FakeScoringRepository implements ScoringRepository {
+  @override
+  Future<RankingBoard> getRankings({required RankingScope scope}) async => RankingBoard(
+        scope: scope, items: const [], total: 10,
+        me: const RankingEntry(rank: 7, userId: 1, score: 12480),
+      );
+  @override
+  Future<MyResultsPage> getMyResults({int? page, int? limit}) async => const MyResultsPage(items: [], total: 0);
+  @override
+  Future<RaceResultSet> getRaceResult(int raceId) async => RaceResultSet(raceId: raceId, results: const []);
+}
 
 /// getMe 응답/실패를 주입 가능한 fake. 다른 메서드는 프로필 테스트에서 미사용.
 class _FakeUserRepository implements UserRepository {
@@ -35,7 +51,10 @@ class _FakeUserRepository implements UserRepository {
 }
 
 Widget _app(UserRepository repo) => ProviderScope(
-      overrides: [userRepositoryProvider.overrideWithValue(repo)],
+      overrides: [
+        userRepositoryProvider.overrideWithValue(repo),
+        scoringRepositoryProvider.overrideWithValue(_FakeScoringRepository()),
+      ],
       child: MaterialApp(
         theme: buildAppTheme(),
         home: const Scaffold(body: SafeArea(child: ProfileScreen())),

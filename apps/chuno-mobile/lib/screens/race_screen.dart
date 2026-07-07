@@ -93,7 +93,7 @@ class _LiveRaceViewState extends ConsumerState<LiveRaceView> {
     if (_navigatedToResult || !mounted) return;
     _navigatedToResult = true;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => ResultScreen(dnf: !finished)),
+      MaterialPageRoute(builder: (_) => ResultScreen(userId: widget.userId, dnf: !finished)),
     );
   }
 

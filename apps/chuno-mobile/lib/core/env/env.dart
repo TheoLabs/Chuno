@@ -44,4 +44,7 @@ class ApiPaths {
   static const String onboard = '/users/onboard';
   static const String legalDocuments = '/legal-documents';
   static const String rooms = '/rooms';
+  static const String rankings = '/rankings';
+  static const String myResults = '/users/me/results';
+  static String raceResult(int raceId) => '/races/$raceId/result';
 }

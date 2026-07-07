@@ -23,6 +23,9 @@ import 'package:chuno_mobile/features/race/location_service.dart';
 import 'package:chuno_mobile/features/race/race_models.dart';
 import 'package:chuno_mobile/features/race/race_providers.dart';
 import 'package:chuno_mobile/features/race/race_socket.dart';
+import 'package:chuno_mobile/features/scoring/scoring_models.dart';
+import 'package:chuno_mobile/features/scoring/scoring_providers.dart';
+import 'package:chuno_mobile/features/scoring/scoring_repository.dart';
 import 'package:chuno_mobile/screens/server_countdown_screen.dart';
 import 'package:chuno_mobile/features/users/user_models.dart';
 import 'package:chuno_mobile/features/users/user_providers.dart';
@@ -118,6 +121,42 @@ class _FakeRoomRepository implements RoomRepository {
   Future<void> delete(int id) async {}
   @override
   Future<void> leave(int id) async {}
+}
+
+/// 랭킹/결과/기록을 네트워크 없이 제공하는 fake. userId 42 를 나로 가정.
+class _FakeScoringRepository implements ScoringRepository {
+  RaceResultModel _result({required int userId, required int rank, bool finished = true}) => RaceResultModel(
+        id: rank, raceId: 1, userId: userId, finished: finished, distanceKm: finished ? 5.0 : 4.1,
+        finishTime: finished ? 720.0 : null, rank: rank, total: 820 - rank * 40, rankScore: 300 - rank * 20,
+        distanceScore: 200, finishBonus: finished ? 220 : 0, marginScore: 100, pointsAwarded: 82 - rank * 4,
+      );
+
+  @override
+  Future<RankingBoard> getRankings({required RankingScope scope}) async => RankingBoard(
+        scope: scope,
+        items: [
+          for (var i = 0; i < 5; i++)
+            RankingEntry(rank: i + 1, userId: i == 1 ? 42 : 100 + i, score: 21000 - i * 1500),
+        ],
+        total: 128,
+        me: const RankingEntry(rank: 2, userId: 42, score: 19500),
+      );
+
+  @override
+  Future<MyResultsPage> getMyResults({int? page, int? limit}) async => MyResultsPage(
+        items: [_result(userId: 42, rank: 1), _result(userId: 42, rank: 4, finished: false)],
+        total: 2,
+      );
+
+  @override
+  Future<RaceResultSet> getRaceResult(int raceId) async => RaceResultSet(
+        raceId: raceId,
+        results: [
+          _result(userId: 42, rank: 1),
+          _result(userId: 101, rank: 2),
+          _result(userId: 102, rank: 3, finished: false),
+        ],
+      );
 }
 
 /// 실서버 없이 로비 렌더용 — 아무 이벤트도 흘리지 않는 조용한 소켓 채널.
@@ -221,6 +260,7 @@ void main() {
           userRepositoryProvider.overrideWithValue(_FakeUserRepository()),
           legalDocumentRepositoryProvider.overrideWithValue(_FakeLegalRepository()),
           roomRepositoryProvider.overrideWithValue(_FakeRoomRepository()),
+          scoringRepositoryProvider.overrideWithValue(_FakeScoringRepository()),
           roomSocketChannelFactoryProvider.overrideWithValue((_) => _SilentSocketChannel()),
           raceSocketChannelFactoryProvider.overrideWithValue((_) => _SilentRaceSocketChannel()),
           locationServiceProvider.overrideWithValue(_SilentLocationService()),
@@ -237,6 +277,7 @@ void main() {
     'lobby(detail)': LobbyScreen(room: Mock.rooms[0], roomId: 1),
     'result(완주)': const ResultScreen(),
     'result(dnf)': const ResultScreen(dnf: true),
+    'result(실연동)': const ResultScreen(raceId: 1, userId: 42),
     'ranking': wrapTab(const RankingScreen()),
     'history': wrapTab(const HistoryScreen()),
     'profile': wrapTab(const ProfileScreen()),
@@ -328,6 +369,25 @@ void main() {
     expect(find.text('나'), findsWidgets, reason: '내 행 렌더');
     expect(tester.takeException(), isNull, reason: 'race 실연동 렌더 예외');
     await tester.pumpWidget(const SizedBox());
+  });
+
+  // 랭킹/기록/결과 실연동 콘텐츠(로딩 완료 후)가 오버플로우 없이 렌더되는지 — 회귀.
+  final realContentCases = <String, Widget>{
+    'ranking(실연동 콘텐츠)': wrapTab(const RankingScreen()),
+    'history(실연동 콘텐츠)': wrapTab(const HistoryScreen()),
+    'result(실연동 콘텐츠)': const ResultScreen(raceId: 1, userId: 42),
+  };
+  realContentCases.forEach((name, screen) {
+    testWidgets('$name 오버플로우 없이 렌더된다', (tester) async {
+      tester.view.physicalSize = const Size(390, 700);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(app(screen));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: '$name 렌더 예외');
+    });
   });
 
   testWidgets('onboarding(약관 동의 단계) 오버플로우 없이 렌더된다', (tester) async {

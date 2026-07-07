@@ -21,18 +21,4 @@ class Mock {
         RaceRunner(id: 'm', name: '민지', color: AppColors.a5, base: .050, km: 2.70),
         RaceRunner(id: 's', name: '서연', color: AppColors.a4, base: .044, km: 2.10),
       ];
-
-  static const ranking = <RankEntry>[
-    RankEntry(7, '나', AppColors.coral, '12,480', tier: '💎 다이아', isMe: true),
-    RankEntry(1, '태양', AppColors.a4, '21,050', tier: '👑'),
-    RankEntry(2, '하늘', AppColors.a1, '19,900'),
-    RankEntry(3, '준호', AppColors.a3, '18,320'),
-    RankEntry(4, '지민', AppColors.a5, '15,110'),
-  ];
-
-  static const history = <HistoryEntry>[
-    HistoryEntry('🥇 5km 새벽 추격', '07/01 · 완주 5.0km · 12\'02', '1위', AppColors.coral, '820점'),
-    HistoryEntry('🏃 10km 챌린지', '06/28 · DNF 8.2km', '4위', AppColors.muted, '410점'),
-    HistoryEntry('🥉 3km 스프린트', '06/25 · 완주 3.0km · 14\'20', '3위', AppColors.a4, '640점'),
-  ];
 }

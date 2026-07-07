@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/auth_providers.dart';
+import '../features/scoring/scoring_models.dart';
+import '../features/scoring/scoring_providers.dart';
 import '../features/users/user_models.dart';
 import '../features/users/user_providers.dart';
 import '../theme/app_theme.dart';
@@ -13,6 +15,8 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final me = ref.watch(meProvider);
+    // 전체 랭킹 내 순위(있으면 신원 라인에 부기). 실패/미참가면 순위 표기 생략.
+    final myRank = ref.watch(rankingProvider(RankingScope.all)).asData?.value.me?.rank;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -32,7 +36,7 @@ class ProfileScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(18, 4, 18, 20),
             children: [
               me.when(
-                data: (m) => _identity(m),
+                data: (m) => _identity(m, myRank),
                 loading: () => const _IdentitySkeleton(),
                 error: (_, _) => _IdentityError(onRetry: () => ref.invalidate(meProvider)),
               ),
@@ -106,14 +110,15 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   /// users/me 실데이터로 상단 신원(아바타·닉네임·티어·레벨) 표시.
-  /// 포인트/랭킹은 아직 목업이라 여기선 레벨 라벨에 "· 전체 7위"만 부기한다.
-  Widget _identity(MeModel m) {
+  /// 전체 랭킹 내 순위([myRank], 랭킹 실연동)를 레벨 라벨에 부기한다(없으면 생략).
+  Widget _identity(MeModel m, int? myRank) {
     final nickname = (m.nickname != null && m.nickname!.trim().isNotEmpty) ? m.nickname!.trim() : '러너';
     final initial = nickname.isNotEmpty ? nickname.substring(0, 1) : '나';
     final level = RunnerLevel.fromWire(m.level);
     final tier = RunnerTier.fromWire(m.tier);
-    // 목업(users/me 미포함): 랭킹은 추후 랭킹 컨텍스트에서.
-    final levelLine = level != null ? '${level.label} 러너 · 전체 7위' : '전체 7위';
+    final rankLabel = myRank != null ? '전체 $myRank위' : null;
+    final levelLabel = level != null ? '${level.label} 러너' : null;
+    final levelLine = [levelLabel, rankLabel].whereType<String>().join(' · ');
     return Column(children: [
       Avatar(initial, AppColors.coral, size: 82),
       const SizedBox(height: 12),
@@ -131,8 +136,10 @@ class ProfileScreen extends ConsumerWidget {
           _tierTag(tier),
         ],
       ]),
-      const SizedBox(height: 4),
-      Muted(levelLine, size: 11),
+      if (levelLine.isNotEmpty) ...[
+        const SizedBox(height: 4),
+        Muted(levelLine, size: 11),
+      ],
     ]);
   }
 
