@@ -17,6 +17,7 @@ export type LeaderboardEntry = {
 };
 
 export type LeaderboardSnapshot = {
+  id: number; // raceId — 종료 후 결과 조회(GET /races/:id/result)에 쓰도록 클라에 노출.
   roomId: number;
   status: RaceStatus;
   startedAt: number;
@@ -110,6 +111,7 @@ export class RaceService extends DddService {
     if (!race) return null;
 
     return {
+      id: race.id,
       roomId: race.roomId,
       status: race.status,
       startedAt: race.startedAt.getTime(),
